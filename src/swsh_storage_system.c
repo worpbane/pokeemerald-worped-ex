@@ -756,20 +756,21 @@ static bool8 IsCursorOnCloseBox(void);
 static bool8 IsCursorOnBoxTitle(void);
 static bool8 IsCursorInBox(void);
 
-// Scroll arrows
+// Box name & Scroll arrows
 static void CreateBoxScrollArrows(void);
-static void StartBoxScrollArrowsSlide(s8);
-static void StopBoxScrollArrowsSlide(void);
+static void UpdateBoxTitle(u8);
+static void UNUSED StartBoxScrollArrowsSlide(s8);
+static void UNUSED StopBoxScrollArrowsSlide(void);
 static void AnimateBoxScrollArrows(bool8);
 static void SpriteCB_Arrow(struct Sprite *);
 static struct Sprite *CreateChooseBoxArrows(u16, u16, u8, u8, u8);
 
 // Box title
 static void InitBoxTitle(u8);
-static void CreateIncomingBoxTitle(u8, s8);
-static void CycleBoxTitleSprites(void);
-static void SpriteCB_IncomingBoxTitle(struct Sprite *);
-static void SpriteCB_OutgoingBoxTitle(struct Sprite *);
+static void UNUSED CreateIncomingBoxTitle(u8, s8);
+static void UNUSED CycleBoxTitleSprites(void);
+static void UNUSED SpriteCB_IncomingBoxTitle(struct Sprite *);
+static void UNUSED SpriteCB_OutgoingBoxTitle(struct Sprite *);
 static void CycleBoxTitleColor(void);
 static s16 GetBoxTitleBaseX(const u8 *);
 
@@ -926,16 +927,12 @@ static const u8 sText_OutOf30[] = _("/30");
 static const u16 sChooseBoxMenu_Pal[]        = INCBIN_U16("graphics/pokemon_storage/box_selection_popup.gbapal");
 static const u8 sChooseBoxMenuCenter_Gfx[]   = INCBIN_U8("graphics/pokemon_storage/box_selection_popup_center.4bpp");
 static const u8 sChooseBoxMenuSides_Gfx[]    = INCBIN_U8("graphics/pokemon_storage/box_selection_popup_sides.4bpp");
-static const u32 sScrollingBg_Gfx[]          = INCBIN_U32("graphics/pokemon_storage/scrolling_bg.4bpp.smol");
-static const u32 sScrollingBg_Tilemap[]      = INCBIN_U32("graphics/pokemon_storage/scrolling_bg.bin.smolTM");
 static const u16 sDisplayMenu_Pal[]          = INCBIN_U16("graphics/pokemon_storage/display_menu.gbapal"); // Unused
 static const u32 sDisplayMenu_Tilemap[]      = INCBIN_U32("graphics/pokemon_storage/display_menu.bin.smolTM");
 static const u16 sPkmnData_Tilemap[]         = INCBIN_U16("graphics/pokemon_storage/pkmn_data.bin");
 // sInterface_Pal - parts of the display frame, "PkmnData"'s normal color, Close Box
 static const u16 sInterface_Pal[]            = INCBIN_U16("graphics/pokemon_storage/interface.gbapal");
 static const u16 sPkmnDataGray_Pal[]         = INCBIN_U16("graphics/pokemon_storage/pkmn_data_gray.gbapal");
-static const u16 sScrollingBg_Pal[]          = INCBIN_U16("graphics/pokemon_storage/scrolling_bg.gbapal");
-static const u16 sScrollingBgMoveItems_Pal[] = INCBIN_U16("graphics/pokemon_storage/scrolling_bg_move_items.gbapal");
 static const u16 sCloseBoxButton_Tilemap[]   = INCBIN_U16("graphics/pokemon_storage/close_box_button.bin");
 static const u16 sPartySlotFilled_Tilemap[]  = INCBIN_U16("graphics/pokemon_storage/party_slot_filled.bin");
 static const u16 sPartySlotEmpty_Tilemap[]   = INCBIN_U16("graphics/pokemon_storage/party_slot_empty.bin");
@@ -1217,6 +1214,7 @@ static const union AffineAnimCmd *const sAffineAnims_ReleaseMon[] =
 };
 
 #include "data/wallpapers.h"
+#include "data/swsh_wallpapers.h"
 
 static const u16 sUnusedColor = RGB(26, 29, 8);
 
@@ -2074,6 +2072,7 @@ static void Task_InitPokeStorage(u8 taskId)
     case 0:
         SetVBlankCallback(NULL);
         SetGpuReg(REG_OFFSET_DISPCNT, 0);
+        CpuFill32(0, (void *)VRAM, VRAM_SIZE); // Clear VRAM to help debug tile loading
         ResetForPokeStorage();
         if (sStorage->isReopening)
         {
@@ -3810,14 +3809,14 @@ static void FreePokeStorageData(void)
 static void SetScrollingBackground(void)
 {
     SetGpuReg(REG_OFFSET_BG3CNT, BGCNT_PRIORITY(3) | BGCNT_CHARBASE(3) | BGCNT_16COLOR | BGCNT_SCREENBASE(31));
-    DecompressAndLoadBgGfxUsingHeap(3, sScrollingBg_Gfx, 0, 0, 0);
-    DecompressDataWithHeaderVram(sScrollingBg_Tilemap, (void *)BG_SCREEN_ADDR(31));
+    DecompressAndLoadBgGfxUsingHeap(3, sWallpaperTiles_Base, 0, 0, 0);
+    DecompressDataWithHeaderVram(sWallpaperTilemap_Base, (void *)BG_SCREEN_ADDR(31));
 }
 
 static void ScrollBackground(void)
 {
-    ChangeBgX(3, 128, BG_COORD_ADD);
-    ChangeBgY(3, 128, BG_COORD_SUB);
+    ChangeBgX(3, 64, BG_COORD_ADD);
+    ChangeBgY(3, 64, BG_COORD_ADD);
 }
 
 static void LoadPokeStorageMenuGfx(void)
@@ -3853,10 +3852,7 @@ static void InitPalettesAndSprites(void)
     LoadPalette(sInterface_Pal, BG_PLTT_ID(0), sizeof(sInterface_Pal));
     LoadPalette(sPkmnDataGray_Pal, BG_PLTT_ID(2), sizeof(sPkmnDataGray_Pal));
     LoadPalette(sTextWindows_Pal, BG_PLTT_ID(15), sizeof(sTextWindows_Pal));
-    if (sStorage->boxOption != OPTION_MOVE_ITEMS)
-        LoadPalette(sScrollingBg_Pal, BG_PLTT_ID(3), sizeof(sScrollingBg_Pal));
-    else
-        LoadPalette(sScrollingBgMoveItems_Pal, BG_PLTT_ID(3), sizeof(sScrollingBgMoveItems_Pal));
+    LoadPalette(sWallpaperPalette_Base, BG_PLTT_ID(3), PLTT_SIZE_4BPP);
 
     SetGpuReg(REG_OFFSET_BG1CNT, BGCNT_PRIORITY(1) | BGCNT_CHARBASE(1) | BGCNT_16COLOR | BGCNT_SCREENBASE(30));
     CreateDisplayMonSprite();
@@ -5273,6 +5269,37 @@ static void SetUpScrollToBox(u8 boxId)
     sStorage->scrollState = 0;
 }
 
+static void UpdateBoxTitle(u8 boxId)
+{
+    u16 i;
+    u16 palOffset;
+    s16 x;
+    struct SpriteSheet spriteSheet = {sStorage->boxTitleTiles, 0x200, GFXTAG_BOX_TITLE};
+    struct SpriteTemplate template = sSpriteTemplate_BoxTitle;
+
+    for (i = 0; i < 2; i++)
+    {
+        if (sStorage->curBoxTitleSprites[i])
+            DestroySprite(sStorage->curBoxTitleSprites[i]);
+    }
+
+    FreeSpriteTilesByTag(GFXTAG_BOX_TITLE);
+    palOffset = sStorage->boxTitlePalOffset;
+
+    StringCopyPadded(sStorage->boxTitleText, GetBoxNamePtr(boxId), 0, BOX_NAME_LENGTH);
+    DrawTextWindowAndBufferTiles(sStorage->boxTitleText, sStorage->boxTitleTiles, 0, 0, 2);
+    LoadSpriteSheet(&spriteSheet);
+    LoadPalette(sBoxTitleColors[GetBoxWallpaper(boxId)], palOffset, sizeof(sBoxTitleColors[0]));
+    x = GetBoxTitleBaseX(GetBoxNamePtr(boxId));
+
+    for (i = 0; i < 2; i++)
+    {
+        u8 spriteId = CreateSprite(&template, i * 32 + x, 28, 24);
+        sStorage->curBoxTitleSprites[i] = &gSprites[spriteId];
+        StartSpriteAnim(sStorage->curBoxTitleSprites[i], i);
+    }
+}
+
 static bool8 ScrollToBox(void)
 {
     bool8 iconsScrolling;
@@ -5280,25 +5307,29 @@ static bool8 ScrollToBox(void)
     switch (sStorage->scrollState)
     {
     case 0:
-        LoadWallpaperGfx(sStorage->scrollToBoxId, sStorage->scrollDirection);
+        // Disabled scrolling 'box' wallpaper (BG2)
+        // LoadWallpaperGfx(sStorage->scrollToBoxId, sStorage->scrollDirection);
+        LoadWallpaperGfx(sStorage->scrollToBoxId, 0);
         sStorage->scrollState++;
     case 1:
         if (!WaitForWallpaperGfxLoad())
             return TRUE;
 
         InitBoxMonIconScroll(sStorage->scrollToBoxId, sStorage->scrollDirection);
-        CreateIncomingBoxTitle(sStorage->scrollToBoxId, sStorage->scrollDirection);
-        StartBoxScrollArrowsSlide(sStorage->scrollDirection);
+        // CreateIncomingBoxTitle(sStorage->scrollToBoxId, sStorage->scrollDirection);
+        // StartBoxScrollArrowsSlide(sStorage->scrollDirection);
+        UpdateBoxTitle(sStorage->scrollToBoxId);
         break;
     case 2:
         iconsScrolling = UpdateBoxMonIconScroll();
         if (sStorage->scrollTimer != 0)
         {
-            sStorage->bg2_X += sStorage->scrollSpeed;
+            // Disabled sliding visuals except pokemon icons
+            // sStorage->bg2_X += sStorage->scrollSpeed;
             if (--sStorage->scrollTimer != 0)
                 return TRUE;
-            CycleBoxTitleSprites();
-            StopBoxScrollArrowsSlide();
+            // CycleBoxTitleSprites();
+            // StopBoxScrollArrowsSlide();
         }
         return iconsScrolling;
     }
@@ -5535,7 +5566,7 @@ static void InitBoxTitle(u8 boxId)
 #define sOutgoingDelay data[1]
 #define sOutgoingX     data[2]
 
-static void CreateIncomingBoxTitle(u8 boxId, s8 direction)
+static void UNUSED CreateIncomingBoxTitle(u8 boxId, s8 direction)
 {
     u16 palOffset;
     s16 x, adjustedX;
@@ -5583,7 +5614,7 @@ static void CreateIncomingBoxTitle(u8 boxId, s8 direction)
     }
 }
 
-static void CycleBoxTitleSprites(void)
+static void UNUSED CycleBoxTitleSprites(void)
 {
     if (sStorage->boxTitleCycleId == 0)
         FreeSpriteTilesByTag(GFXTAG_BOX_TITLE_ALT);
@@ -5594,7 +5625,7 @@ static void CycleBoxTitleSprites(void)
     sStorage->curBoxTitleSprites[1] = sStorage->nextBoxTitleSprites[1];
 }
 
-static void SpriteCB_IncomingBoxTitle(struct Sprite *sprite)
+static void UNUSED SpriteCB_IncomingBoxTitle(struct Sprite *sprite)
 {
     if (sprite->sIncomingDelay != 0)
         sprite->sIncomingDelay--;
@@ -5602,7 +5633,7 @@ static void SpriteCB_IncomingBoxTitle(struct Sprite *sprite)
         sprite->callback = SpriteCallbackDummy;
 }
 
-static void SpriteCB_OutgoingBoxTitle(struct Sprite *sprite)
+static void UNUSED SpriteCB_OutgoingBoxTitle(struct Sprite *sprite)
 {
     if (sprite->sOutgoingDelay != 0)
     {
@@ -5670,7 +5701,7 @@ static void CreateBoxScrollArrows(void)
 }
 
 // Slide box scroll arrows horizontally for box change
-static void StartBoxScrollArrowsSlide(s8 direction)
+static void UNUSED StartBoxScrollArrowsSlide(s8 direction)
 {
     u16 i;
 
@@ -5698,7 +5729,7 @@ static void StartBoxScrollArrowsSlide(s8 direction)
 }
 
 // New box's scroll arrows have entered, stop sliding and set their position
-static void StopBoxScrollArrowsSlide(void)
+static void UNUSED StopBoxScrollArrowsSlide(void)
 {
     u16 i;
 
@@ -5753,23 +5784,6 @@ static void SpriteCB_Arrow(struct Sprite *sprite)
                 sprite->x2 = 0;
             }
         }
-        break;
-    case 2:
-        sprite->sState = 3;
-        break;
-    case 3:
-        sprite->x -= sStorage->scrollSpeed;
-        if (sprite->x <= 72 || sprite->x >= DISPLAY_WIDTH + 8)
-            sprite->invisible = TRUE;
-        if (--sprite->sTimer == 0)
-        {
-            sprite->x = sprite->data[2];
-            sprite->invisible = FALSE;
-            sprite->sState = 4;
-        }
-        break;
-    case 4:
-        sprite->x -= sStorage->scrollSpeed;
         break;
     }
 }
