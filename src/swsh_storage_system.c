@@ -218,9 +218,7 @@ enum {
 
 enum {
     CURSOR_ANIM_BOUNCE,
-    CURSOR_ANIM_STILL,
-    CURSOR_ANIM_OPEN,
-    CURSOR_ANIM_FIST,
+    CURSOR_ANIM_MAIN,
 };
 
 // Special box ids for the choose box menu
@@ -238,6 +236,7 @@ enum {
     PALTAG_CURSOR,
     PALTAG_MISC_1,
     PALTAG_MISC_2,
+    PALTAG_MISC_3,
     PALTAG_MARKING_COMBO,
     PALTAG_ITEM_ICON_0,
     PALTAG_ITEM_ICON_1, // Used implicitly in CreateItemIconSprites
@@ -935,14 +934,13 @@ static const u16 sPkmnData_Tilemap[]         = INCBIN_U16("graphics/pokemon_stor
 static const u16 sInterface_Pal[]            = INCBIN_U16("graphics/pokemon_storage/interface.gbapal");
 static const u16 sPkmnDataGray_Pal[]         = INCBIN_U16("graphics/pokemon_storage/pkmn_data_gray.gbapal");
 static const u16 sCloseBoxButton_Tilemap[]   = INCBIN_U16("graphics/pokemon_storage/close_box_button.bin");
-// static const u16 sPartySlotFilled_Tilemap[]  = INCBIN_U16("graphics/pokemon_storage/party_slot_filled.bin");
-// static const u16 sPartySlotEmpty_Tilemap[]   = INCBIN_U16("graphics/pokemon_storage/party_slot_empty.bin");
 static const u16 sUnused_Pal[]               = INCBIN_U16("graphics/pokemon_storage/unused.gbapal");
 static const u16 sTextWindows_Pal[]          = INCBIN_U16("graphics/pokemon_storage/text_windows.gbapal");
 
-static const u32 sBoxTitleFrame_Gfx[]             = INCBIN_U32("graphics/pokemon_storage/swsh/box_title_frame.4bpp.smol");
-static const u16 sBoxTitleFrame_Pal[]             = INCBIN_U16("graphics/pokemon_storage/swsh/box_title_frame.gbapal");
-static const u32 sBoxTitleArrow_Gfx[]             = INCBIN_U32("graphics/pokemon_storage/swsh/box_title_arrow.4bpp.smol");
+static const u32 sCursor_Gfx[]               = INCBIN_U32("graphics/pokemon_storage/swsh/cursor.4bpp.smol");
+static const u16 sCursor_Pal[]               = INCBIN_U16("graphics/pokemon_storage/swsh/cursor.gbapal");
+static const u32 sBoxTitleFrame_Gfx[]        = INCBIN_U32("graphics/pokemon_storage/swsh/box_title_frame.4bpp.smol");
+static const u32 sBoxTitleArrow_Gfx[]        = INCBIN_U32("graphics/pokemon_storage/swsh/box_title_arrow.4bpp.smol");
 
 static const struct WindowTemplate sWindowTemplates[] =
 {
@@ -1061,16 +1059,10 @@ static const struct CompressedSpriteSheet sSpriteSheet_BoxTitleFrame =
     .tag = GFXTAG_BOX_TITLE_FRAME,
 };
 
-static const struct SpritePalette sSpritePal_BoxTitleFrame =
-{
-    .data = sBoxTitleFrame_Pal,
-    .tag = PALTAG_MISC_2,
-};
-
 static const struct SpriteTemplate sSpriteTemplate_BoxTitleFrame =
 {
     .tileTag = GFXTAG_BOX_TITLE_FRAME,
-    .paletteTag = PALTAG_MISC_2,
+    .paletteTag = PALTAG_MISC_1,
     .oam = &sOamData_BoxTitleFrame,
     .anims = sSpriteAnimTable_BoxTitleFrame,
     .images = NULL,
@@ -1238,7 +1230,7 @@ static const union AnimCmd *const sAnims_BoxTitle[] =
 static const struct SpriteTemplate sSpriteTemplate_BoxTitle =
 {
     .tileTag = GFXTAG_BOX_TITLE,
-    .paletteTag = PALTAG_MISC_2,
+    .paletteTag = PALTAG_MISC_1,
     .oam = &sOamData_BoxTitle,
     .anims = sAnims_BoxTitle,
     .images = NULL,
@@ -1287,7 +1279,7 @@ static const struct CompressedSpriteSheet sSpriteSheet_BoxTitleArrow =
 static const struct SpriteTemplate sSpriteTemplate_BoxTitleArrow =
 {
     .tileTag = GFXTAG_BOX_TITLE_ARROW,
-    .paletteTag = PALTAG_MISC_2,
+    .paletteTag = PALTAG_MISC_1,
     .oam = &sOamData_BoxTitleArrow,
     .anims = sSpriteAnimTable_BoxTitleArrow,
     .images = NULL,
@@ -1295,9 +1287,70 @@ static const struct SpriteTemplate sSpriteTemplate_BoxTitleArrow =
     .callback = SpriteCB_Arrow,
 };
 
-static const u16 sHandCursor_Pal[] = INCBIN_U16("graphics/pokemon_storage/hand_cursor.gbapal");
-static const u8 sHandCursor_Gfx[] = INCBIN_U8("graphics/pokemon_storage/hand_cursor.4bpp");
+static const struct CompressedSpriteSheet sSpriteSheet_Cursor[] =
+{
+    {
+        .data = sCursor_Gfx,
+        .size = (32 * 32 * 3) / 2,
+        .tag = GFXTAG_CURSOR,
+    },
+    {},
+};
 
+static const struct SpritePalette sSpritePal_Cursor[] =
+{
+    {
+        .data = sCursor_Pal,
+        .tag = PALTAG_MISC_1,
+    },
+    {
+        .data = sCursor_Pal + 16,
+        .tag = PALTAG_MISC_2,
+    },
+    {
+        .data = sCursor_Pal + 32,
+        .tag = PALTAG_MISC_3,
+    },
+    {},
+};
+
+static const struct OamData sOamData_Cursor =
+{
+    .shape = SPRITE_SHAPE(32x32),
+    .size = SPRITE_SIZE(32x32),
+    .priority = 1,
+};
+
+static const union AnimCmd sAnim_Cursor_Bouncing[] =
+{
+    ANIMCMD_FRAME(0, 8),
+    ANIMCMD_FRAME(16, 8),
+    ANIMCMD_FRAME(32, 8),
+    ANIMCMD_FRAME(16, 8),
+    ANIMCMD_JUMP(0)
+};
+static const union AnimCmd sAnim_Cursor_Main[] =
+{
+    ANIMCMD_FRAME(16, 5),
+    ANIMCMD_END
+};
+
+static const union AnimCmd *const sAnims_Cursor[] =
+{
+    [CURSOR_ANIM_BOUNCE] = sAnim_Cursor_Bouncing,
+    [CURSOR_ANIM_MAIN]  = sAnim_Cursor_Main,
+};
+
+static const struct SpriteTemplate sSpriteTemplate_Cursor =
+{
+    .tileTag = GFXTAG_CURSOR,
+    .paletteTag = PALTAG_MISC_1,
+    .oam = &sOamData_Cursor,
+    .anims = sAnims_Cursor,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
+};
 
 //------------------------------------------------------------------------------
 //  SECTION: Misc utility
@@ -1741,7 +1794,6 @@ void ResetPokemonStorageSystem(void)
 static void LoadChooseBoxMenuGfx(struct ChooseBoxMenu *menu, u16 tileTag, u16 palTag, u8 subpriority, bool32 loadPal)
 {
     // Because loadPal is always false, the below palette is never used.
-    // The Choose Box menu instead uses the palette indicated by palTag, which is always PALTAG_MISC_1 (sHandCursor_Pal)
     struct SpritePalette palette =
     {
         sChooseBoxMenu_Pal, palTag
@@ -2846,7 +2898,7 @@ static void Task_DepositMenu(u8 taskId)
     {
     case 0:
         PrintMessage(MSG_DEPOSIT_IN_WHICH_BOX);
-        LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_1, 3, FALSE);
+        LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_2, 3, FALSE);
         CreateChooseBoxMenuSprites(sDepositBoxId);
         sStorage->state++;
         break;
@@ -3073,7 +3125,7 @@ static void Task_TakeItemForMoving(u8 taskId)
         }
         break;
     case 1:
-        StartCursorAnim(CURSOR_ANIM_OPEN);
+        StartCursorAnim(CURSOR_ANIM_MAIN);
         TakeItemFromMon(sInPartyMenu ? CURSOR_AREA_IN_PARTY : CURSOR_AREA_IN_BOX, GetCursorPosition());
         sStorage->state++;
         sJustOpenedBag = FALSE;
@@ -3081,7 +3133,7 @@ static void Task_TakeItemForMoving(u8 taskId)
     case 2:
         if (!IsItemIconAnimActive())
         {
-            StartCursorAnim(CURSOR_ANIM_FIST);
+            StartCursorAnim(CURSOR_ANIM_MAIN);
             ClearBottomWindow();
             RefreshDisplayMon();
             PrintDisplayMonInfo();
@@ -3104,7 +3156,7 @@ static void Task_GiveMovingItemToMon(u8 taskId)
         sStorage->state++;
         break;
     case 1:
-        StartCursorAnim(CURSOR_ANIM_OPEN);
+        StartCursorAnim(CURSOR_ANIM_MAIN);
         GiveItemToMon(sInPartyMenu ? CURSOR_AREA_IN_PARTY : CURSOR_AREA_IN_BOX, GetCursorPosition());
         sStorage->state++;
         break;
@@ -3196,14 +3248,14 @@ static void Task_SwitchSelectedItem(u8 taskId)
         }
         break;
     case 1:
-        StartCursorAnim(CURSOR_ANIM_OPEN);
+        StartCursorAnim(CURSOR_ANIM_MAIN);
         SwapItemsWithMon(sInPartyMenu ? CURSOR_AREA_IN_PARTY : CURSOR_AREA_IN_BOX, GetCursorPosition());
         sStorage->state++;
         break;
     case 2:
         if (!IsItemIconAnimActive())
         {
-            StartCursorAnim(CURSOR_ANIM_FIST);
+            StartCursorAnim(CURSOR_ANIM_MAIN);
             RefreshDisplayMon();
             PrintDisplayMonInfo();
             PrintMessage(MSG_CHANGED_TO_ITEM);
@@ -3467,7 +3519,7 @@ static void Task_JumpBox(u8 taskId)
     {
     case 0:
         PrintMessage(MSG_JUMP_TO_WHICH_BOX);
-        LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_1, 3, FALSE);
+        LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_CHOOSE_BOX_MENU, PALTAG_MISC_2, 3, FALSE);
         CreateChooseBoxMenuSprites(StorageGetCurrentBox());
         sStorage->state++;
         break;
@@ -3830,7 +3882,7 @@ static bool8 InitPokeStorageWindows(void)
 
 static void LoadBoxTitleFrameSpritePalette(void)
 {
-    LoadSpritePalette(&sSpritePal_BoxTitleFrame);
+    // LoadSpritePalette(&sSpritePal_BoxTitleFrame);
 }
 
 static void InitPalettesAndSprites(void)
@@ -4301,7 +4353,7 @@ static void InitCursorItemIcon(void)
     if (sMovingItemId != ITEM_NONE)
     {
         InitItemIconInCursor(sMovingItemId);
-        StartCursorAnim(CURSOR_ANIM_FIST);
+        StartCursorAnim(CURSOR_ANIM_MAIN);
     }
 }
 
@@ -4903,7 +4955,7 @@ static bool8 MoveShiftingMons(void)
         return FALSE;
 
     sStorage->shiftTimer++;
-    if (sStorage->shiftTimer & 1)
+    if ((sStorage->shiftTimer & 3) == 0)
     {
         (*sStorage->shiftMonSpritePtr)->y--;
         sStorage->movingMonSprite->y++;
@@ -5008,7 +5060,7 @@ static void SetMovingMonPriority(u8 priority)
 static void SpriteCB_HeldMon(struct Sprite *sprite)
 {
     sprite->x = sStorage->cursorSprite->x;
-    sprite->y = sStorage->cursorSprite->y + sStorage->cursorSprite->y2;
+    sprite->y = sStorage->cursorSprite->y + (sStorage->cursorSprite->y2 / 2) + 4;
 }
 
 static u16 TryLoadMonIconTiles(u16 species, u32 personality)
@@ -5474,7 +5526,7 @@ static void CreateBoxTitleFrame(u8 boxId)
     s16 y = 20;
 
     struct SpriteTemplate template = sSpriteTemplate_BoxTitleFrame;
-    template.paletteTag = PALTAG_MISC_2;
+    template.paletteTag = PALTAG_MISC_1;
 
     LoadCompressedSpriteSheet(&sSpriteSheet_BoxTitleFrame);
 
@@ -5512,7 +5564,7 @@ static void InitBoxTitle(u8 boxId)
 
     struct SpriteSheet spriteSheet = {sStorage->boxTitleTiles, 0x200, GFXTAG_BOX_TITLE};
 
-    CpuCopy16(sBoxTitleFrame_Pal, sStorage->boxTitlePal, sizeof(sStorage->boxTitlePal));
+    CpuCopy16(sCursor_Pal, sStorage->boxTitlePal, sizeof(sStorage->boxTitlePal));
 
     if (sCursorArea == CURSOR_AREA_BOX_TITLE)
     {
@@ -5527,7 +5579,7 @@ static void InitBoxTitle(u8 boxId)
         sStorage->boxTitlePal[15] = BOX_TITLE_TEXT_MAIN;
     }
     
-    tagIndex = IndexOfSpritePaletteTag(PALTAG_MISC_2);
+    tagIndex = IndexOfSpritePaletteTag(PALTAG_MISC_1);
     LoadPalette(sStorage->boxTitlePal, OBJ_PLTT_ID(tagIndex), 32);
     sStorage->wallpaperPalBits = 0x3f0;
 
@@ -6021,12 +6073,12 @@ static void SetCursorPosition(u8 newCursorArea, u8 newCursorPosition)
     if (sStorage->boxOption != OPTION_MOVE_ITEMS)
     {
         if (sStorage->inBoxMovingMode == MOVE_MODE_NORMAL && !sIsMonBeingMoved)
-            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_STILL);
+            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
     }
     else
     {
         if (!IsMovingItem())
-            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_STILL);
+            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
     }
 
     if (sStorage->boxOption == OPTION_MOVE_ITEMS)
@@ -6184,13 +6236,13 @@ static bool8 MonPlaceChange_Grab(void)
     case 0:
         if (sIsMonBeingMoved)
             return FALSE;
-        StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_OPEN);
+        StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
         sStorage->monPlaceChangeState++;
         break;
     case 1:
         if (!MonPlaceChange_CursorDown())
         {
-            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_FIST);
+            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
             MoveMon();
             sStorage->monPlaceChangeState++;
         }
@@ -6213,7 +6265,7 @@ static bool8 MonPlaceChange_Place(void)
     case 0:
         if (!MonPlaceChange_CursorDown())
         {
-            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_OPEN);
+            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
             PlaceMon();
             sStorage->monPlaceChangeState++;
         }
@@ -6248,14 +6300,14 @@ static bool8 MonPlaceChange_Shift(void)
         default:
             return FALSE;
         }
-        StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_OPEN);
+        StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
         SaveMonSpriteAtPos(sStorage->shiftBoxId, sCursorPosition);
         sStorage->monPlaceChangeState++;
         break;
     case 1:
         if (!MoveShiftingMons())
         {
-            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_FIST);
+            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
             SetShiftedMonData(sStorage->shiftBoxId, sCursorPosition);
             sStorage->monPlaceChangeState++;
         }
@@ -6452,7 +6504,7 @@ static bool8 TryStorePartyMonInBox(u8 boxId)
     if (boxId == StorageGetCurrentBox())
         CreateBoxMonIconAtPos(boxPosition);
 
-    StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_STILL);
+    StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
     return TRUE;
 }
 
@@ -6525,7 +6577,7 @@ static void ReleaseMon(void)
 static void TrySetCursorFistAnim(void)
 {
     if (sIsMonBeingMoved)
-        StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_FIST);
+        StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
 }
 
 // If the player is on the listed map (or any map, if none is specified),
@@ -7812,70 +7864,11 @@ static void CreateCursorSprites(void)
 {
     u16 x, y;
     u8 spriteId;
-    struct SpriteSheet spriteSheets[] =
-    {
-        {sHandCursor_Gfx, 0x800, GFXTAG_CURSOR},
-        {}
-    };
 
-    struct SpritePalette spritePalettes[] =
-    {
-        {sHandCursor_Pal, PALTAG_MISC_1},
-        {}
-    };
-
-    static const struct OamData sOamData_Cursor =
-    {
-        .shape = SPRITE_SHAPE(32x32),
-        .size = SPRITE_SIZE(32x32),
-        .priority = 1,
-    };
-
-    static const union AnimCmd sAnim_Cursor_Bouncing[] =
-    {
-        ANIMCMD_FRAME(0, 30),
-        ANIMCMD_FRAME(16, 30),
-        ANIMCMD_JUMP(0)
-    };
-    static const union AnimCmd sAnim_Cursor_Still[] =
-    {
-        ANIMCMD_FRAME(0, 5),
-        ANIMCMD_END
-    };
-    static const union AnimCmd sAnim_Cursor_Open[] =
-    {
-        ANIMCMD_FRAME(32, 5),
-        ANIMCMD_END
-    };
-    static const union AnimCmd sAnim_Cursor_Fist[] =
-    {
-        ANIMCMD_FRAME(48, 5),
-        ANIMCMD_END
-    };
-
-    static const union AnimCmd *const sAnims_Cursor[] =
-    {
-        [CURSOR_ANIM_BOUNCE] = sAnim_Cursor_Bouncing,
-        [CURSOR_ANIM_STILL]  = sAnim_Cursor_Still,
-        [CURSOR_ANIM_OPEN]   = sAnim_Cursor_Open,
-        [CURSOR_ANIM_FIST]   = sAnim_Cursor_Fist
-    };
-
-    static const struct SpriteTemplate sSpriteTemplate_Cursor =
-    {
-        .tileTag = GFXTAG_CURSOR,
-        .paletteTag = PALTAG_MISC_2,
-        .oam = &sOamData_Cursor,
-        .anims = sAnims_Cursor,
-        .images = NULL,
-        .affineAnims = gDummySpriteAffineAnimTable,
-        .callback = SpriteCallbackDummy,
-    };
-
-    LoadSpriteSheets(spriteSheets);
-    LoadSpritePalettes(spritePalettes);
-    sStorage->cursorPalNums[0] = IndexOfSpritePaletteTag(PALTAG_MISC_2); // White hand, normal
-    sStorage->cursorPalNums[1] = IndexOfSpritePaletteTag(PALTAG_MISC_1); // Yellow hand, when auto-action is on
+    LoadCompressedSpriteSheet(sSpriteSheet_Cursor);
+    LoadSpritePalettes(sSpritePal_Cursor);
+    sStorage->cursorPalNums[0] = IndexOfSpritePaletteTag(PALTAG_MISC_1); // Red cursor, normal
+    sStorage->cursorPalNums[1] = IndexOfSpritePaletteTag(PALTAG_MISC_2); // Blue cursor, when auto-action is on
 
     GetCursorCoordsByPos(sCursorArea, sCursorPosition, &x, &y);
     spriteId = CreateSprite(&sSpriteTemplate_Cursor, x, y, 2);
@@ -7885,7 +7878,7 @@ static void CreateCursorSprites(void)
         sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
         sStorage->cursorSprite->oam.priority = 1;
         if (sIsMonBeingMoved)
-            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_FIST);
+            StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
     }
     else
     {
@@ -8118,7 +8111,7 @@ static const struct WindowTemplate sWindowTemplate_MultiMove =
     .width = 19,
     .height = 16,
     .paletteNum = 9,
-    .baseBlock = 0x0,
+    .baseBlock = 0x1,
 };
 
 EWRAM_DATA static struct
@@ -8190,6 +8183,9 @@ static bool8 MultiMove_RunFunction(void)
     return FALSE;
 }
 
+#define MULTIMOVE_TINT_COLOR RGB(21, 31, 24) // RGB_WHITE default
+#define MULTIMOVE_TINT_COEFF 8
+
 static bool8 MultiMove_Start(void)
 {
     switch (sMultiMove->state)
@@ -8212,8 +8208,9 @@ static bool8 MultiMove_Start(void)
         SetBgAttribute(0, BG_ATTR_CHARBASEINDEX, 0);
         PutWindowTilemap(sStorage->multiMoveWindowId);
         CopyWindowToVram8Bit(sStorage->multiMoveWindowId, COPYWIN_FULL);
-        BlendPalettes(0x3F00, 8, RGB_WHITE);
-        StartCursorAnim(CURSOR_ANIM_OPEN);
+        BlendPalettes(0x3F00, MULTIMOVE_TINT_COEFF, MULTIMOVE_TINT_COLOR);
+        StartCursorAnim(CURSOR_ANIM_MAIN);
+        sStorage->cursorSprite->oam.paletteNum = IndexOfSpritePaletteTag(PALTAG_MISC_3);
         SetGpuReg(REG_OFFSET_BG0CNT, BGCNT_PRIORITY(0) | BGCNT_CHARBASE(0) | BGCNT_SCREENBASE(29) | BGCNT_256COLOR);
         sMultiMove->state++;
         break;
@@ -8240,6 +8237,7 @@ static bool8 MultiMove_Cancel(void)
     case 1:
         MultiMove_ResetBg();
         StartCursorAnim(CURSOR_ANIM_BOUNCE);
+        sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
         sMultiMove->state++;
         break;
     case 2:
@@ -8293,7 +8291,7 @@ static bool8 MultiMove_GrabSelection(void)
     case 1:
         if (!DoMonPlaceChange())
         {
-            StartCursorAnim(CURSOR_ANIM_FIST);
+            StartCursorAnim(CURSOR_ANIM_MAIN);
             MultiMove_InitMove(0, Q_8_8(1), 8);
             InitMultiMonPlaceChange(TRUE);
             sMultiMove->state++;
@@ -8335,7 +8333,7 @@ static bool8 MultiMove_PlaceMons(void)
         if (!DoMonPlaceChange() && !MultiMove_UpdateMove())
         {
             MultiMove_CreatePlacedMonIcons();
-            StartCursorAnim(CURSOR_ANIM_OPEN);
+            StartCursorAnim(CURSOR_ANIM_MAIN);
             InitMultiMonPlaceChange(TRUE);
             HideBg(0);
             sMultiMove->state++;
@@ -8345,6 +8343,7 @@ static bool8 MultiMove_PlaceMons(void)
         if (!DoMonPlaceChange())
         {
             StartCursorAnim(CURSOR_ANIM_BOUNCE);
+            sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
             MultiMove_ResetBg();
             sMultiMove->state++;
         }
