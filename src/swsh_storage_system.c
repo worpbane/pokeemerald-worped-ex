@@ -193,6 +193,7 @@ enum {
     INPUT_MULTIMOVE_UNABLE,
     INPUT_MULTIMOVE_MOVE_MONS,
     INPUT_MULTIMOVE_PLACE_MONS,
+    INPUT_TOGGLE_MON_INFO,
 };
 
 enum {
@@ -233,7 +234,6 @@ enum {
     PALTAG_MON_ICON_4, // Used implicitly in CreateMonIconSprite
     PALTAG_MON_ICON_5, // Used implicitly in CreateMonIconSprite
     PALTAG_DISPLAY_MON,
-    PALTAG_CURSOR,
     PALTAG_MISC_1,
     PALTAG_MISC_2,
     PALTAG_MISC_3,
@@ -307,6 +307,13 @@ enum {
     CHANGE_GRAB,
     CHANGE_PLACE,
     CHANGE_SHIFT,
+};
+
+// Cursor interaction modes, cycled by pressing SELECT
+enum {
+    CURSOR_MODE_NORMAL,        // Default - show menu on A press
+    CURSOR_MODE_AUTO_ACTION,   // Quick single-mon actions (no menu)
+    CURSOR_MODE_MULTI_MOVE,    // Multi-selection mode
 };
 
 // Modes for selecting and moving Pokémon in the box.
@@ -472,7 +479,7 @@ struct PokemonStorageSystemData
     u8 newCursorPosition;
     u8 cursorPrevHorizPos;
     u8 cursorFlipTimer;
-    u8 cursorPalNums[2];
+    u8 cursorPalNums[3];
     const u16 *displayMonPalette;
     u32 displayMonPersonality;
     u16 displayMonSpecies;
@@ -529,6 +536,9 @@ struct PokemonStorageSystemData
     u8 ALIGNED(4) itemIconBuffer[0x800];
     u8 wallpaperBgTilemapBuffer[0x1000];
     u8 displayMenuTilemapBuffer[0x800];
+    u16 infoTilemapBuffer[0x400];
+    bool8 showMonInfo;
+    u8 monInfoTilemapId;
 };
 
 #include "data/swsh_wallpapers.h"
@@ -550,7 +560,7 @@ EWRAM_DATA static s8 sCursorPosition = 0;
 EWRAM_DATA static bool8 sIsMonBeingMoved = 0;
 EWRAM_DATA static u8 sMovingMonOrigBoxId = 0;
 EWRAM_DATA static u8 sMovingMonOrigBoxPos = 0;
-EWRAM_DATA static bool8 sAutoActionOn = 0;
+EWRAM_DATA static u8 sCursorMode = 0;
 EWRAM_DATA static bool8 sJustOpenedBag = 0;
 EWRAM_DATA static bool8 sRefreshDisplayMonGfx = FALSE;
 
@@ -661,6 +671,7 @@ static bool8 IsMonBeingMoved(void);
 static void TryRefreshDisplayMon(void);
 static void ReshowDisplayMon(void);
 static void SetDisplayMonData(void *, u8);
+static u16 GetSpeciesAtCursorPosition(void);
 
 // Moving multiple Pokémon at once
 static void MultiMove_Free(void);
@@ -796,6 +807,10 @@ static void SetUpScrollToBox(u8);
 static bool8 ScrollToBox(void);
 static s8 DetermineBoxScrollDirection(u8);
 static void SetCurrentBox(u8);
+
+// Mon info panel
+static void ClearMonInfoTilemap(void);
+static void UpdateMonInfoTilemap(void);
 
 // Misc
 static void CreateMainMenu(u8, s16 *);
@@ -962,7 +977,7 @@ static const struct WindowTemplate sWindowTemplates[] =
         .width = 18,
         .height = 2,
         .paletteNum = 15,
-        .baseBlock = 0x14,
+        .baseBlock = 44,
     },
     [WIN_ITEM_DESC] = {
         .bg = 0,
@@ -971,7 +986,7 @@ static const struct WindowTemplate sWindowTemplates[] =
         .width = 21,
         .height = 7,
         .paletteNum = 15,
-        .baseBlock = 0x14,
+        .baseBlock = 44,
     },
     DUMMY_WIN_TEMPLATE
 };
@@ -2314,6 +2329,11 @@ static void Task_PokeStorageMain(u8 taskId)
             PlaySE(SE_SELECT);
             sStorage->state = MSTATE_MOVE_CURSOR;
             break;
+        case INPUT_TOGGLE_MON_INFO:
+            PlaySE(SE_SELECT);
+            sStorage->showMonInfo ^= 1;
+            UpdateMonInfoTilemap();
+            break;
         case INPUT_SHOW_PARTY:
             if (sStorage->boxOption != OPTION_MOVE_MONS && sStorage->boxOption != OPTION_MOVE_ITEMS)
             {
@@ -2490,6 +2510,7 @@ static void Task_PokeStorageMain(u8 taskId)
             if (sStorage->setMosaic)
                 StartDisplayMonMosaicEffect();
             sStorage->state = MSTATE_HANDLE_INPUT;
+            UpdateMonInfoTilemap();
         }
         break;
     case MSTATE_SCROLL_BOX:
@@ -2510,6 +2531,7 @@ static void Task_PokeStorageMain(u8 taskId)
             else
             {
                 sStorage->state = MSTATE_HANDLE_INPUT;
+                UpdateMonInfoTilemap();
             }
         }
         break;
@@ -4219,15 +4241,64 @@ static void UpdateBoxToSendMons(void)
 static void InitPokeStorageBg0(void)
 {
     SetGpuReg(REG_OFFSET_BG0CNT, BGCNT_PRIORITY(0) | BGCNT_CHARBASE(0) | BGCNT_SCREENBASE(29));
-    LoadUserWindowBorderGfx(WIN_MESSAGE, 2, BG_PLTT_ID(14));
-    FillBgTilemapBufferRect(0, 0, 0, 0, 32, 20, 17);
+    SetBgTilemapBuffer(0, sStorage->infoTilemapBuffer);
+    DecompressAndLoadBgGfxUsingHeap(0, sMonInfo_Gfx, 0, 0, 0);
+    LoadUserWindowBorderGfx(WIN_MESSAGE, 192, BG_PLTT_ID(14));
+    FillBgTilemapBufferRect(0, 0, 0, 0, 32, 32, 17);
+    UpdateMonInfoTilemap();
     CopyBgTilemapBufferToVram(0);
+}
+
+static void UpdateMonInfoTilemap(void)
+{
+    if (sCursorMode == CURSOR_MODE_MULTI_MOVE)
+    {
+        return;
+    }
+
+    if (sStorage->showMonInfo && GetSpeciesAtCursorPosition() != SPECIES_NONE)
+    {
+        if (sCursorArea == CURSOR_AREA_IN_BOX)
+        {
+            // Column-based positioning: columns 2-5 use left tilemap, columns 0-1 use right tilemap
+            u8 column = sCursorPosition % IN_BOX_COLUMNS;
+            if (column >= 2 && column <= 5)
+                sStorage->monInfoTilemapId = 0;
+            else
+                sStorage->monInfoTilemapId = 1;
+        }
+        else if (sCursorArea == CURSOR_AREA_IN_PARTY)
+        {
+            // Party menu always uses right tilemap
+            sStorage->monInfoTilemapId = 1;
+        }
+
+        if (sStorage->monInfoTilemapId == 0)
+            DecompressDataWithHeaderWram(sMonInfo_Left_Tilemap, sStorage->infoTilemapBuffer);
+        else
+            DecompressDataWithHeaderWram(sMonInfo_Right_Tilemap, sStorage->infoTilemapBuffer);
+    }
+    else
+    {
+        FillBgTilemapBufferRect(0, 0, 0, 0, 32, 32, 17);
+    }
+    ScheduleBgCopyTilemapToVram(0);
+}
+
+static void ClearMonInfoTilemap(void)
+{
+    if (sStorage->showMonInfo)
+    {
+        FillBgTilemapBufferRect(0, 0, 0, 0, 32, 32, 17);
+        ScheduleBgCopyTilemapToVram(0);
+    }
 }
 
 static void PrintMessage(u8 id)
 {
     u8 *txtPtr;
 
+    ClearMonInfoTilemap();
     DynamicPlaceholderTextUtil_Reset();
     switch (sMessages[id].format)
     {
@@ -4260,7 +4331,7 @@ static void PrintMessage(u8 id)
     DynamicPlaceholderTextUtil_ExpandPlaceholders(sStorage->messageText, sMessages[id].text);
     FillWindowPixelBuffer(WIN_MESSAGE, PIXEL_FILL(1));
     AddTextPrinterParameterized(WIN_MESSAGE, FONT_NORMAL, sStorage->messageText, 0, 1, TEXT_SKIP_DRAW, NULL);
-    DrawTextBorderOuter(WIN_MESSAGE, 2, 14);
+    DrawTextBorderOuter(WIN_MESSAGE, 192, 14);
     PutWindowTilemap(WIN_MESSAGE);
     CopyWindowToVram(WIN_MESSAGE, COPYWIN_GFX);
     ScheduleBgCopyTilemapToVram(0);
@@ -4268,13 +4339,15 @@ static void PrintMessage(u8 id)
 
 static void ShowYesNoWindow(s8 cursorPos)
 {
-    CreateYesNoMenu(&sYesNoWindowTemplate, 2, 14, 0);
+    ClearMonInfoTilemap();
+    CreateYesNoMenu(&sYesNoWindowTemplate, 192, 14, 0);
     Menu_MoveCursorNoWrapAround(cursorPos);
 }
 
 static void ClearBottomWindow(void)
 {
     ClearStdWindowAndFrameToTransparent(WIN_MESSAGE, FALSE);
+    UpdateMonInfoTilemap();
     ScheduleBgCopyTilemapToVram(0);
 }
 
@@ -4300,7 +4373,8 @@ static void AddWallpaperMenu(void)
     sStorage->menuWindow.tilemapLeft = 29 - sStorage->menuWindow.width;
     sStorage->menuWindow.tilemapTop = 5;
     sStorage->menuWindowId = AddWindow(&sStorage->menuWindow);
-    DrawStdFrameWithCustomTileAndPalette(sStorage->menuWindowId, FALSE, 2, 14);
+    ClearMonInfoTilemap();
+    DrawStdFrameWithCustomTileAndPalette(sStorage->menuWindowId, FALSE, 192, 14);
 
     sStorage->listMenuTemplate.items = (struct ListMenuItem *)sStorage->menuItems;
     sStorage->listMenuTemplate.moveCursorFunc = ListMenuDefaultCursorMoveFunc;
@@ -5869,7 +5943,7 @@ static void InitCursor(void)
     sIsMonBeingMoved = FALSE;
     sMovingMonOrigBoxId = 0;
     sMovingMonOrigBoxPos = 0;
-    sAutoActionOn = FALSE;
+    sCursorMode = CURSOR_MODE_NORMAL;
     ClearSavedCursorPos();
     CreateCursorSprites();
     sStorage->cursorPrevHorizPos = 1;
@@ -6226,7 +6300,11 @@ static void InitMultiMonPlaceChange(bool8 up)
 
 static bool8 DoMonPlaceChange(void)
 {
-    return sStorage->monPlaceChangeFunc();
+    if (sStorage->monPlaceChangeFunc())
+        return TRUE;
+
+    UpdateMonInfoTilemap();
+    return FALSE;
 }
 
 static bool8 MonPlaceChange_Grab(void)
@@ -7210,20 +7288,15 @@ static u8 InBoxInput_Normal(void)
             }
             break;
         }
-        else if (JOY_NEW(START_BUTTON))
-        {
-            retVal = INPUT_MOVE_CURSOR;
-            cursorArea = CURSOR_AREA_BOX_TITLE;
-            cursorPosition = 0;
-            break;
-        }
 
         if ((JOY_NEW(A_BUTTON)) && SetSelectionMenuTexts())
         {
-            if (!sAutoActionOn)
+            // Normal mode: Show menu
+            if (sCursorMode == CURSOR_MODE_NORMAL)
                 return INPUT_IN_MENU;
 
-            if (sStorage->boxOption != OPTION_MOVE_MONS || sIsMonBeingMoved == TRUE)
+            // Auto-action mode: Perform quick single-mon actions
+            if (sCursorMode == CURSOR_MODE_AUTO_ACTION)
             {
                 switch (GetMenuItemTextId(0))
                 {
@@ -7245,10 +7318,36 @@ static u8 InBoxInput_Normal(void)
                     return INPUT_SWITCH_ITEMS;
                 }
             }
-            else
+            
+            if (sCursorMode == CURSOR_MODE_MULTI_MOVE)
             {
-                sStorage->inBoxMovingMode = MOVE_MODE_MULTIPLE_SELECTING;
-                return INPUT_MULTIMOVE_START;
+                if (sStorage->boxOption == OPTION_MOVE_MONS && !sIsMonBeingMoved)
+                {
+                    sStorage->inBoxMovingMode = MOVE_MODE_MULTIPLE_SELECTING;
+                    return INPUT_MULTIMOVE_START;
+                }
+                else
+                {
+                    switch (GetMenuItemTextId(0))
+                    {
+                    case MENU_STORE:
+                        return INPUT_DEPOSIT;
+                    case MENU_WITHDRAW:
+                        return INPUT_WITHDRAW;
+                    case MENU_MOVE:
+                        return INPUT_MOVE_MON;
+                    case MENU_SHIFT:
+                        return INPUT_SHIFT_MON;
+                    case MENU_PLACE:
+                        return INPUT_PLACE_MON;
+                    case MENU_TAKE:
+                        return INPUT_TAKE_ITEM;
+                    case MENU_GIVE:
+                        return INPUT_GIVE_ITEM;
+                    case MENU_SWITCH:
+                        return INPUT_SWITCH_ITEMS;
+                    }
+                }
             }
         }
 
@@ -7509,7 +7608,7 @@ static u8 HandleInput_InParty(void)
             }
             else if (SetSelectionMenuTexts())
             {
-                if (!sAutoActionOn)
+                if (sCursorMode == CURSOR_MODE_NORMAL)
                     return INPUT_IN_MENU;
 
                 switch (GetMenuItemTextId(0))
@@ -7662,7 +7761,7 @@ static u8 HandleInput_OnButtons(void)
             break;
         }
 
-        if (JOY_REPEAT(DPAD_DOWN | START_BUTTON))
+        if (JOY_REPEAT(DPAD_DOWN))
         {
             retVal = INPUT_MOVE_CURSOR;
             cursorArea = CURSOR_AREA_BOX_TITLE;
@@ -7710,6 +7809,8 @@ static u8 HandleInput_OnButtons(void)
 
 static u8 HandleInput(void)
 {
+    if (JOY_NEW(START_BUTTON))
+        return INPUT_TOGGLE_MON_INFO;
     struct
     {
         u8 (*func)(void);
@@ -7720,7 +7821,7 @@ static u8 HandleInput(void)
         {HandleInput_InParty,   CURSOR_AREA_IN_PARTY},
         {HandleInput_OnBox,     CURSOR_AREA_BOX_TITLE},
         {HandleInput_OnButtons, CURSOR_AREA_BUTTONS},
-        {},
+        {NULL, 0},
     };
 
     u16 i = 0;
@@ -7867,15 +7968,16 @@ static void CreateCursorSprites(void)
 
     LoadCompressedSpriteSheet(sSpriteSheet_Cursor);
     LoadSpritePalettes(sSpritePal_Cursor);
-    sStorage->cursorPalNums[0] = IndexOfSpritePaletteTag(PALTAG_MISC_1); // Red cursor, normal
-    sStorage->cursorPalNums[1] = IndexOfSpritePaletteTag(PALTAG_MISC_2); // Blue cursor, when auto-action is on
+    sStorage->cursorPalNums[CURSOR_MODE_NORMAL]      = IndexOfSpritePaletteTag(PALTAG_MISC_1); // Red cursor
+    sStorage->cursorPalNums[CURSOR_MODE_AUTO_ACTION] = IndexOfSpritePaletteTag(PALTAG_MISC_2); // Blue cursor
+    sStorage->cursorPalNums[CURSOR_MODE_MULTI_MOVE]  = IndexOfSpritePaletteTag(PALTAG_MISC_3); // Green cursor
 
     GetCursorCoordsByPos(sCursorArea, sCursorPosition, &x, &y);
     spriteId = CreateSprite(&sSpriteTemplate_Cursor, x, y, 2);
     if (spriteId != MAX_SPRITES)
     {
         sStorage->cursorSprite = &gSprites[spriteId];
-        sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+        sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sCursorMode];
         sStorage->cursorSprite->oam.priority = 1;
         if (sIsMonBeingMoved)
             StartSpriteAnim(sStorage->cursorSprite, CURSOR_ANIM_MAIN);
@@ -7888,8 +7990,26 @@ static void CreateCursorSprites(void)
 
 static void ToggleCursorAutoAction(void)
 {
-    sAutoActionOn = !sAutoActionOn;
-    sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+    if (sCursorMode == CURSOR_MODE_AUTO_ACTION)
+    {
+        // Clear mon info tilemap while still in auto-action mode
+        FillBgTilemapBufferRect(0, 0, 0, 0, 32, 32, 17);
+        ScheduleBgCopyTilemapToVram(0);
+    }
+    
+    sCursorMode = (sCursorMode + 1) % 3;
+    sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sCursorMode];
+    
+    if (sCursorMode == CURSOR_MODE_NORMAL || sCursorMode == CURSOR_MODE_AUTO_ACTION)
+    {
+        // Reset any multi-move state if applicable
+        if (sStorage->inBoxMovingMode != MOVE_MODE_NORMAL)
+        {
+            sStorage->inBoxMovingMode = MOVE_MODE_NORMAL;
+        }
+        // Restore mon info
+        UpdateMonInfoTilemap();
+    }
 }
 
 static u8 GetCursorPosition(void)
@@ -7953,7 +8073,7 @@ static void InitMenu(void)
     sStorage->menuWidth = 0;
     sStorage->menuWindow.bg = 0;
     sStorage->menuWindow.paletteNum = 15;
-    sStorage->menuWindow.baseBlock = 92;
+    sStorage->menuWindow.baseBlock = 202;
 }
 
 static const u8 gPCText_Give[] = _("GIVE");
@@ -8034,8 +8154,9 @@ static void AddMenu(void)
     sStorage->menuWindow.tilemapLeft = 29 - sStorage->menuWindow.width;
     sStorage->menuWindow.tilemapTop = 15 - sStorage->menuWindow.height;
     sStorage->menuWindowId = AddWindow(&sStorage->menuWindow);
+    ClearMonInfoTilemap();
     ClearWindowTilemap(sStorage->menuWindowId);
-    DrawStdFrameWithCustomTileAndPalette(sStorage->menuWindowId, FALSE, 2, 14);
+    DrawStdFrameWithCustomTileAndPalette(sStorage->menuWindowId, FALSE, 192, 14);
     PrintMenuTable(sStorage->menuWindowId, sStorage->menuItemsCount, (void *)sStorage->menuItems);
     InitMenuInUpperLeftCornerNormal(sStorage->menuWindowId, sStorage->menuItemsCount, 0);
     ScheduleBgCopyTilemapToVram(0);
@@ -8091,6 +8212,7 @@ static void RemoveMenu(void)
 {
     ClearStdWindowAndFrameToTransparent(sStorage->menuWindowId, TRUE);
     RemoveWindow(sStorage->menuWindowId);
+    UpdateMonInfoTilemap();
 }
 
 
@@ -8192,10 +8314,15 @@ static bool8 MultiMove_Start(void)
     {
     case 0:
         HideBg(0);
-        TryLoadAllMonIconPalettesAtOffset(BG_PLTT_ID(8));
+        ClearMonInfoTilemap();
+        DmaClear16(3, (void *)(VRAM + 0x0000), 0x1000);
         sMultiMove->state++;
         break;
     case 1:
+        TryLoadAllMonIconPalettesAtOffset(BG_PLTT_ID(8));
+        sMultiMove->state++;
+        break;
+    case 2:
         GetCursorBoxColumnAndRow(&sMultiMove->fromColumn, &sMultiMove->fromRow);
         sMultiMove->toColumn = sMultiMove->fromColumn;
         sMultiMove->toRow = sMultiMove->fromRow;
@@ -8214,7 +8341,7 @@ static bool8 MultiMove_Start(void)
         SetGpuReg(REG_OFFSET_BG0CNT, BGCNT_PRIORITY(0) | BGCNT_CHARBASE(0) | BGCNT_SCREENBASE(29) | BGCNT_256COLOR);
         sMultiMove->state++;
         break;
-    case 2:
+    case 3:
         if (!IsDma3ManagerBusyWithBgCopy())
         {
             ShowBg(0);
@@ -8237,7 +8364,7 @@ static bool8 MultiMove_Cancel(void)
     case 1:
         MultiMove_ResetBg();
         StartCursorAnim(CURSOR_ANIM_BOUNCE);
-        sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+        sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sCursorMode];
         sMultiMove->state++;
         break;
     case 2:
@@ -8343,7 +8470,7 @@ static bool8 MultiMove_PlaceMons(void)
         if (!DoMonPlaceChange())
         {
             StartCursorAnim(CURSOR_ANIM_BOUNCE);
-            sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sAutoActionOn];
+            sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sCursorMode];
             MultiMove_ResetBg();
             sMultiMove->state++;
         }
@@ -8632,6 +8759,7 @@ static void MultiMove_ResetBg(void)
     SetBgAttribute(0, BG_ATTR_CHARBASEINDEX, 0);
     SetGpuReg(REG_OFFSET_BG0CNT, BGCNT_PRIORITY(0) | BGCNT_CHARBASE(0) | BGCNT_SCREENBASE(29));
     InitPokeStorageBg0();
+    UpdateMonInfoTilemap();
 }
 
 static u8 MultiMove_GetOrigin(void)
