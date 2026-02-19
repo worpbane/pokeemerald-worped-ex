@@ -567,6 +567,7 @@ struct PokemonStorageSystemData
     struct Sprite *genderIconSprite;
     struct Sprite *typeIconSprites[2];
     struct Sprite *shinyIconSprite;
+    u16 *typeIconTilesPtr[2];
     u8 ALIGNED(4) tileBuffer[MON_PIC_SIZE * MAX_MON_PIC_FRAMES];
     u8 ALIGNED(4) itemIconBuffer[0x800];
     u8 wallpaperBgTilemapBuffer[0x1000];
@@ -870,10 +871,13 @@ static void UpdateMarkingComboSprite(void);
 static void ClearBottomWindow(void);
 static void InitSupplementalTilemaps(void);
 static void UpdateGenderIconSprite(u8);
+static void UpdateTypeIconTiles(u8, void *);
+static void SpriteCB_TypeIcon(struct Sprite *);
 static void UpdateTypeIconsSprite(void);
 static void UpdateShinyIconSprite(void);
 static void HideInfoPanelSprites(void);
 static void ClearMonInfoPanel(void);
+static u16 GetTargetBg0Y(void);
 static void PrintDisplayMonStats(u8);
 static void PrintDisplayMonAbility(u8);
 static void PrintDisplayMonHeldItem(u8);
@@ -1006,7 +1010,7 @@ static const u32 sBoxTitleFrame_Gfx[]        = INCBIN_U32("graphics/pokemon_stor
 static const u32 sBoxTitleArrow_Gfx[]        = INCBIN_U32("graphics/pokemon_storage/swsh/box_title_arrow.4bpp.smol");
 static const u32 sGenderIcons_Gfx[]          = INCBIN_U32("graphics/pokemon_storage/swsh/gender_icons.4bpp.smol");
 static const u32 sShinyIcon_Gfx[]            = INCBIN_U32("graphics/pokemon_storage/swsh/shiny_icon.4bpp.smol");
-static const u32 sTypeIcons_Gfx[]            = INCBIN_U32("graphics/pokemon_storage/swsh/type_icons.4bpp.smol");
+static const ALIGNED(4) u8 sTypeIcons_Gfx[]  = INCBIN_U8("graphics/pokemon_storage/swsh/type_icons.4bpp"); // Uncompressed for DMA copy
 static const u16 sTypeIcons_Pal[]            = INCBIN_U16("graphics/pokemon_storage/swsh/type_icons.gbapal");
 static const u16 sMarkings_Pal[]             = INCBIN_U16("graphics/pokemon_storage/swsh/markings.gbapal");
 
@@ -1636,119 +1640,12 @@ static const struct OamData sOamData_TypeIcons =
     .affineParam = 0,
 };
 
-static const union AnimCmd sSpriteAnim_TypeNone[] = {
-    ANIMCMD_FRAME(TYPE_NONE * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeNormal[] = {
-    ANIMCMD_FRAME(TYPE_NORMAL * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeFighting[] = {
-    ANIMCMD_FRAME(TYPE_FIGHTING * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeFlying[] = {
-    ANIMCMD_FRAME(TYPE_FLYING * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypePoison[] = {
-    ANIMCMD_FRAME(TYPE_POISON * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeGround[] = {
-    ANIMCMD_FRAME(TYPE_GROUND * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeRock[] = {
-    ANIMCMD_FRAME(TYPE_ROCK * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeBug[] = {
-    ANIMCMD_FRAME(TYPE_BUG * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeGhost[] = {
-    ANIMCMD_FRAME(TYPE_GHOST * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeSteel[] = {
-    ANIMCMD_FRAME(TYPE_STEEL * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeMystery[] = {
-    ANIMCMD_FRAME(TYPE_MYSTERY * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeFire[] = {
-    ANIMCMD_FRAME(TYPE_FIRE * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeWater[] = {
-    ANIMCMD_FRAME(TYPE_WATER * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeGrass[] = {
-    ANIMCMD_FRAME(TYPE_GRASS * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeElectric[] = {
-    ANIMCMD_FRAME(TYPE_ELECTRIC * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypePsychic[] = {
-    ANIMCMD_FRAME(TYPE_PSYCHIC * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeIce[] = {
-    ANIMCMD_FRAME(TYPE_ICE * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeDragon[] = {
-    ANIMCMD_FRAME(TYPE_DRAGON * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeDark[] = {
-    ANIMCMD_FRAME(TYPE_DARK * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeFairy[] = {
-    ANIMCMD_FRAME(TYPE_FAIRY * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_TypeStellar[] = {
-    ANIMCMD_FRAME(TYPE_STELLAR * 8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-
-static const union AnimCmd *const sSpriteAnimTable_TypeIcons[NUMBER_OF_MON_TYPES] = {
-    [TYPE_NONE]     = sSpriteAnim_TypeNone,
-    [TYPE_NORMAL]   = sSpriteAnim_TypeNormal,
-    [TYPE_FIGHTING] = sSpriteAnim_TypeFighting,
-    [TYPE_FLYING]   = sSpriteAnim_TypeFlying,
-    [TYPE_POISON]   = sSpriteAnim_TypePoison,
-    [TYPE_GROUND]   = sSpriteAnim_TypeGround,
-    [TYPE_ROCK]     = sSpriteAnim_TypeRock,
-    [TYPE_BUG]      = sSpriteAnim_TypeBug,
-    [TYPE_GHOST]    = sSpriteAnim_TypeGhost,
-    [TYPE_STEEL]    = sSpriteAnim_TypeSteel,
-    [TYPE_MYSTERY]  = sSpriteAnim_TypeMystery,
-    [TYPE_FIRE]     = sSpriteAnim_TypeFire,
-    [TYPE_WATER]    = sSpriteAnim_TypeWater,
-    [TYPE_GRASS]    = sSpriteAnim_TypeGrass,
-    [TYPE_ELECTRIC] = sSpriteAnim_TypeElectric,
-    [TYPE_PSYCHIC]  = sSpriteAnim_TypePsychic,
-    [TYPE_ICE]      = sSpriteAnim_TypeIce,
-    [TYPE_DRAGON]   = sSpriteAnim_TypeDragon,
-    [TYPE_DARK]     = sSpriteAnim_TypeDark,
-    [TYPE_FAIRY]    = sSpriteAnim_TypeFairy,
-    [TYPE_STELLAR]  = sSpriteAnim_TypeStellar,
-};
-
-static const struct CompressedSpriteSheet sSpriteSheet_TypeIcons =
+// Type icons now use DMA copy instead of animations to save VRAM (only loads 2 slots instead of all 21 types)
+// Uncompressed sprite sheet (only 2 slots loaded to save VRAM)
+static const struct SpriteSheet sSpriteSheet_TypeIcons =
 {
     .data = sTypeIcons_Gfx,
-    .size = (NUMBER_OF_MON_TYPES) * 0x100,
+    .size = 2 * 0x100, // Only load 2 type icon slots (saves 4.75 KB VRAM)
     .tag = GFXTAG_TYPE_ICON,
 };
 
@@ -1757,7 +1654,7 @@ static const struct SpriteTemplate sSpriteTemplate_TypeIcons =
     .tileTag = GFXTAG_TYPE_ICON,
     .paletteTag = PALTAG_TYPE_ICON,
     .oam = &sOamData_TypeIcons,
-    .anims = sSpriteAnimTable_TypeIcons,
+    .anims = gDummySpriteAnimTable,
     .images = NULL,
     .affineAnims = gDummySpriteAffineAnimTable,
     .callback = SpriteCallbackDummy
@@ -2703,6 +2600,7 @@ static void Task_ReshowPokeStorage(u8 taskId)
 enum {
     MSTATE_HANDLE_INPUT,
     MSTATE_MOVE_CURSOR,
+    MSTATE_HIDE_PANEL_SPRITES,
     MSTATE_SCROLL_BOX,
     MSTATE_WAIT_MSG,
     MSTATE_ERROR_LAST_PARTY_MON,
@@ -2905,11 +2803,26 @@ static void Task_PokeStorageMain(u8 taskId)
             else
                 StopFlashingCloseBoxButton();
 
-            UpdateMonInfoTilemap();
-            if (sStorage->setMosaic)
-                StartDisplayMonMosaicEffect();
-            sStorage->state = MSTATE_HANDLE_INPUT;
+            u16 targetBg0Y = GetTargetBg0Y();
+            if (targetBg0Y != sStorage->bg0_Y && targetBg0Y != 0 && sStorage->bg0_Y != 0)
+            {
+                HideInfoPanelSprites();
+                sStorage->state = MSTATE_HIDE_PANEL_SPRITES;
+            }
+            else
+            {
+                UpdateMonInfoTilemap();
+                if (sStorage->setMosaic)
+                    StartDisplayMonMosaicEffect();
+                sStorage->state = MSTATE_HANDLE_INPUT;
+            }
         }
+        break;
+    case MSTATE_HIDE_PANEL_SPRITES:
+        UpdateMonInfoTilemap();
+        if (sStorage->setMosaic)
+            StartDisplayMonMosaicEffect();
+        sStorage->state = MSTATE_HANDLE_INPUT;
         break;
     case MSTATE_SCROLL_BOX:
         if (!ScrollToBox())
@@ -4334,8 +4247,8 @@ static void InitPalettesAndSprites(void)
     // Load type icon palettes to obj pals 13-15
     LoadPalette(sTypeIcons_Pal, OBJ_PLTT_ID(13), 3 * PLTT_SIZE_4BPP);
 
-    // Load type icon sprite sheet
-    LoadCompressedSpriteSheet(&sSpriteSheet_TypeIcons);
+    // Load type icon sprite sheet (only 2 slots)
+    LoadSpriteSheet(&sSpriteSheet_TypeIcons);
 
     // NOTE: Disabled old info panel sprites
     // CreateDisplayMonSprite();
@@ -4566,6 +4479,26 @@ static void UpdateShinyIconSprite(void)
     }
 }
 
+static void UpdateTypeIconTiles(u8 typeId, void *dest)
+{
+    u32 offset = (typeId + 1) * 0x100; // +1 to skip placeholder tiles at start of graphics
+    RequestDma3Copy(&sTypeIcons_Gfx[offset], dest, 0x100, 0x10);
+}
+
+// Sprite callback to update tiles during VBlank (syncs with OAM palette updates)
+static void SpriteCB_TypeIcon(struct Sprite *sprite)
+{
+    // sprite->data[0] = type ID to load
+    // sprite->data[1] = sprite index (0 or 1)
+    if (sprite->data[0] != 0xFF)
+    {
+        u8 typeId = sprite->data[0];
+        u8 index = sprite->data[1];
+        UpdateTypeIconTiles(typeId, sStorage->typeIconTilesPtr[index]);
+        sprite->data[0] = 0xFF;
+    }
+}
+
 static void UpdateTypeIconsSprite(void)
 {
     u16 species = sStorage->displayMon.species;
@@ -4602,6 +4535,9 @@ static void UpdateTypeIconsSprite(void)
     if (sStorage->typeIconSprites[0] == NULL)
     {
         sStorage->typeIconSprites[0] = &gSprites[CreateSprite(&sSpriteTemplate_TypeIcons, spriteX1, spriteY, 0)];
+        sStorage->typeIconTilesPtr[0] = (void *) OBJ_VRAM0 + 32 * GetSpriteTileStartByTag(GFXTAG_TYPE_ICON);
+        sStorage->typeIconSprites[0]->callback = SpriteCB_TypeIcon;
+        sStorage->typeIconSprites[0]->data[1] = 0;
     }
     else
     {
@@ -4609,9 +4545,9 @@ static void UpdateTypeIconsSprite(void)
         sStorage->typeIconSprites[0]->y = spriteY;
     }
 
-    StartSpriteAnim(sStorage->typeIconSprites[0], type1);
     if (type1 < NUMBER_OF_MON_TYPES)
         sStorage->typeIconSprites[0]->oam.paletteNum = gTypesInfo[type1].palette;
+    sStorage->typeIconSprites[0]->data[0] = type1;
     sStorage->typeIconSprites[0]->invisible = FALSE;
 
     if (!sStorage->displayMon.isEgg && type1 != type2)
@@ -4619,6 +4555,10 @@ static void UpdateTypeIconsSprite(void)
         if (sStorage->typeIconSprites[1] == NULL)
         {
             sStorage->typeIconSprites[1] = &gSprites[CreateSprite(&sSpriteTemplate_TypeIcons, spriteX2, spriteY, 0)];
+            sStorage->typeIconTilesPtr[1] = (void *) OBJ_VRAM0 + 32 * (GetSpriteTileStartByTag(GFXTAG_TYPE_ICON) + 8);
+            sStorage->typeIconSprites[1]->oam.tileNum += 8;
+            sStorage->typeIconSprites[1]->callback = SpriteCB_TypeIcon;
+            sStorage->typeIconSprites[1]->data[1] = 1;
         }
         else
         {
@@ -4626,9 +4566,10 @@ static void UpdateTypeIconsSprite(void)
             sStorage->typeIconSprites[1]->y = spriteY;
         }
 
-        StartSpriteAnim(sStorage->typeIconSprites[1], type2);
+        // Update palette and queue tile update for VBlank (via callback)
         if (type2 < NUMBER_OF_MON_TYPES)
             sStorage->typeIconSprites[1]->oam.paletteNum = gTypesInfo[type2].palette;
+        sStorage->typeIconSprites[1]->data[0] = type2;
         sStorage->typeIconSprites[1]->invisible = FALSE;
     }
     else if (sStorage->typeIconSprites[1] != NULL)
@@ -5029,13 +4970,28 @@ static bool8 DoShowPartyMenu(void)
     case 1:
         if (!UpdateCursorPos())
         {
-            UpdateMonInfoTilemap();
-            if (sStorage->setMosaic)
-                StartDisplayMonMosaicEffect();
-            sStorage->showPartyMenuState++;
+            u16 targetBg0Y = GetTargetBg0Y();
+            if (targetBg0Y != sStorage->bg0_Y && targetBg0Y != 0 && sStorage->bg0_Y != 0)
+            {
+                HideInfoPanelSprites();
+                sStorage->showPartyMenuState++;
+            }
+            else
+            {
+                UpdateMonInfoTilemap();
+                if (sStorage->setMosaic)
+                    StartDisplayMonMosaicEffect();
+                sStorage->showPartyMenuState += 2;
+            }
         }
         break;
     case 2:
+        UpdateMonInfoTilemap();
+        if (sStorage->setMosaic)
+            StartDisplayMonMosaicEffect();
+        sStorage->showPartyMenuState++;
+        break;
+    case 3:
         return FALSE;
     }
     return TRUE;
@@ -5060,6 +5016,29 @@ static void InitPokeStorageBg0(void)
     sStorage->bg0_Y = 0;
     UpdateMonInfoTilemap();
     CopyBgTilemapBufferToVram(0);
+}
+
+static u16 GetTargetBg0Y(void)
+{
+    if (sCursorMode == CURSOR_MODE_MULTI_MOVE)
+        return 0;
+
+    if (sStorage->showMonInfo && (GetSpeciesAtCursorPosition() != SPECIES_NONE || sIsMonBeingMoved))
+    {
+        if (sCursorArea == CURSOR_AREA_IN_BOX)
+        {
+            u8 column = sCursorPosition % IN_BOX_COLUMNS;
+            if (column >= 2 && column <= 5)
+                return DISPLAY_HEIGHT;
+            else
+                return DISPLAY_HEIGHT * 2;
+        }
+        else if (sCursorArea == CURSOR_AREA_IN_PARTY)
+        {
+            return DISPLAY_HEIGHT * 2;
+        }
+    }
+    return 0;
 }
 
 static void UpdateMonInfoTilemap(void)
