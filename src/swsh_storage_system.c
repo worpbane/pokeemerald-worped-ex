@@ -7005,6 +7005,13 @@ static u8 InBoxInput_Normal(void)
             }
             else
             {
+                if (sStorage->boxOption == OPTION_WITHDRAW)
+                {
+                    u8 row = sCursorPosition / IN_BOX_COLUMNS;
+                    cursorPosition = row * IN_BOX_COLUMNS + (IN_BOX_COLUMNS - 1);
+                    sStorage->cursorHorizontalWrap = 1;
+                    break;
+                }
                 // Go to party
                 cursorArea = CURSOR_AREA_IN_PARTY;
                 if (sCursorPosition / IN_BOX_COLUMNS == 0)
@@ -7026,6 +7033,13 @@ static u8 InBoxInput_Normal(void)
             }
             else
             {
+                if (sStorage->boxOption == OPTION_WITHDRAW)
+                {
+                    u8 row = sCursorPosition / IN_BOX_COLUMNS;
+                    cursorPosition = row * IN_BOX_COLUMNS;
+                    sStorage->cursorHorizontalWrap = 1;
+                    break;
+                }
                 // Wraparound to party
                 cursorArea = CURSOR_AREA_IN_PARTY;
                 if (sCursorPosition / IN_BOX_COLUMNS == 0)
@@ -7327,6 +7341,9 @@ static u8 HandleInput_InParty(void)
         }
         else if (JOY_REPEAT(DPAD_LEFT))
         {
+            if (sStorage->boxOption == OPTION_DEPOSIT)
+                break;
+
             retVal = INPUT_MOVE_CURSOR;
             cursorArea = CURSOR_AREA_IN_BOX;
             
@@ -7345,6 +7362,9 @@ static u8 HandleInput_InParty(void)
         }
         else if (JOY_REPEAT(DPAD_RIGHT))
         {
+            if (sStorage->boxOption == OPTION_DEPOSIT)
+                break;
+
             retVal = INPUT_MOVE_CURSOR;
             cursorArea = CURSOR_AREA_IN_BOX;
             
