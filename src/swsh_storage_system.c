@@ -1773,27 +1773,8 @@ static void Task_ReshowPokeStorage(u8 taskId)
     case 1:
         if (!UpdatePaletteFade())
         {
-            if (sWhichToReshow == SCREEN_CHANGE_ITEM_FROM_BAG - 1 && gSpecialVar_ItemId != ITEM_NONE)
-            {
-                PrintMessage(MSG_ITEM_IS_HELD);
-                sStorage->state++;
-            }
-            else
-            {
-                SetPokeStorageTask(Task_PokeStorageMain);
-            }
-        }
-        break;
-    case 2:
-        if (!IsDma3ManagerBusyWithBgCopy() && JOY_NEW(A_BUTTON | B_BUTTON))
-        {
-            ClearBottomWindow();
-            sStorage->state++;
-        }
-        break;
-    case 3:
-        if (!IsDma3ManagerBusyWithBgCopy())
             SetPokeStorageTask(Task_PokeStorageMain);
+        }
         break;
     }
 }
@@ -2783,20 +2764,8 @@ static void Task_GiveMovingItemToMon(u8 taskId)
     case 3:
         if (PrintDisplayMonInfo())
         {
-            PrintMessage(MSG_ITEM_IS_HELD);
-            sStorage->state++;
-        }
-        break;
-    case 4:
-        if (JOY_NEW(A_BUTTON | B_BUTTON | DPAD_ANY))
-        {
-            ClearBottomWindow();
-            sStorage->state++;
-        }
-        break;
-    case 5:
-        if (!IsDma3ManagerBusyWithBgCopy())
             SetPokeStorageTask(Task_PokeStorageMain);
+        }
         break;
     }
 }
@@ -2885,20 +2854,8 @@ static void Task_SwitchSelectedItem(u8 taskId)
     case 3:
         if (PrintDisplayMonInfo())
         {
-            PrintMessage(MSG_CHANGED_TO_ITEM);
-            sStorage->state++;
-        }
-        break;
-    case 4:
-        if (JOY_NEW(A_BUTTON | B_BUTTON | DPAD_ANY))
-        {
-            ClearBottomWindow();
-            sStorage->state++;
-        }
-        break;
-    case 5:
-        if (!IsDma3ManagerBusyWithBgCopy())
             SetPokeStorageTask(Task_PokeStorageMain);
+        }
         break;
     }
 }
