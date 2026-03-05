@@ -250,10 +250,12 @@ static EWRAM_DATA struct PokemonSummaryScreenData
     u8 unk_filler4[2];
 } *sMonSummaryScreen = NULL;
 
+EWRAM_DATA u8 gLastViewedMonIndex = 0;
 static EWRAM_DATA u8 sMoveSlotToReplace = 0;
 ALIGNED(4) static EWRAM_DATA u8 sAnimDelayTaskId = 0;
 ALIGNED(4) static EWRAM_DATA u8 sShadowAnimDelayTaskId = 0;
 static EWRAM_DATA u8 sStringVar5[8] = {0};
+EWRAM_DATA MainCallback gInitialSummaryScreenCallback = NULL;
 
 // forward declarations
 static bool8 LoadGraphics(void);
@@ -524,14 +526,14 @@ static const u8 *const sMonCharacteristicTable[MON_CHARACTERISTIC_COUNT] = {
 };
 
 // bg gfx
-const u32 sSummaryScreen_Gfx[]                      = INCBIN_U32("graphics/summary_screen/swsh/tiles.4bpp.lz");
+const u32 sSummaryScreen_Gfx[]                      = INCBIN_U32("graphics/summary_screen/swsh/tiles.4bpp.smol");
 const u16 sSummaryScreen_Pal[]                      = INCBIN_U16("graphics/summary_screen/swsh/tiles.gbapal");
-const u32 sSummaryPage_ScrollBG_Tilemap[]           = INCBIN_U32("graphics/summary_screen/swsh/scroll_bg.bin.lz");
-const u32 sSummaryPage_Info_Tilemap[]               = INCBIN_U32("graphics/summary_screen/swsh/page_info.bin.lz");
-const u32 sSummaryPage_Skills_Tilemap[]             = INCBIN_U32("graphics/summary_screen/swsh/page_skills.bin.lz");
-const u32 sSummaryPage_BattleMoves_Tilemap[]        = INCBIN_U32("graphics/summary_screen/swsh/page_battle_moves.bin.lz");
-const u32 sSummaryPage_Memo_Tilemap[]               = INCBIN_U32("graphics/summary_screen/swsh/page_memo.bin.lz");
-const u32 sSummaryEffect_Battle_Tilemap[]           = INCBIN_U32("graphics/summary_screen/swsh/effect_battle.bin.lz");
+const u32 sSummaryPage_ScrollBG_Tilemap[]           = INCBIN_U32("graphics/summary_screen/swsh/scroll_bg.bin.smolTM");
+const u32 sSummaryPage_Info_Tilemap[]               = INCBIN_U32("graphics/summary_screen/swsh/page_info.bin.smolTM");
+const u32 sSummaryPage_Skills_Tilemap[]             = INCBIN_U32("graphics/summary_screen/swsh/page_skills.bin.smolTM");
+const u32 sSummaryPage_BattleMoves_Tilemap[]        = INCBIN_U32("graphics/summary_screen/swsh/page_battle_moves.bin.smolTM");
+const u32 sSummaryPage_Memo_Tilemap[]               = INCBIN_U32("graphics/summary_screen/swsh/page_memo.bin.smolTM");
+const u32 sSummaryEffect_Battle_Tilemap[]           = INCBIN_U32("graphics/summary_screen/swsh/effect_battle.bin.smolTM");
 const u16 sSummaryScreen_PPTextPalette[]            = INCBIN_U16("graphics/summary_screen/swsh/text_pp.gbapal");
 
 // sprite gfx
@@ -542,39 +544,39 @@ static const u8 sButtons_Gfx[][4 * TILE_SIZE_4BPP] = {
 };
 
 #if SWSH_SUMMARY_SWSH_TYPE_ICONS == TRUE
-    static const u32 sMoveTypes_Gfx[] = INCBIN_U32("graphics/types_swsh_summary_screen/move_types.4bpp.lz");
+    static const u32 sMoveTypes_Gfx[] = INCBIN_U32("graphics/types_swsh_summary_screen/move_types.4bpp.smol");
     #if SWSH_SUMMARY_SWSH_TYPE_ICONS_SV_PAL == TRUE
         static const u16 sMoveTypes_Pal[] = INCBIN_U16("graphics/types_swsh_summary_screen/move_types_sv.gbapal");
     #else
         static const u16 sMoveTypes_Pal[] = INCBIN_U16("graphics/types_swsh_summary_screen/move_types.gbapal");
     #endif
 #endif
-static const u32 sTeraTypes_Gfx[]                   = INCBIN_U32("graphics/types_swsh_summary_screen/tera/tera_types_swsh.4bpp.lz");
-static const u32 sHeldItemBox_Gfx[]                 = INCBIN_U32("graphics/summary_screen/swsh/held_item_box.4bpp.lz");
+static const u32 sTeraTypes_Gfx[]                   = INCBIN_U32("graphics/types_swsh_summary_screen/tera/tera_types_swsh.4bpp.smol");
+static const u32 sHeldItemBox_Gfx[]                 = INCBIN_U32("graphics/summary_screen/swsh/held_item_box.4bpp.smol");
 static const u16 sHeldItemBox_Pal[]                 = INCBIN_U16("graphics/summary_screen/swsh/held_item_box.gbapal");
-static const u32 sAbilityBox_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/ability_box.4bpp.lz");
-static const u32 sMoveSelect_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/move_select.4bpp.lz");
+static const u32 sAbilityBox_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/ability_box.4bpp.smol");
+static const u32 sMoveSelect_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/move_select.4bpp.smol");
 static const u16 sMarkings_Pal[]                    = INCBIN_U16("graphics/summary_screen/swsh/markings.gbapal");
-static const u32 sShinyIcon_Gfx[]                   = INCBIN_U32("graphics/summary_screen/swsh/shiny_icon.4bpp.lz");
-static const u32 sPokerusCuredIcon_Gfx[]            = INCBIN_U32("graphics/summary_screen/swsh/pokerus_cured_icon.4bpp.lz");
-static const u32 sGenderGfx_Icons[]                 = INCBIN_U32("graphics/summary_screen/swsh/gender_icons.4bpp.lz");
+static const u32 sShinyIcon_Gfx[]                   = INCBIN_U32("graphics/summary_screen/swsh/shiny_icon.4bpp.smol");
+static const u32 sPokerusCuredIcon_Gfx[]            = INCBIN_U32("graphics/summary_screen/swsh/pokerus_cured_icon.4bpp.smol");
+static const u32 sGenderGfx_Icons[]                 = INCBIN_U32("graphics/summary_screen/swsh/gender_icons.4bpp.smol");
 static const u16 sGenderPal_Icons[]                 = INCBIN_U16("graphics/summary_screen/swsh/gender_icons.gbapal");
 static const u16 sCategoryIcons_Pal[]               = INCBIN_U16("graphics/summary_screen/swsh/category_icons.gbapal");
-static const u32 sCategoryIcons_Gfx[]               = INCBIN_U32("graphics/summary_screen/swsh/category_icons.4bpp.lz");
+static const u32 sCategoryIcons_Gfx[]               = INCBIN_U32("graphics/summary_screen/swsh/category_icons.4bpp.smol");
 static const u16 sFriendshipIcon_Pal[]              = INCBIN_U16("graphics/summary_screen/swsh/heart.gbapal");
-static const u32 sFriendshipIcon_Gfx[]              = INCBIN_U32("graphics/summary_screen/swsh/heart.4bpp.lz");
+static const u32 sFriendshipIcon_Gfx[]              = INCBIN_U32("graphics/summary_screen/swsh/heart.4bpp.smol");
 // rave note: yeah I know doing this with a sprite is mad jank, but I promise I have my reasons
 // mont note: it is maaad jank, but it works, we promise
-static const u32 sRelearnPrompt_Gfx[]               = INCBIN_U32("graphics/summary_screen/swsh/relearn_prompt.4bpp.lz");
-static const u32 sRelearnPromptSwitch_Gfx[]         = INCBIN_U32("graphics/summary_screen/swsh/relearn_prompt_switch.4bpp.lz");
-static const u32 sLRButton_Gfx[]                    = INCBIN_U32("graphics/summary_screen/swsh/lr_button.4bpp.lz");
-static const u32 sInfoPrompt_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/info_prompt.4bpp.lz");
-static const u32 sDynamaxBox_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/dynamax_box.4bpp.lz");
-static const u32 sDynamaxLevels_Gfx[]               = INCBIN_U32("graphics/summary_screen/swsh/dynamax_levels.4bpp.lz");
-static const u32 sGigantamaxIcon_Gfx[]              = INCBIN_U32("graphics/summary_screen/swsh/gigantamax.4bpp.lz");
+static const u32 sRelearnPrompt_Gfx[]               = INCBIN_U32("graphics/summary_screen/swsh/relearn_prompt.4bpp.smol");
+static const u32 sRelearnPromptSwitch_Gfx[]         = INCBIN_U32("graphics/summary_screen/swsh/relearn_prompt_switch.4bpp.smol");
+static const u32 sLRButton_Gfx[]                    = INCBIN_U32("graphics/summary_screen/swsh/lr_button.4bpp.smol");
+static const u32 sInfoPrompt_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/info_prompt.4bpp.smol");
+static const u32 sDynamaxBox_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/dynamax_box.4bpp.smol");
+static const u32 sDynamaxLevels_Gfx[]               = INCBIN_U32("graphics/summary_screen/swsh/dynamax_levels.4bpp.smol");
+static const u32 sGigantamaxIcon_Gfx[]              = INCBIN_U32("graphics/summary_screen/swsh/gigantamax.4bpp.smol");
 
 #if SWSH_SUMMARY_SWSH_STATUS_ICONS == TRUE
-static const u32 sStatusGfx_Icons[]                 = INCBIN_U32("graphics/summary_screen/swsh/status_icons.4bpp.lz");
+static const u32 sStatusGfx_Icons[]                 = INCBIN_U32("graphics/summary_screen/swsh/status_icons.4bpp.smol");
 static const u16 sStatusPal_Icons[]                 = INCBIN_U16("graphics/summary_screen/swsh/status_icons.gbapal");
 #endif
 
@@ -867,7 +869,68 @@ enum SwShCategoryIcon
     CATEGORY_ICON_STATUS,
 };
 
+// ===============================================
+// Vanilla Category Icons (for battle_interface, move_relearner)
+// ===============================================
+
 static const struct OamData sOamData_CategoryIcons =
+{
+    .size = SPRITE_SIZE(16x16),
+    .shape = SPRITE_SHAPE(16x16),
+    .priority = 0,
+};
+
+const struct CompressedSpriteSheet gSpriteSheet_CategoryIcons =
+{
+    .data = gCategoryIcons_Gfx,
+    .size = 16*16*3/2,
+    .tag = TAG_CATEGORY_ICONS,
+};
+
+const struct SpritePalette gSpritePal_CategoryIcons =
+{
+    .data = gCategoryIcons_Pal,
+    .tag = TAG_CATEGORY_ICONS
+};
+
+static const union AnimCmd sSpriteAnim_CategoryPhysical[] =
+{
+    ANIMCMD_FRAME(0, 0),
+    ANIMCMD_END
+};
+
+static const union AnimCmd sSpriteAnim_CategorySpecial[] =
+{
+    ANIMCMD_FRAME(4, 0),
+    ANIMCMD_END
+};
+
+static const union AnimCmd sSpriteAnim_CategoryStatus[] =
+{
+    ANIMCMD_FRAME(8, 0),
+    ANIMCMD_END
+};
+
+static const union AnimCmd *const sSpriteAnimTable_CategoryIcons[] =
+{
+    sSpriteAnim_CategoryPhysical,
+    sSpriteAnim_CategorySpecial,
+    sSpriteAnim_CategoryStatus,
+};
+
+const struct SpriteTemplate gSpriteTemplate_CategoryIcons =
+{
+    .tileTag = TAG_CATEGORY_ICONS,
+    .paletteTag = TAG_CATEGORY_ICONS,
+    .oam = &sOamData_CategoryIcons,
+    .anims = sSpriteAnimTable_CategoryIcons,
+};
+
+// ===============================================
+// SWSH Custom Category Icons (local to summary screen only)
+// ===============================================
+
+static const struct OamData sOamData_CategoryIcons_SwSh =
 {
     .size = SPRITE_SIZE(32x16),
     .shape = SPRITE_SHAPE(32x16),
@@ -887,40 +950,37 @@ static const struct SpritePalette sSpritePal_CategoryIcons =
     .tag = TAG_CATEGORY_ICONS
 };
 
-static const union AnimCmd sSpriteAnim_CategoryPhysical[] =
+static const union AnimCmd sSpriteAnim_CategoryPhysical_SwSh[] =
 {
     ANIMCMD_FRAME(0, 0),
     ANIMCMD_END
 };
 
-static const union AnimCmd sSpriteAnim_CategorySpecial[] =
+static const union AnimCmd sSpriteAnim_CategorySpecial_SwSh[] =
 {
     ANIMCMD_FRAME(8, 0),
     ANIMCMD_END
 };
 
-static const union AnimCmd sSpriteAnim_CategoryStatus[] =
+static const union AnimCmd sSpriteAnim_CategoryStatus_SwSh[] =
 {
     ANIMCMD_FRAME(16, 0),
     ANIMCMD_END
 };
 
-static const union AnimCmd *const sSpriteAnimTable_CategoryIcons[] =
+static const union AnimCmd *const sSpriteAnimTable_CategoryIcons_SwSh[] =
 {
-    [CATEGORY_ICON_PHYSICAL] = sSpriteAnim_CategoryPhysical,
-    [CATEGORY_ICON_SPECIAL] = sSpriteAnim_CategorySpecial,
-    [CATEGORY_ICON_STATUS] = sSpriteAnim_CategoryStatus,
+    [CATEGORY_ICON_PHYSICAL] = sSpriteAnim_CategoryPhysical_SwSh,
+    [CATEGORY_ICON_SPECIAL]  = sSpriteAnim_CategorySpecial_SwSh,
+    [CATEGORY_ICON_STATUS]   = sSpriteAnim_CategoryStatus_SwSh,
 };
 
 static const struct SpriteTemplate sSpriteTemplate_CategoryIcons =
 {
     .tileTag = TAG_CATEGORY_ICONS,
     .paletteTag = TAG_CATEGORY_ICONS,
-    .oam = &sOamData_CategoryIcons,
-    .anims = sSpriteAnimTable_CategoryIcons,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
+    .oam = &sOamData_CategoryIcons_SwSh,
+    .anims = sSpriteAnimTable_CategoryIcons_SwSh,
 };
 
 static const struct OamData sOamData_RelearnPrompt =
@@ -942,10 +1002,6 @@ static const struct SpriteTemplate sSpriteTemplate_RelearnPrompt =
     .tileTag = TAG_RELEARN_PROMPT,
     .paletteTag = TAG_MON_MARKINGS,
     .oam = &sOamData_RelearnPrompt,
-    .anims = gDummySpriteAnimTable,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_RelearnPromptSwitch =
@@ -1000,9 +1056,6 @@ static const struct SpriteTemplate sSpriteTemplate_RelearnPromptSwitch =
     .paletteTag = TAG_MON_MARKINGS,
     .oam = &sOamData_RelearnPromptSwitch,
     .anims = sSpriteAnimTable_RelearnPromptSwitch,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_LRButton =
@@ -1024,10 +1077,6 @@ static const struct SpriteTemplate sSpriteTemplate_LRButton =
     .tileTag = TAG_LR_BUTTON,
     .paletteTag = TAG_MON_MARKINGS,
     .oam = &sOamData_LRButton,
-    .anims = gDummySpriteAnimTable,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_InfoPrompt =
@@ -1049,10 +1098,6 @@ static const struct SpriteTemplate sSpriteTemplate_InfoPrompt =
     .tileTag = TAG_INFO_PROMPT,
     .paletteTag = TAG_MON_MARKINGS,
     .oam = &sOamData_InfoPrompt,
-    .anims = gDummySpriteAnimTable,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 enum FriendshipLevels
@@ -1144,9 +1189,6 @@ static const struct SpriteTemplate sSpriteTemplate_FriendshipIcon =
     .paletteTag = TAG_FRIENDSHIP_ICON,
     .oam = &sOamData_FriendshipIcon,
     .anims = sSpriteAnimTable_FriendshipIcon,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_MoveTypes =
@@ -1293,9 +1335,6 @@ static const struct SpriteTemplate sSpriteTemplate_MoveTypes =
     .paletteTag = TAG_MOVE_TYPES,
     .oam = &sOamData_MoveTypes,
     .anims = sSpriteAnimTable_MoveTypes,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const union AnimCmd sSpriteAnim_TeraTypeNone[] = {
@@ -1437,9 +1476,6 @@ static const struct SpriteTemplate sSpriteTemplate_TeraType =
     .paletteTag = TAG_TERA_TYPE,
     .oam = &sOamData_TeraType,
     .anims = sSpriteAnimTable_TeraType,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_MoveSelector =
@@ -1528,9 +1564,6 @@ static const struct SpriteTemplate sMoveSelectorSpriteTemplate =
     .paletteTag = TAG_HELD_ITEM_BOX,
     .oam = &sOamData_MoveSelector,
     .anims = sSpriteAnimTable_MoveSelector,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_HeldItemBox =
@@ -1602,9 +1635,6 @@ static const struct SpriteTemplate sSpriteTemplate_HeldItemBox =
     .paletteTag = TAG_HELD_ITEM_BOX,
     .oam = &sOamData_HeldItemBox,
     .anims = sSpriteAnimTable_HeldItemBox,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy,
 };
 
 static const struct OamData sOamData_AbilityBox =
@@ -1667,9 +1697,6 @@ static const struct SpriteTemplate sSpriteTemplate_AbilityBox =
     .paletteTag = TAG_HELD_ITEM_BOX,
     .oam = &sOamData_AbilityBox,
     .anims = sSpriteAnimTable_AbilityBox,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy,
 };
 
 
@@ -1764,9 +1791,6 @@ static const struct SpriteTemplate sSpriteTemplate_DynamaxBox =
     .paletteTag = TAG_HELD_ITEM_BOX,
     .oam = &sOamData_DynamaxBox,
     .anims = sSpriteAnimTable_DynamaxBox,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy,
 };
 
 static const struct CompressedSpriteSheet sSpriteSheet_DynamaxLevels =
@@ -1842,9 +1866,6 @@ static const struct SpriteTemplate sSpriteTemplate_DynamaxLevel =
     .paletteTag = TAG_HELD_ITEM_BOX,
     .oam = &sOamData_DynamaxLevel,
     .anims = sSpriteAnimTable_DynamaxLevels,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy,
 };
 
 static const struct OamData sOamData_StatusCondition =
@@ -1936,9 +1957,6 @@ static const struct SpriteTemplate sSpriteTemplate_StatusCondition =
     .paletteTag = TAG_MON_STATUS,
     .oam = &sOamData_StatusCondition,
     .anims = sSpriteAnimTable_StatusCondition,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_Gender =
@@ -1992,9 +2010,6 @@ static const struct SpriteTemplate sSpriteTemplate_Gender =
     .paletteTag = TAG_GENDER_ICON,
     .oam = &sOamData_Gender,
     .anims = sSpriteAnimTable_Gender,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_ShinyIcon =
@@ -2026,10 +2041,6 @@ static const struct SpriteTemplate sSpriteTemplate_ShinyIcon =
     .tileTag = TAG_MON_SHINY_ICON,
     .paletteTag = TAG_MON_MARKINGS,
     .oam = &sOamData_ShinyIcon,
-    .anims = gDummySpriteAnimTable,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_GigantamaxIcon =
@@ -2061,10 +2072,6 @@ static const struct SpriteTemplate sSpriteTemplate_GigantamaxIcon =
     .tileTag = TAG_GIGANTAMAX_ICON,
     .paletteTag = TAG_GENDER_ICON,
     .oam = &sOamData_GigantamaxIcon,
-    .anims = gDummySpriteAnimTable,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const struct OamData sOamData_PokerusCuredIcon =
@@ -2096,10 +2103,6 @@ static const struct SpriteTemplate sSpriteTemplate_PokerusCuredIcon =
     .tileTag = TAG_MON_POKERUS_CURED_ICON,
     .paletteTag = TAG_MON_MARKINGS,
     .oam = &sOamData_PokerusCuredIcon,
-    .anims = gDummySpriteAnimTable,
-    .images = NULL,
-    .affineAnims = gDummySpriteAffineAnimTable,
-    .callback = SpriteCallbackDummy
 };
 
 static const u16 sMonShadowPalette[] = INCBIN_U16("graphics/summary_screen/swsh/shadow.gbapal");
@@ -2110,7 +2113,7 @@ static const struct SpritePalette sSpritePal_MonShadow =
 };
 
 // code
-void ShowPokemonSummaryScreen_SwSh(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void))
+void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void))
 {
     u8 pageCount = PSS_PAGE_COUNT - 1;
 
@@ -2154,8 +2157,8 @@ void ShowPokemonSummaryScreen_SwSh(u8 mode, void *mons, u8 monIndex, u8 maxMonIn
     else
         sMonSummaryScreen->currPageIndex = sMonSummaryScreen->minPageIndex;
 
-    SummaryScreen_SetAnimDelayTaskId_SwSh(TASK_NONE);
-    SummaryScreen_SetShadowAnimDelayTaskId_SwSh(TASK_NONE);
+    SummaryScreen_SetAnimDelayTaskId(TASK_NONE);
+    SummaryScreen_SetShadowAnimDelayTaskId(TASK_NONE);
 
     if (gMonSpritesGfxPtr == NULL)
         CreateMonSpritesGfxManager(MON_SPR_GFX_MANAGER_A, MON_SPR_GFX_MODE_NORMAL);
@@ -2166,9 +2169,9 @@ void ShowPokemonSummaryScreen_SwSh(u8 mode, void *mons, u8 monIndex, u8 maxMonIn
     SetMainCallback2(CB2_InitSummaryScreen);
 }
 
-void ShowSelectMovePokemonSummaryScreen_SwSh(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove)
+void ShowSelectMovePokemonSummaryScreen(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove)
 {
-    ShowPokemonSummaryScreen_SwSh(SUMMARY_MODE_SELECT_MOVE, mons, monIndex, gPlayerPartyCount - 1, callback);
+    ShowPokemonSummaryScreen(SUMMARY_MODE_SELECT_MOVE, mons, monIndex, gPlayerPartyCount - 1, callback);
     sMonSummaryScreen->newMove = newMove;
 }
 
@@ -2904,6 +2907,26 @@ static bool32 NoMovesAvailableToRelearn(void)
     }
 
     return zeroCounter == MOVE_RELEARNER_COUNT;
+}
+
+bool32 CheckRelearnerStateFlag(enum MoveRelearnerStates state)
+{
+    if (P_ENABLE_MOVE_RELEARNERS)
+        return TRUE;
+
+    switch (state)
+    {
+    case MOVE_RELEARNER_LEVEL_UP_MOVES:
+        return TRUE;
+    case MOVE_RELEARNER_EGG_MOVES:
+        return FlagGet(P_FLAG_EGG_MOVES);
+    case MOVE_RELEARNER_TM_MOVES:
+        return P_TM_MOVES_RELEARNER;
+    case MOVE_RELEARNER_TUTOR_MOVES:
+        return FlagGet(P_FLAG_TUTOR_MOVES);
+    default:
+        return FALSE;
+    }
 }
 
 static void TryUpdateRelearnType(enum IncrDecrUpdateValues delta)
@@ -3723,7 +3746,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
     }
 }
 
-u8 GetMoveSlotToReplace_SwSh(void)
+u8 GetMoveSlotToReplace(void)
 {
     return sMoveSlotToReplace;
 }
@@ -5556,12 +5579,12 @@ static void SpriteCB_Pokemon(struct Sprite *sprite)
 
 // Track and then destroy Task_PokemonSummaryAnimateAfterDelay
 // Normally destroys itself but it can be interrupted before the animation starts
-void SummaryScreen_SetAnimDelayTaskId_SwSh(u8 taskId)
+void SummaryScreen_SetAnimDelayTaskId(u8 taskId)
 {
     sAnimDelayTaskId = taskId;
 }
 
-void SummaryScreen_SetShadowAnimDelayTaskId_SwSh(u8 taskId)
+void SummaryScreen_SetShadowAnimDelayTaskId(u8 taskId)
 {
     sShadowAnimDelayTaskId = taskId;
 }
@@ -6243,7 +6266,7 @@ static void ShowCancelOrRenamePrompt(void)
 static void CB2_ReturnToSummaryScreenFromNamingScreen(void)
 {
     SetMonData(&gPlayerParty[gSpecialVar_0x8004], MON_DATA_NICKNAME, gStringVar2);
-    ShowPokemonSummaryScreen_SwSh(SUMMARY_MODE_NORMAL, gPlayerParty, gSpecialVar_0x8004, gPlayerPartyCount - 1, gInitialSummaryScreenCallback);
+    ShowPokemonSummaryScreen(SUMMARY_MODE_NORMAL, gPlayerParty, gSpecialVar_0x8004, gPlayerPartyCount - 1, gInitialSummaryScreenCallback);
 }
 
 static void CB2_PssChangePokemonNickname(void)

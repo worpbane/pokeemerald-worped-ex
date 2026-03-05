@@ -10,8 +10,6 @@
 #include "battle_switch_in.h"
 #include "battle_environment.h"
 #include "battle_z_move.h"
-#include "swsh_summary_screen.h"
-#include "constants/moves.h"
 #include "battle_move_resolution.h"
 #include "item.h"
 #include "util.h"
@@ -54,6 +52,7 @@
 #include "data.h"
 #include "generational_changes.h"
 #include "move.h"
+#include "constants/abilities.h"
 #include "constants/battle_anim.h"
 #include "constants/battle_move_effects.h"
 #include "constants/battle_string_ids.h"
@@ -5997,10 +5996,7 @@ static void Cmd_yesnoboxlearnmove(void)
         if (!gPaletteFade.active)
         {
             FreeAllWindowBuffers();
-            if (SWSH_SUMMARY_SCREEN)
-                ShowSelectMovePokemonSummaryScreen_SwSh(gPlayerParty, gBattleStruct->expGetterMonId, ReshowBattleScreenAfterMenu, gMoveToLearn);
-            else
-                ShowSelectMovePokemonSummaryScreen(gPlayerParty, gBattleStruct->expGetterMonId, ReshowBattleScreenAfterMenu, gMoveToLearn);            
+            ShowSelectMovePokemonSummaryScreen(gPlayerParty, gBattleStruct->expGetterMonId, ReshowBattleScreenAfterMenu, gMoveToLearn);
             gBattleScripting.learnMoveState++;
         }
         break;
@@ -9646,15 +9642,15 @@ static void Cmd_settaunt(void)
     else if (gBattleMons[gBattlerTarget].volatiles.tauntTimer == 0)
     {
         u8 turns;
-        if (B_TAUNT_TURNS >= GEN_5)
+        if (GetConfig(B_TAUNT_TURNS) >= GEN_5)
         {
             turns = B_TAUNT_TIMER - 1; // 4 turns
             if (!HasBattlerActedThisTurn(gBattlerTarget))
                 turns--; // If the target hasn't yet moved this turn, Taunt lasts for only three turns (source: Bulbapedia)
         }
-        else if (B_TAUNT_TURNS >= GEN_4)
+        else if (GetConfig(B_TAUNT_TURNS) >= GEN_4)
         {
-            turns = RandomUniform(RNG_TAUNT, 3, B_TAUNT_TIMER);
+            turns = RandomUniform(RNG_TAUNT_TURNS, 3, B_TAUNT_TIMER);
         }
         else
         {

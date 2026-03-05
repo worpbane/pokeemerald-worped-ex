@@ -65,10 +65,10 @@ SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(14, 6));
 - ribbons
 */
 
-void ShowPokemonSummaryScreen_SwSh(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void));
-void ShowSelectMovePokemonSummaryScreen_SwSh(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove);
-u8 GetMoveSlotToReplace_SwSh(void);
-void SummaryScreen_SetAnimDelayTaskId_SwSh(u8 taskId);
-void SummaryScreen_SetShadowAnimDelayTaskId_SwSh(u8 taskId);
+void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void));
+void ShowSelectMovePokemonSummaryScreen(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove);
+u8 GetMoveSlotToReplace(void);
+void SummaryScreen_SetAnimDelayTaskId(u8 taskId);
+void SummaryScreen_SetShadowAnimDelayTaskId(u8 taskId);
 
 #endif // GUARD_SWSH_SUMMARY_SCREEN_H

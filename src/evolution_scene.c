@@ -3,7 +3,6 @@
 #include "battle.h"
 #include "battle_message.h"
 #include "bg.h"
-#include "swsh_summary_screen.h"
 #include "data.h"
 #include "decompress.h"
 #include "evolution_scene.h"
@@ -979,18 +978,9 @@ static void Task_EvolutionScene(u8 taskId)
             if (!gPaletteFade.active)
             {
                 FreeAllWindowBuffers();
-                if (SWSH_SUMMARY_SCREEN)
-                {
-                    ShowSelectMovePokemonSummaryScreen_SwSh(gPlayerParty, gTasks[taskId].tPartyId,
+                ShowSelectMovePokemonSummaryScreen(gPlayerParty, gTasks[taskId].tPartyId,
                             CB2_EvolutionSceneLoadGraphics,
                             gMoveToLearn);
-                }
-                else
-                {
-                    ShowSelectMovePokemonSummaryScreen(gPlayerParty, gTasks[taskId].tPartyId,
-                            CB2_EvolutionSceneLoadGraphics,
-                            gMoveToLearn);
-                }
                 gTasks[taskId].tLearnMoveState++;
             }
             break;
@@ -1378,47 +1368,21 @@ static void Task_TradeEvolutionScene(u8 taskId)
 
                 if (gTasks[taskId].tPartyId == PC_MON_CHOSEN)
                 {
-                    if (SWSH_SUMMARY_SCREEN)
-                    {
-                        ShowSelectMovePokemonSummaryScreen_SwSh(
+                    ShowSelectMovePokemonSummaryScreen(
                                 gEnemyParty, 
                                 TRADEMON_FROM_PC,
                                 CB2_TradeEvolutionSceneLoadGraphics,
                                 gMoveToLearn
                             );
-                    }
-                    else
-                    {
-                        ShowSelectMovePokemonSummaryScreen(
-                                gEnemyParty, 
-                                TRADEMON_FROM_PC,
-                                CB2_TradeEvolutionSceneLoadGraphics,
-                                gMoveToLearn
-                            );
-                    }   
-
                 }
                 else
                 {
-                    if (SWSH_SUMMARY_SCREEN)
-                    {
-                        ShowSelectMovePokemonSummaryScreen_SwSh(
+                    ShowSelectMovePokemonSummaryScreen(
                                 gPlayerParty, 
                                 gTasks[taskId].tPartyId,
                                 CB2_TradeEvolutionSceneLoadGraphics,
                                 gMoveToLearn
                             );
-                    }
-                    else
-                    {
-                        ShowSelectMovePokemonSummaryScreen(
-                                gPlayerParty, 
-                                gTasks[taskId].tPartyId,
-                                CB2_TradeEvolutionSceneLoadGraphics,
-                                gMoveToLearn
-                            );
-                    }
-
                 }
                 gTasks[taskId].tLearnMoveState++;
             }

@@ -53,6 +53,8 @@
 #include "constants/rgb.h"
 #include "constants/songs.h"
 
+#if !SWSH_SUMMARY_SCREEN
+
 // Screen titles (upper left)
 #define PSS_LABEL_WINDOW_POKEMON_INFO_TITLE 0
 #define PSS_LABEL_WINDOW_POKEMON_SKILLS_TITLE 1
@@ -2862,10 +2864,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
 
 u8 GetMoveSlotToReplace(void)
 {
-    if (SWSH_SUMMARY_SCREEN)
-        return GetMoveSlotToReplace_SwSh();
-    else
-        return sMoveSlotToReplace;
+    return sMoveSlotToReplace;
 }
 
 static void DrawPagination(void) // Updates the pagination dots at the top of the summary screen
@@ -4653,10 +4652,7 @@ static void SpriteCB_Pokemon(struct Sprite *sprite)
 // Normally destroys itself but it can be interrupted before the animation starts
 void SummaryScreen_SetAnimDelayTaskId(u8 taskId)
 {
-    if (SWSH_SUMMARY_SCREEN)
-        SummaryScreen_SetAnimDelayTaskId_SwSh(taskId);
-    else
-        sAnimDelayTaskId = taskId;
+    sAnimDelayTaskId = taskId;
 }
 
 static void SummaryScreen_DestroyAnimDelayTask(void)
@@ -4994,3 +4990,5 @@ static void CB2_PssChangePokemonNickname(void)
 {
     ChangePokemonNicknameWithCallback(CB2_ReturnToSummaryScreenFromNamingScreen);
 }
+
+#endif // !SWSH_SUMMARY_SCREEN
