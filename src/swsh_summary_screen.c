@@ -250,12 +250,10 @@ static EWRAM_DATA struct PokemonSummaryScreenData
     u8 unk_filler4[2];
 } *sMonSummaryScreen = NULL;
 
-EWRAM_DATA u8 gLastViewedMonIndex = 0;
 static EWRAM_DATA u8 sMoveSlotToReplace = 0;
 ALIGNED(4) static EWRAM_DATA u8 sAnimDelayTaskId = 0;
 ALIGNED(4) static EWRAM_DATA u8 sShadowAnimDelayTaskId = 0;
 static EWRAM_DATA u8 sStringVar5[8] = {0};
-EWRAM_DATA MainCallback gInitialSummaryScreenCallback = NULL;
 
 // forward declarations
 static bool8 LoadGraphics(void);
@@ -880,19 +878,6 @@ static const struct OamData sOamData_CategoryIcons =
     .priority = 0,
 };
 
-const struct CompressedSpriteSheet gSpriteSheet_CategoryIcons =
-{
-    .data = gCategoryIcons_Gfx,
-    .size = 16*16*3/2,
-    .tag = TAG_CATEGORY_ICONS,
-};
-
-const struct SpritePalette gSpritePal_CategoryIcons =
-{
-    .data = gCategoryIcons_Pal,
-    .tag = TAG_CATEGORY_ICONS
-};
-
 static const union AnimCmd sSpriteAnim_CategoryPhysical[] =
 {
     ANIMCMD_FRAME(0, 0),
@@ -916,14 +901,6 @@ static const union AnimCmd *const sSpriteAnimTable_CategoryIcons[] =
     sSpriteAnim_CategoryPhysical,
     sSpriteAnim_CategorySpecial,
     sSpriteAnim_CategoryStatus,
-};
-
-const struct SpriteTemplate gSpriteTemplate_CategoryIcons =
-{
-    .tileTag = TAG_CATEGORY_ICONS,
-    .paletteTag = TAG_CATEGORY_ICONS,
-    .oam = &sOamData_CategoryIcons,
-    .anims = sSpriteAnimTable_CategoryIcons,
 };
 
 // ===============================================
@@ -2113,7 +2090,7 @@ static const struct SpritePalette sSpritePal_MonShadow =
 };
 
 // code
-void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void))
+void ShowPokemonSummaryScreen_SwSh(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void))
 {
     u8 pageCount = PSS_PAGE_COUNT - 1;
 
@@ -2166,7 +2143,7 @@ void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, 
     else
         sMonSummaryScreen->currPageIndex = sMonSummaryScreen->minPageIndex;
 
-    SummaryScreen_SetAnimDelayTaskId(TASK_NONE);
+    SummaryScreen_SetAnimDelayTaskId_SwSh(TASK_NONE);
     SummaryScreen_SetShadowAnimDelayTaskId(TASK_NONE);
 
     if (gMonSpritesGfxPtr == NULL)
@@ -2178,9 +2155,9 @@ void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, 
     SetMainCallback2(CB2_InitSummaryScreen);
 }
 
-void ShowSelectMovePokemonSummaryScreen(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove)
+void ShowSelectMovePokemonSummaryScreen_SwSh(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove)
 {
-    ShowPokemonSummaryScreen(SUMMARY_MODE_SELECT_MOVE, mons, monIndex, gPlayerPartyCount - 1, callback);
+    ShowPokemonSummaryScreen_SwSh(SUMMARY_MODE_SELECT_MOVE, mons, monIndex, gPlayerPartyCount - 1, callback);
     sMonSummaryScreen->newMove = newMove;
 }
 
@@ -2912,44 +2889,6 @@ static void Task_HandleInput(u8 taskId)
 #undef tSkillsState
 
 #define tSummaryState data[0]
-
-bool32 HasAnyRelearnableMoves(enum MoveRelearnerStates state)
-{
-    struct Pokemon *mon = &sMonSummaryScreen->currentMon;
-    return CanBoxMonRelearnMoves(&mon->box, state);
-}
-
-bool32 NoMovesAvailableToRelearn(void)
-{
-    u32 zeroCounter = 0;
-    for (enum MoveRelearnerStates state = MOVE_RELEARNER_LEVEL_UP_MOVES; state < MOVE_RELEARNER_COUNT; state++)
-    {
-        if (!HasAnyRelearnableMoves(state))
-            zeroCounter++;
-    }
-
-    return zeroCounter == MOVE_RELEARNER_COUNT;
-}
-
-bool32 CheckRelearnerStateFlag(enum MoveRelearnerStates state)
-{
-    if (P_ENABLE_MOVE_RELEARNERS)
-        return TRUE;
-
-    switch (state)
-    {
-    case MOVE_RELEARNER_LEVEL_UP_MOVES:
-        return TRUE;
-    case MOVE_RELEARNER_EGG_MOVES:
-        return FlagGet(P_FLAG_EGG_MOVES);
-    case MOVE_RELEARNER_TM_MOVES:
-        return P_TM_MOVES_RELEARNER;
-    case MOVE_RELEARNER_TUTOR_MOVES:
-        return FlagGet(P_FLAG_TUTOR_MOVES);
-    default:
-        return FALSE;
-    }
-}
 
 static void TryUpdateRelearnType(enum IncrDecrUpdateValues delta)
 {
@@ -3770,7 +3709,7 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
     }
 }
 
-u8 GetMoveSlotToReplace(void)
+u8 GetMoveSlotToReplace_SwSh(void)
 {
     return sMoveSlotToReplace;
 }
@@ -5606,7 +5545,7 @@ static void SpriteCB_Pokemon(struct Sprite *sprite)
 
 // Track and then destroy Task_PokemonSummaryAnimateAfterDelay
 // Normally destroys itself but it can be interrupted before the animation starts
-void SummaryScreen_SetAnimDelayTaskId(u8 taskId)
+void SummaryScreen_SetAnimDelayTaskId_SwSh(u8 taskId)
 {
     sAnimDelayTaskId = taskId;
 }

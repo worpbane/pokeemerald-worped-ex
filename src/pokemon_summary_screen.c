@@ -53,8 +53,6 @@
 #include "constants/rgb.h"
 #include "constants/songs.h"
 
-#if !SWSH_SUMMARY_SCREEN
-
 // Screen titles (upper left)
 #define PSS_LABEL_WINDOW_POKEMON_INFO_TITLE 0
 #define PSS_LABEL_WINDOW_POKEMON_SKILLS_TITLE 1
@@ -1195,6 +1193,12 @@ u32 GetAdjustedIvData(struct Pokemon *mon, u32 stat)
 
 void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, void (*callback)(void))
 {
+    if (SWSH_SUMMARY_SCREEN)
+    {
+        ShowPokemonSummaryScreen_SwSh(mode, mons, monIndex, maxMonIndex, callback);
+        return;
+    }
+
     sMonSummaryScreen = AllocZeroed(sizeof(*sMonSummaryScreen));
     sMonSummaryScreen->mode = mode;
     if (monIndex == PC_MON_CHOSEN)
@@ -1261,6 +1265,12 @@ void ShowPokemonSummaryScreen(u8 mode, void *mons, u8 monIndex, u8 maxMonIndex, 
 
 void ShowSelectMovePokemonSummaryScreen(struct Pokemon *mons, u8 monIndex, void (*callback)(void), u16 newMove)
 {
+    if (SWSH_SUMMARY_SCREEN)
+    {
+        ShowSelectMovePokemonSummaryScreen_SwSh(mons, monIndex, callback, newMove);
+        return;
+    }
+
     ShowPokemonSummaryScreen(SUMMARY_MODE_SELECT_MOVE, mons, monIndex, gPlayerPartyCount - 1, callback);
     sMonSummaryScreen->newMove = newMove;
 }
@@ -2864,6 +2874,9 @@ static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
 
 u8 GetMoveSlotToReplace(void)
 {
+    if (SWSH_SUMMARY_SCREEN)
+        return GetMoveSlotToReplace_SwSh();
+
     return sMoveSlotToReplace;
 }
 
@@ -4644,7 +4657,7 @@ static void SpriteCB_Pokemon(struct Sprite *sprite)
     {
         sprite->data[1] = IsMonSpriteNotFlipped(sprite->data[0]);
         PlayMonCry();
-        PokemonSummaryDoMonAnimation(sprite, sprite->data[0], summary->isEgg);
+        PokemonSummaryDoMonAnimation(sprite, sprite->data[0], summary->isEgg, FALSE);
     }
 }
 
@@ -4652,6 +4665,12 @@ static void SpriteCB_Pokemon(struct Sprite *sprite)
 // Normally destroys itself but it can be interrupted before the animation starts
 void SummaryScreen_SetAnimDelayTaskId(u8 taskId)
 {
+    if (SWSH_SUMMARY_SCREEN)
+    {
+        SummaryScreen_SetAnimDelayTaskId_SwSh(taskId);
+        return;
+    }
+
     sAnimDelayTaskId = taskId;
 }
 
@@ -4990,5 +5009,3 @@ static void CB2_PssChangePokemonNickname(void)
 {
     ChangePokemonNicknameWithCallback(CB2_ReturnToSummaryScreenFromNamingScreen);
 }
-
-#endif // !SWSH_SUMMARY_SCREEN
