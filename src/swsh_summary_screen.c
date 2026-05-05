@@ -176,7 +176,8 @@ static EWRAM_DATA struct PokemonSummaryScreenData
     } monList;
     /*0x04*/ MainCallback callback;
     /*0x08*/ struct Sprite *markingsSprite;
-    /*0x0C*/ struct Pokemon currentMon;
+    /*0x0C*/ void *markingComboTilesPtr;
+    /*0x10*/ struct Pokemon currentMon;
     /*0x70*/ struct PokeSummary
     {
         u16 species; // 0x0
@@ -353,7 +354,7 @@ static u8 CreateMonSprite(struct Pokemon *, bool32);
 static void SpriteCB_Pokemon(struct Sprite *);
 static void StopPokemonAnimations(void);
 static void CreateMonMarkingsSprite(struct Pokemon *);
-static void RemoveAndCreateMonMarkingsSprite(struct Pokemon *);
+static void UpdateMonMarkingsSprite(struct Pokemon *);
 static void CreateCaughtBallSprite(struct Pokemon *);
 static void CreateHeldItemBoxSprites(void);
 static void DestroyHeldItemBoxSprites(void);
@@ -549,11 +550,9 @@ static const u32 sHeldItemBox_Gfx[]                 = INCBIN_U32("graphics/summa
 static const u16 sHeldItemBox_Pal[]                 = INCBIN_U16("graphics/summary_screen/swsh/held_item_box.gbapal");
 static const u32 sAbilityBox_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/ability_box.4bpp.smol");
 static const u32 sMoveSelect_Gfx[]                  = INCBIN_U32("graphics/summary_screen/swsh/move_select.4bpp.smol");
-static const u16 sMarkings_Pal[]                    = INCBIN_U16("graphics/summary_screen/swsh/markings.gbapal");
 static const u32 sShinyIcon_Gfx[]                   = INCBIN_U32("graphics/summary_screen/swsh/shiny_icon.4bpp.smol");
 static const u32 sPokerusCuredIcon_Gfx[]            = INCBIN_U32("graphics/summary_screen/swsh/pokerus_cured_icon.4bpp.smol");
 static const u32 sGenderGfx_Icons[]                 = INCBIN_U32("graphics/summary_screen/swsh/gender_icons.4bpp.smol");
-static const u16 sGenderPal_Icons[]                 = INCBIN_U16("graphics/summary_screen/swsh/gender_icons.gbapal");
 static const u16 sCategoryIcons_Pal[]               = INCBIN_U16("graphics/summary_screen/swsh/category_icons.gbapal");
 static const u32 sCategoryIcons_Gfx[]               = INCBIN_U32("graphics/summary_screen/swsh/category_icons.4bpp.smol");
 static const u16 sFriendshipIcon_Pal[]              = INCBIN_U16("graphics/summary_screen/swsh/heart.gbapal");
@@ -972,7 +971,7 @@ static const struct CompressedSpriteSheet sSpriteSheet_RelearnPrompt =
 static const struct SpriteTemplate sSpriteTemplate_RelearnPrompt =
 {
     .tileTag = TAG_RELEARN_PROMPT,
-    .paletteTag = TAG_MON_MARKINGS,
+    .paletteTag = TAG_CATEGORY_ICONS,
     .oam = &sOamData_RelearnPrompt,
 };
 
@@ -1025,7 +1024,7 @@ static const union AnimCmd *const sSpriteAnimTable_RelearnPromptSwitch[] =
 static const struct SpriteTemplate sSpriteTemplate_RelearnPromptSwitch =
 {
     .tileTag = TAG_RELEARN_PROMPT_SWITCH,
-    .paletteTag = TAG_MON_MARKINGS,
+    .paletteTag = TAG_CATEGORY_ICONS,
     .oam = &sOamData_RelearnPromptSwitch,
     .anims = sSpriteAnimTable_RelearnPromptSwitch,
 };
@@ -1047,7 +1046,7 @@ static const struct CompressedSpriteSheet sSpriteSheet_LRButton =
 static const struct SpriteTemplate sSpriteTemplate_LRButton =
 {
     .tileTag = TAG_LR_BUTTON,
-    .paletteTag = TAG_MON_MARKINGS,
+    .paletteTag = TAG_CATEGORY_ICONS,
     .oam = &sOamData_LRButton,
 };
 
@@ -1068,7 +1067,7 @@ static const struct CompressedSpriteSheet sSpriteSheet_InfoPrompt =
 static const struct SpriteTemplate sSpriteTemplate_InfoPrompt =
 {
     .tileTag = TAG_INFO_PROMPT,
-    .paletteTag = TAG_MON_MARKINGS,
+    .paletteTag = TAG_CATEGORY_ICONS,
     .oam = &sOamData_InfoPrompt,
 };
 
@@ -1970,16 +1969,10 @@ static const struct CompressedSpriteSheet sGenderIconsSpriteSheet =
     .tag = TAG_GENDER_ICON
 };
 
-static const struct SpritePalette sGenderIconsSpritePalette =
-{
-    .data = sGenderPal_Icons,
-    .tag = TAG_GENDER_ICON
-};
-
 static const struct SpriteTemplate sSpriteTemplate_Gender =
 {
     .tileTag = TAG_GENDER_ICON,
-    .paletteTag = TAG_GENDER_ICON,
+    .paletteTag = TAG_FRIENDSHIP_ICON,
     .oam = &sOamData_Gender,
     .anims = sSpriteAnimTable_Gender,
 };
@@ -2011,7 +2004,7 @@ static const struct CompressedSpriteSheet sShinyIconSpriteSheet =
 static const struct SpriteTemplate sSpriteTemplate_ShinyIcon =
 {
     .tileTag = TAG_MON_SHINY_ICON,
-    .paletteTag = TAG_MON_MARKINGS,
+    .paletteTag = TAG_CATEGORY_ICONS,
     .oam = &sOamData_ShinyIcon,
 };
 
@@ -2073,7 +2066,7 @@ static const struct CompressedSpriteSheet sPokerusCuredIconSpriteSheet =
 static const struct SpriteTemplate sSpriteTemplate_PokerusCuredIcon =
 {
     .tileTag = TAG_MON_POKERUS_CURED_ICON,
-    .paletteTag = TAG_MON_MARKINGS,
+    .paletteTag = TAG_CATEGORY_ICONS,
     .oam = &sOamData_PokerusCuredIcon,
 };
 
@@ -2478,17 +2471,16 @@ static bool8 DecompressGraphics(void)
         sMonSummaryScreen->switchCounter++;
         break;
     case 13:
-        LoadCompressedSpriteSheet(&sPokerusCuredIconSpriteSheet);
+        LoadSpritePalette(&sSpritePal_CategoryIcons);
         sMonSummaryScreen->switchCounter++;
         break;
     case 14:
-        if (SWSH_SUMMARY_CATEGORY_ICONS)
-            LoadCompressedSpriteSheet(&sSpriteSheet_CategoryIcons);
+        LoadCompressedSpriteSheet(&sPokerusCuredIconSpriteSheet);
         sMonSummaryScreen->switchCounter++;
         break;
     case 15:
         if (SWSH_SUMMARY_CATEGORY_ICONS)
-            LoadSpritePalette(&sSpritePal_CategoryIcons);
+            LoadCompressedSpriteSheet(&sSpriteSheet_CategoryIcons);
         sMonSummaryScreen->switchCounter++;
         break;
     case 16:
@@ -3060,19 +3052,9 @@ static void Task_ChangeSummaryMon(u8 taskId)
         }
         break;
     case 5:
-        RemoveAndCreateMonMarkingsSprite(&sMonSummaryScreen->currentMon);
+        UpdateMonMarkingsSprite(&sMonSummaryScreen->currentMon);
         break;
     case 6:
-        CreateCaughtBallSprite(&sMonSummaryScreen->currentMon);
-        break;
-    case 7:
-        CreateGenderSprite(&sMonSummaryScreen->currentMon, sMonSummaryScreen->summary.species);
-        break;
-    case 8:
-        if (SWSH_SUMMARY_SHOW_GIGANTAMAX)
-            CreateGigantamaxSprite();
-        break;
-    case 9:
         sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_MON] = LoadMonGfxAndSprite(&sMonSummaryScreen->currentMon, &data[1], FALSE);
 
         if (SWSH_SUMMARY_MON_SHADOWS)
@@ -3092,6 +3074,16 @@ static void Task_ChangeSummaryMon(u8 taskId)
 
         TryDrawExperienceProgressBar();
         data[1] = 0;
+        break;
+    case 7:
+        CreateCaughtBallSprite(&sMonSummaryScreen->currentMon);
+        break;
+    case 8:
+        CreateGenderSprite(&sMonSummaryScreen->currentMon, sMonSummaryScreen->summary.species);
+        break;
+    case 9:
+        if (SWSH_SUMMARY_SHOW_GIGANTAMAX)
+            CreateGigantamaxSprite();
         break;
     case 10:
         SetTypeIcons();
@@ -3984,7 +3976,6 @@ static void LoadGenderGfx(void)
     if (GetSpriteTileStartByTag(TAG_GENDER_ICON) == 0xFFFF)
     {
         LoadCompressedSpriteSheet(&sGenderIconsSpriteSheet);
-        LoadSpritePalette(&sGenderIconsSpritePalette);
     }
 }
 
@@ -5557,12 +5548,14 @@ static void StopPokemonAnimations(void)  // A subtle effect, this function stops
 
 static void CreateMonMarkingsSprite(struct Pokemon *mon)
 {
-    struct Sprite *sprite = CreateMonMarkingAllCombosSprite(TAG_MON_MARKINGS, TAG_MON_MARKINGS, sMarkings_Pal);
+    struct Sprite *sprite = CreateMonMarkingComboSprite(TAG_MON_MARKINGS, TAG_CATEGORY_ICONS, sCategoryIcons_Pal);
 
     sMonSummaryScreen->markingsSprite = sprite;
     if (sprite != NULL)
     {
-        StartSpriteAnim(sprite, GetMonData(mon, MON_DATA_MARKINGS));
+        sMonSummaryScreen->markingComboTilesPtr = (void *) OBJ_VRAM0 + 32 * GetSpriteTileStartByTag(TAG_MON_MARKINGS);        
+        UpdateMonMarkingTiles(GetMonData(mon, MON_DATA_MARKINGS), sMonSummaryScreen->markingComboTilesPtr);
+        
         sMonSummaryScreen->markingsSprite->x = 137;
         sMonSummaryScreen->markingsSprite->y = 87;
         sMonSummaryScreen->markingsSprite->oam.priority = 2;
@@ -5622,11 +5615,16 @@ static void SetFriendshipSprite(void)
     StartSpriteAnim(&gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_FRIENDSHIP]], level);
 }
 
-static void RemoveAndCreateMonMarkingsSprite(struct Pokemon *mon)
+static void UpdateMonMarkingsSprite(struct Pokemon *mon)
 {
-    DestroySprite(sMonSummaryScreen->markingsSprite);
-    FreeSpriteTilesByTag(TAG_MON_MARKINGS);
-    CreateMonMarkingsSprite(mon);
+    if (sMonSummaryScreen->markingsSprite != NULL && sMonSummaryScreen->markingComboTilesPtr != NULL)
+    {
+        UpdateMonMarkingTiles(GetMonData(mon, MON_DATA_MARKINGS), sMonSummaryScreen->markingComboTilesPtr);
+    }
+    else
+    {
+        CreateMonMarkingsSprite(mon);
+    }
 }
 
 static void CreateCaughtBallSprite(struct Pokemon *mon)
