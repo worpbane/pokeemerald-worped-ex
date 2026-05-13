@@ -81,8 +81,6 @@ enum {
 
 // IDs for messages to print with PrintMessage
 enum {
-    MSG_JUMP_TO_WHICH_BOX,
-    MSG_DEPOSIT_IN_WHICH_BOX,
     MSG_BOX_IS_FULL,
     MSG_RELEASE_POKE,
     MSG_WAS_RELEASED,
@@ -100,8 +98,6 @@ enum {
     MSG_PLACED_IN_BAG,
     MSG_BAG_FULL,
     MSG_PUT_IN_BAG,
-    MSG_ITEM_IS_HELD,
-    MSG_CHANGED_TO_ITEM,
     MSG_CANT_STORE_MAIL,
 };
 
@@ -169,7 +165,6 @@ enum {
     INPUT_MOVE_CURSOR,
     INPUT_2, // Unused
     INPUT_3, // Unused
-    INPUT_SHOW_PARTY,
     INPUT_HIDE_PARTY,
     INPUT_BOX_OPTIONS,
     INPUT_IN_MENU,
@@ -605,7 +600,6 @@ static void Task_SwitchSelectedItem(u8);
 static void Task_TakeItemForMoving(u8);
 static void Task_WithdrawMon(u8);
 static void Task_ShiftMon(u8);
-static void Task_ShowPartyPokemon(u8);
 static void Task_ShowItemInfo(u8);
 static void Task_GiveItemFromBag(u8);
 static void Task_ItemToBag(u8);
@@ -1668,18 +1662,6 @@ static void Task_PokeStorageMain(u8 taskId)
             TryRefreshDisplayMon();
             UpdateMonInfoTilemap();
             break;
-        case INPUT_SHOW_PARTY:
-            if (sStorage->boxOption != OPTION_MOVE_MONS && sStorage->boxOption != OPTION_MOVE_ITEMS && sStorage->boxOption != OPTION_SELECT_MON)
-            {
-                PrintMessage(MSG_WHICH_ONE_WILL_TAKE);
-                sStorage->state = MSTATE_WAIT_MSG;
-            }
-            else
-            {
-                ClearSavedCursorPos();
-                SetPokeStorageTask(Task_ShowPartyPokemon);
-            }
-            break;
         case INPUT_HIDE_PARTY:
             if (sStorage->boxOption == OPTION_MOVE_MONS || sStorage->boxOption == OPTION_SELECT_MON)
             {
@@ -1934,26 +1916,6 @@ static void Task_PokeStorageMain(u8 taskId)
     }
 }
 
-static void Task_ShowPartyPokemon(u8 taskId)
-{
-    switch (sStorage->state)
-    {
-    case 0:
-        PlaySE(SE_WIN_OPEN);
-        SetCursorInParty();
-        sStorage->state++;
-        break;
-    case 1:
-        if (!UpdateCursorPos())
-        {
-            UpdateMonInfoTilemap();
-            if (sStorage->setMosaic)
-                RefreshDisplayMonData();
-            SetPokeStorageTask(Task_PokeStorageMain);
-        }
-        break;
-    }
-}
 
 static void Task_HidePartyPokemon(u8 taskId)
 {
@@ -2270,7 +2232,6 @@ static void Task_DepositMon(u8 taskId)
     switch (sStorage->state)
     {
     case 0:
-        PrintMessage(MSG_DEPOSIT_IN_WHICH_BOX);
         LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_BOX_SELECTION, PALTAG_MISC_3, 3, FALSE);
         CreateChooseBoxMenuSprites(sDepositBoxId);
         sStorage->state++;
@@ -2399,7 +2360,6 @@ static void Task_DepositMon(u8 taskId)
     case 14:
         if (JOY_NEW(A_BUTTON | B_BUTTON | DPAD_ANY))
         {
-            PrintMessage(MSG_DEPOSIT_IN_WHICH_BOX);
             sStorage->state = 1;
         }
         break;
@@ -3114,7 +3074,6 @@ static void Task_JumpBox(u8 taskId)
     switch (sStorage->state)
     {
     case 0:
-        PrintMessage(MSG_JUMP_TO_WHICH_BOX);
         LoadChooseBoxMenuGfx(&sStorage->chooseBoxMenu, GFXTAG_BOX_SELECTION, PALTAG_MISC_3, 3, FALSE);
         CreateChooseBoxMenuSprites(StorageGetCurrentBox());
         sStorage->state++;
@@ -9391,6 +9350,8 @@ void UpdateSpeciesSpritePSS_SwSh(struct BoxPokemon *boxMon)
             {
                 u32 personality = GetMonData(&gPlayerParty[sCursorPosition], MON_DATA_PERSONALITY);
                 sStorage->partySprites[sCursorPosition] = CreateMonIconSprite(species, personality, 40, 24 * sCursorPosition + 16, 1, 12, isEgg);
+                if (sStorage->boxOption == OPTION_MOVE_ITEMS)
+                    SetPartyMonIconObjMode(sCursorPosition, (GetMonData(&gPlayerParty[sCursorPosition], MON_DATA_HELD_ITEM) == ITEM_NONE ? ST_OAM_OBJ_BLEND : ST_OAM_OBJ_NORMAL));
             }
         }
         else
