@@ -81,7 +81,6 @@ enum {
 
 // IDs for messages to print with PrintMessage
 enum {
-    MSG_IS_SELECTED,
     MSG_JUMP_TO_WHICH_BOX,
     MSG_DEPOSIT_IN_WHICH_BOX,
     MSG_BOX_IS_FULL,
@@ -98,8 +97,6 @@ enum {
     MSG_WORRIED,
     MSG_SURPRISE,
     MSG_PLEASE_REMOVE_MAIL,
-    MSG_IS_SELECTED2,
-    MSG_GIVE_TO_MON,
     MSG_PLACED_IN_BAG,
     MSG_BAG_FULL,
     MSG_PUT_IN_BAG,
@@ -1989,13 +1986,6 @@ static void Task_OnSelectedMon(u8 taskId)
         PlaySE(SE_SELECT);
         // sets flag to prevent mon info panel from appearing
         sStorage->inMenuInteraction = TRUE;
-        if (sStorage->boxOption != OPTION_MOVE_ITEMS)
-            PrintMessage(MSG_IS_SELECTED);
-        else if (IsMovingItem() || sStorage->displayMon.heldItem != ITEM_NONE)
-            PrintMessage(MSG_IS_SELECTED2);
-        else
-            PrintMessage(MSG_GIVE_TO_MON);
-
         AddMenu();
         sStorage->state = 1;
         break;
@@ -7450,7 +7440,6 @@ static void AddBoxOptionsMenu(void)
     SetMenuText(MENU_JUMP);
     SetMenuText(MENU_WALLPAPER);
     SetMenuText(MENU_NAME);
-    SetMenuText(MENU_CANCEL);
 }
 
 static u8 SetSelectionMenuTexts(void)
@@ -7519,7 +7508,6 @@ static bool8 SetMenuTexts_Mon(void)
     SetMenuText(MENU_MARK);
     if (sStorage->boxOption != OPTION_SELECT_MON)
         SetMenuText(MENU_RELEASE);
-    SetMenuText(MENU_CANCEL);
     return TRUE;
 }
 
@@ -7565,7 +7553,6 @@ static bool8 SetMenuTexts_Item(void)
         }
     }
 
-    SetMenuText(MENU_CANCEL);
     return TRUE;
 }
 
@@ -7717,15 +7704,66 @@ static s8 GetMenuItemTextId(u8 menuIdx)
         return sStorage->menuItems[menuIdx].textId;
 }
 
+static void GetMenuPosition(u8 cursorArea, u8 cursorPos, u8 *outLeft, u8 *outTop)
+{
+    static const u8 validTopPositions[] = {2, 5, 8, 11, 14, 17};
+    u8 slotRow = 0;
+    u8 menuHeight = 2 * sStorage->menuItemsCount;
+    
+    *outLeft = 9;
+    *outTop = 2;
+    
+    if (cursorArea == CURSOR_AREA_BOX_TITLE)
+    {
+        *outLeft = 19;
+        *outTop = 5;
+        return;
+    }
+    else if (cursorArea == CURSOR_AREA_IN_PARTY)
+    {
+        slotRow = cursorPos;
+    }
+    else if (cursorArea == CURSOR_AREA_IN_BOX)
+    {
+        slotRow = (cursorPos / IN_BOX_COLUMNS) + 1;
+        u8 col = cursorPos % IN_BOX_COLUMNS;
+        
+        if (col < 3)
+            *outLeft = 15 + (col * 3);
+        else
+            *outLeft = (u8[]){16, 19, 22}[col - 3] - sStorage->menuWindow.width + 1;
+    }
+    
+    u8 preferredTop = validTopPositions[min(slotRow, ARRAY_COUNT(validTopPositions) - 1)];
+    
+    if (preferredTop + menuHeight <= 19)
+    {
+        *outTop = preferredTop;
+    }
+    else
+    {
+        for (s8 i = ARRAY_COUNT(validTopPositions) - 1; i >= 0; i--)
+        {
+            if (validTopPositions[i] + menuHeight <= 19)
+            {
+                *outTop = validTopPositions[i];
+                break;
+            }
+        }
+    }
+}
+
 static void AddMenu(void)
 {
+    u8 tilemapLeft, tilemapTop;
+    
     sStorage->menuWindow.width = (sStorage->menuWidth + 7) / 8 + 2;
     if (sStorage->menuWindow.width > 28)
         sStorage->menuWindow.width = 28;
-
     sStorage->menuWindow.height = 2 * sStorage->menuItemsCount;
-    sStorage->menuWindow.tilemapLeft = 29 - sStorage->menuWindow.width;
-    sStorage->menuWindow.tilemapTop = 15 - sStorage->menuWindow.height;
+    GetMenuPosition(sCursorArea, sCursorPosition, &tilemapLeft, &tilemapTop);    
+    sStorage->menuWindow.tilemapLeft = tilemapLeft;
+    sStorage->menuWindow.tilemapTop = tilemapTop;
     sStorage->menuWindowId = AddWindow(&sStorage->menuWindow);
     ClearMonInfoTilemap();
     ClearWindowTilemap(sStorage->menuWindowId);
