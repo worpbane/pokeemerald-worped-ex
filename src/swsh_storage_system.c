@@ -2865,6 +2865,8 @@ static void Task_TakeItemForMoving(u8 taskId)
     case 3:
         if (PrintDisplayMonInfo())
             sStorage->state++;
+        else if (sStorage->inMenuInteraction)
+            HideInfoPanelSprites();
         break;
     case 4:
         if (!IsDma3ManagerBusyWithBgCopy())
@@ -2899,6 +2901,10 @@ static void Task_GiveMovingItemToMon(u8 taskId)
         if (PrintDisplayMonInfo())
         {
             SetPokeStorageTask(Task_PokeStorageMain);
+        }
+        else if (sStorage->inMenuInteraction)
+        {
+            HideInfoPanelSprites();
         }
         break;
     }
@@ -2941,6 +2947,8 @@ static void Task_ItemToBag(u8 taskId)
     case 3:
         if (PrintDisplayMonInfo())
             sStorage->state++;
+        else if (sStorage->inMenuInteraction)
+            HideInfoPanelSprites();
         break;
     case 4:
         if (!IsDma3ManagerBusyWithBgCopy())
@@ -2989,6 +2997,10 @@ static void Task_SwitchSelectedItem(u8 taskId)
         if (PrintDisplayMonInfo())
         {
             SetPokeStorageTask(Task_PokeStorageMain);
+        }
+        else if (sStorage->inMenuInteraction)
+        {
+            HideInfoPanelSprites();
         }
         break;
     }
@@ -3853,7 +3865,6 @@ static void UpdateStatLabelsSprites(void)
     u8 upStatX, upStatY, downStatX, downStatY;
     u16 upStatPalTag, downStatPalTag;
     u8 nature;
-    struct BoxPokemon *boxMon;
     u8 animIndexMap[NUM_STATS] = {0, 0, 1, 4, 2, 3};
 
     if (!sStorage->showMonInfo
@@ -3868,20 +3879,7 @@ static void UpdateStatLabelsSprites(void)
         return;
     }
 
-    if (sCursorArea == CURSOR_AREA_IN_BOX)
-    {
-        boxMon = GetBoxedMonPtr(StorageGetCurrentBox(), sCursorPosition);
-    }
-    else if (sCursorArea == CURSOR_AREA_IN_PARTY)
-    {
-        boxMon = &gPlayerParty[sCursorPosition].box;
-    }
-    else
-    {
-        boxMon = &sStorage->movingMon.box;
-    }
-
-    nature = GetNatureFromPersonality(boxMon->personality);
+    nature = GetNatureFromPersonality(sStorage->displayMon.personality);
     natureUpStat = gNaturesInfo[nature].statUp;
     natureDownStat = gNaturesInfo[nature].statDown;
 
