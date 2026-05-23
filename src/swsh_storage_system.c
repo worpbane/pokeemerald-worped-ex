@@ -132,7 +132,6 @@ enum {
     MENU_GIVE_2,
     MENU_SWITCH,
     MENU_BAG,
-    MENU_INFO,
     MENU_SELECT,
     MENU_BASE,
     MENU_NORMAL,
@@ -533,7 +532,6 @@ struct PokemonStorageSystemData
     u16 multiMoveWindowId;
     struct ItemIcon itemIcons[MAX_ITEM_ICONS];
     u16 movingItemId;
-    u16 itemInfoWindowOffset;
     struct Sprite *genderIconSprite;
     struct Sprite *typeIconSprites[2];
     struct Sprite *shinyIconSprite;
@@ -594,7 +592,6 @@ static void Task_SwitchSelectedItem(u8);
 static void Task_TakeItemForMoving(u8);
 static void Task_WithdrawMon(u8);
 static void Task_ShiftMon(u8);
-static void Task_ShowItemInfo(u8);
 static void Task_GiveItemFromBag(u8);
 static void Task_ItemToBag(u8);
 static void Task_TakeItemForMoving(u8);
@@ -734,10 +731,6 @@ static bool8 IsMovingItem(void);
 static const u8 *GetMovingItemName(void);
 static u16 GetMovingItemId(void);
 static void PrintItemDescription(void);
-static void InitItemInfoWindow(void);
-static bool8 UpdateItemInfoWindowSlideIn(void);
-static bool8 UpdateItemInfoWindowSlideOut(void);
-static void DrawItemInfoWindow(u32);
 static void SetItemIconCallback(u8, u8, u8, u8);
 static void SpriteCB_ItemIcon_SetPosToCursor(struct Sprite *);
 static void SpriteCB_ItemIcon_WaitAnim(struct Sprite *);
@@ -2152,9 +2145,6 @@ static void Task_OnSelectedMon(u8 taskId)
             PlaySE(SE_SELECT);
             SetPokeStorageTask(Task_GiveItemFromBag);
             break;
-        case MENU_INFO:
-            SetPokeStorageTask(Task_ShowItemInfo);
-            break;
         case MENU_SELECT:
             PlaySE(SE_SELECT);
             struct BoxPokemon *boxmon = GetCursorBoxMon();
@@ -2958,49 +2948,6 @@ static void Task_SwitchSelectedItem(u8 taskId)
         {
             HideInfoPanelSprites();
         }
-        break;
-    }
-}
-
-static void Task_ShowItemInfo(u8 taskId)
-{
-    switch (sStorage->state)
-    {
-    case 0:
-        ClearBottomWindow();
-        sStorage->state++;
-        break;
-    case 1:
-        if (!IsDma3ManagerBusyWithBgCopy())
-        {
-            PlaySE(SE_WIN_OPEN);
-            PrintItemDescription();
-            InitItemInfoWindow();
-            sStorage->state++;
-        }
-        break;
-    case 2:
-        if (!UpdateItemInfoWindowSlideIn())
-            sStorage->state++;
-        break;
-    case 3:
-        if (!IsDma3ManagerBusyWithBgCopy())
-            sStorage->state++;
-        break;
-    case 4:
-        if (JOY_NEW(A_BUTTON | B_BUTTON | DPAD_ANY))
-        {
-            PlaySE(SE_WIN_OPEN);
-            sStorage->state++;
-        }
-        break;
-    case 5:
-        if (!UpdateItemInfoWindowSlideOut())
-            sStorage->state++;
-        break;
-    case 6:
-        if (!IsDma3ManagerBusyWithBgCopy())
-            SetPokeStorageTask(Task_PokeStorageMain);
         break;
     }
 }
@@ -7662,7 +7609,6 @@ static bool8 SetMenuTexts_Item(void)
                 SetMenuText(MENU_TAKE);
                 SetMenuText(MENU_BAG);
             }
-            SetMenuText(MENU_INFO);
         }
     }
     else
@@ -7726,7 +7672,7 @@ static void ToggleCursorAutoAction(void)
         ClearMonInfoPanel();
     }
 
-    sCursorMode = (sCursorMode + 1) % 3;
+    sCursorMode = (sCursorMode + 1) % (sStorage->boxOption == OPTION_MOVE_ITEMS ? 2 : 3);
     sStorage->cursorSprite->oam.paletteNum = sStorage->cursorPalNums[sCursorMode];
 
     if (sCursorMode == CURSOR_MODE_MULTI_MOVE)
@@ -8992,67 +8938,6 @@ static void PrintItemDescription(void)
 
     FillWindowPixelBuffer(WIN_ITEM_DESC, PIXEL_FILL(1));
     AddTextPrinterParameterized4(WIN_ITEM_DESC, FONT_NORMAL, 4, 0, 0, 1, sTextColors[0], 0, description);
-}
-
-static void InitItemInfoWindow(void)
-{
-    sStorage->itemInfoWindowOffset = 21;
-    LoadBgTiles(0, sItemInfoFrame_Gfx, 0x80, 0x13A);
-    DrawItemInfoWindow(0);
-}
-
-static bool8 UpdateItemInfoWindowSlideIn(void)
-{
-    s32 i, pos;
-
-    if (sStorage->itemInfoWindowOffset == 0)
-        return FALSE;
-
-    sStorage->itemInfoWindowOffset--;
-    pos = 21 - sStorage->itemInfoWindowOffset;
-    for (i = 0; i < pos; i++)
-        WriteSequenceToBgTilemapBuffer(0, GetBgAttribute(0, BG_ATTR_BASETILE) + 0x2C + sStorage->itemInfoWindowOffset + i, i, 13, 1, 7, 15, 21);
-
-    DrawItemInfoWindow(pos);
-    return (sStorage->itemInfoWindowOffset != 0);
-}
-
-static bool8 UpdateItemInfoWindowSlideOut(void)
-{
-    s32 i, pos;
-
-    if (sStorage->itemInfoWindowOffset == 22)
-        return FALSE;
-
-    if (sStorage->itemInfoWindowOffset == 0)
-        FillBgTilemapBufferRect(0, 0, 21, 12, 1, 9, 17);
-
-    sStorage->itemInfoWindowOffset++;
-    pos = 21 - sStorage->itemInfoWindowOffset;
-    for (i = 0; i < pos; i++)
-    {
-        WriteSequenceToBgTilemapBuffer(0, GetBgAttribute(0, BG_ATTR_BASETILE) + 0x2C + sStorage->itemInfoWindowOffset + i, i, 13, 1, 7, 15, 21);
-    }
-
-    if (pos >= 0)
-        DrawItemInfoWindow(pos);
-
-    FillBgTilemapBufferRect(0, 0, pos + 1, 12, 1, 9, 17);
-    ScheduleBgCopyTilemapToVram(0);
-    return TRUE;
-}
-
-static void DrawItemInfoWindow(u32 x)
-{
-    if (x != 0)
-    {
-        FillBgTilemapBufferRect(0, 0x13A, 0, 0xC, x, 1, 15);
-        FillBgTilemapBufferRect(0, 0x93A, 0, 0x14, x, 1, 15);
-    }
-    FillBgTilemapBufferRect(0, 0x13B, x, 0xD, 1, 7, 15);
-    FillBgTilemapBufferRect(0, 0x13C, x, 0xC, 1, 1, 15);
-    FillBgTilemapBufferRect(0, 0x13D, x, 0x14, 1, 1, 15);
-    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void SpriteCB_ItemIcon_WaitAnim(struct Sprite *sprite)

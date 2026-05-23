@@ -71,8 +71,6 @@ static const u32 sStatLabels_Gfx[]            = INCBIN_U32("graphics/pokemon_sto
 static const ALIGNED(4) u8 sTypeIcons_Gfx[]   = INCBIN_U8("graphics/pokemon_storage/swsh/type_icons.4bpp");
 static const u16 sTypeIcons_Pal[]             = INCBIN_U16("graphics/pokemon_storage/swsh/type_icons.gbapal");
 
-static const u32 sItemInfoFrame_Gfx[]         = INCBIN_U32("graphics/pokemon_storage/swsh/item_info_frame.4bpp");
-
 // ============================================================================
 // Graphics - Wallpapers
 // ============================================================================
@@ -227,7 +225,6 @@ static const u8 *const sMenuTexts[] =
     [MENU_GIVE_2]     = gPCText_Give,
     [MENU_SWITCH]     = COMPOUND_STRING("SWITCH"),
     [MENU_BAG]        = COMPOUND_STRING("BAG"),
-    [MENU_INFO]       = COMPOUND_STRING("INFO"),
     [MENU_SELECT]     = COMPOUND_STRING("SELECT"),
     [MENU_BASE]       = COMPOUND_STRING("DEFAULT"),
     [MENU_NORMAL]     = COMPOUND_STRING("NORMAL"),
