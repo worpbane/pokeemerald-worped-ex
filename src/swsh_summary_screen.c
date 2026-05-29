@@ -3398,8 +3398,11 @@ static void PssScrollEnd(u8 taskId)
     {
         if (sMonSummaryScreen->currPageIndex == PSS_PAGE_CONTEST_MOVES)
         {
+            enum Move move = sMonSummaryScreen->firstMoveIndex == MAX_MON_MOVES
+                ? sMonSummaryScreen->newMove
+                : sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
             SetBgTilemapBuffer(1, sMonSummaryScreen->bg1TilemapBuffers[PSS_EFFECT_CONTEST]);
-            HandleAppealJamTilemap(sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex]);
+            HandleAppealJamTilemap(move);
         }
         else
         {
