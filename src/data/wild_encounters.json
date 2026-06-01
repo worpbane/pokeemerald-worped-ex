@@ -3983,12 +3983,12 @@
               {
                 "min_level": 26,
                 "max_level": 26,
-                "species": "SPECIES_ODDISH"
+                "species": "SPECIES_STUFFUL"
               },
               {
                 "min_level": 28,
                 "max_level": 28,
-                "species": "SPECIES_ODDISH"
+                "species": "SPECIES_STUFFUL"
               },
               {
                 "min_level": 28,
@@ -9158,7 +9158,7 @@
               {
                 "min_level": 26,
                 "max_level": 26,
-                "species": "SPECIES_ZUBAT"
+                "species": "SPECIES_SNOM"
               },
               {
                 "min_level": 26,
@@ -9168,7 +9168,7 @@
               {
                 "min_level": 28,
                 "max_level": 28,
-                "species": "SPECIES_ZUBAT"
+                "species": "SPECIES_SANDSHREW_ALOLA"
               },
               {
                 "min_level": 28,
@@ -9178,7 +9178,7 @@
               {
                 "min_level": 30,
                 "max_level": 30,
-                "species": "SPECIES_ZUBAT"
+                "species": "SPECIES_SNOM"
               },
               {
                 "min_level": 30,
@@ -9198,7 +9198,7 @@
               {
                 "min_level": 30,
                 "max_level": 30,
-                "species": "SPECIES_GOLBAT"
+                "species": "SPECIES_SANDSHREW_ALOLA"
               },
               {
                 "min_level": 28,

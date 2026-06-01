@@ -3,7 +3,6 @@
   "name": "PacifidlogTown_PokemonCenter_1F",
   "layout": "LAYOUT_POKEMON_CENTER_1F",
   "music": "MUS_POKE_CENTER",
-  "region": "REGION_HOENN",
   "region_map_section": "MAPSEC_PACIFIDLOG_TOWN",
   "requires_flash": false,
   "weather": "WEATHER_NONE",
@@ -57,8 +56,8 @@
     },
     {
       "graphics_id": "OBJ_EVENT_GFX_WOMAN_1",
-      "x": 4,
-      "y": 5,
+      "x": 3,
+      "y": 6,
       "elevation": 3,
       "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
       "movement_range_x": 1,
@@ -96,15 +95,9 @@
       "elevation": 3,
       "dest_map": "MAP_PACIFIDLOG_TOWN",
       "dest_warp_id": "0"
-    },
-    {
-      "x": 1,
-      "y": 6,
-      "elevation": 4,
-      "dest_map": "MAP_PACIFIDLOG_TOWN_POKEMON_CENTER_2F",
-      "dest_warp_id": "0"
     }
   ],
   "coord_events": [],
-  "bg_events": []
+  "bg_events": [],
+  "region": "REGION_HOENN"
 }

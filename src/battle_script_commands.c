@@ -9719,7 +9719,7 @@ static void FinalizeCapture(void)
     }
     else if (ballId == BALL_FRIEND)
     {
-        u32 friendship = (B_FRIEND_BALL_MODIFIER >= GEN_8 ? 150 : 200);
+        u32 friendship = 200;
         SetMonData(caughtMon, MON_DATA_FRIENDSHIP, &friendship);
     }
 }
@@ -9902,14 +9902,9 @@ static void ComputeBallData(u32 wildMonBattler, u32 playerBattler, struct BallDa
         }
         break;
     case BALL_DREAM:
-        if (B_DREAM_BALL_MODIFIER >= GEN_8 && (battleMon->status1 & STATUS1_SLEEP || (GetBattlerAbilityIgnoreMoldBreaker(wildMonBattler) == ABILITY_COMATOSE)))
-            ball->multiplier = 400;
-        break;
+		ball->multiplier = 400;
     case BALL_SAFARI:
-        if (B_SAFARI_BALL_MODIFIER == GEN_1)
-            ball->multiplier = 200;
-        else if (B_SAFARI_BALL_MODIFIER <= GEN_7)
-            ball->multiplier = 150;
+        ball->multiplier = 150;
         break;
     case BALL_SPORT:
         if (B_SPORT_BALL_MODIFIER <= GEN_7)
