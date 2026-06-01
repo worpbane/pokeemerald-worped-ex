@@ -9,7 +9,9 @@ This is a personal fork of **`pokeemerald-expansion` 1.16.0** by the ROM Hacking
 ## 🧬 Project Overview
 The original *Modern Emerald – Worped* was built on top of Resetes12's Modern Emerald project. This repository represents a complete port and overhaul, shifting everything over to the modern, highly optimized **`pokeemerald-expansion`** engine. 
 
-The goal isn't to create a massive, bloated overhaul, but to build my absolute ideal version of Hoenn. This includes clean quality-of-life systems, a fully personalized battle UI, and a small roster of late-generation Pokémon that I personally think are cute and belong in Hoenn.
+The goal isn't to create a massive, bloated overhaul, but to build my absolute ideal version of Hoenn. This includes clean quality-of-life systems, a fully personalized UI, and a small roster of late-generation Pokémon that I personally like. This isn't a difficulty-hack, it's a fun-hack! 
+
+I grew up playing Gen 3, and it remains my favorite generation to this day (I actually never played Gen 4 through 7 and am only just recently playing Platinum with a plan to move on to Black after). The main reason this repository exists is so I can easily version manage the changes I'm making to the region I love. This will also eventually serve as the launchpad for two separate projects I have planned down the road: a Sinnoh demake, and an entirely original custom region inspired by the world-building of hacks like *Pokémon Unbound*.
 
 ---
 
@@ -17,7 +19,7 @@ The goal isn't to create a massive, bloated overhaul, but to build my absolute i
 
 To keep the project scope focused, the following architecture serves as the active roadmap and development wish list for **Worped Ex**. This outlines the specific features I hope to fully implement, blending established systems from the original *Modern Emerald* project with custom, ground-up mechanics unique to *Worped*.
 
-> 💡 **Note Engine Features:** I am fully aware that many of these mechanics (such as Mega Evolutions, the Physical/Special split, and following Pokémon) are already natively included as baseline code structures inside `pokeemerald-expansion`. My goal with this project isn't to re-write them, but to capitalize on them, configure the engine switches properly, and write the custom overworld event scripts to integrate them into my vision of Hoenn!
+> 💡 **Note on Engine Features:** I am fully aware that a few mechanics from `pokeemerald-worped` are already natively included as baseline code structures inside `pokeemerald-expansion`. This list is more of a reference for me to keep track of my progress.
 
 ### 🌟 Worped Ex Additions (Planned Features)
 * **1-Floor Pokémon Center:** Total removal of the multiplayer second level, re-mapping the space into a custom NPC counter for simulated offline Wonder Trades.
@@ -28,16 +30,16 @@ To keep the project scope focused, the following architecture serves as the acti
 * **Expanded Starter Selection:** Custom selection logic at the start of the game. (Archie & Mudskip)
 * **Catch Mode & DexNav:** Streamlined catching sequences and custom DexNav logic. (FlashLucky & ghoulslash)
 * **Item Pickup Headers:** Pop-up header notifications when items are found or received.
-* **Map Changes:** Map re-layouts across select routes and cities to smooth out overworld navigation.
+* **Map Changes:** Map layout changes across select routes and cities to smooth out overworld navigation and add a bit of character in places.
 * **Mega Evolutions:** Integration of Mega Evolution mechanics.
 
 ### 🔄 Modern Emerald Ports (Planned Feature Adaptations)
-* **QoL Field Movements & Atmosphere:** Run everywhere automatically, faster Nurse Joy text cycles, day/night cycles with dynamic ambient lighting (windows/lamps), and footstep footprints in grass and sand.
-* **Unique Surf Animations:** Custom overworld sprites and unique animations while surfing across Hoenn's waterways.
+* **QoL Field Movements & Atmosphere:** Run everywhere automatically, faster Nurse Joy text cycles, skippable Walley Catch Tutorial, day/night cycles with dynamic ambient lighting (windows/lamps), and footstep footprints in grass and sand.
+* **Unique Surf Animations:** Custom overworld sprites and unique animations while surfing across Hoenn's waterways. (Not actually sure how to do this one).
 * **Smart HMs:** Natively utilize HM field moves without needing to clutter party movesets (requires the HM and a capable Pokémon in party).
 * **Dynamic Pokéballs:** Ability to swap a caught Pokémon's Pokéball directly from the bag interface.
 * **Choosable Shiny Odds:** Initial options menu selection to lock in custom shiny rates (1/512, 1/1024, 1/2048, 1/4096, 1/8192).
-* **Level Cap & Difficulty:** Built-in progression caps to keep boss encounters engaging.
+* **Level Cap & Difficulty:** Opt-in progression caps & difficulty to keep encounters engaging (Expansion has hooks for this).
 * **Enhanced Rewards:** Rock Smash drops updated to regularly yield Shards and Heart Scales.
 * **Unified Bike System:** Merging the Mach and Acro bikes into a single, seamless key item experience.
 * **World Events:** Custom map changes and event overhauls for the Regis, Hoenn Starters, Rival naming, and buffed legendary encounters.
@@ -48,9 +50,9 @@ To keep the project scope focused, the following architecture serves as the acti
 *Note: The data structures for these items and Pokémon are natively handled by the RHH expansion engine, but their physical locations, shop integrations, and overworld event scripts are currently being mapped out for implementation below.*
 
 ### 🗺️ Planned Wild Encounters & Regional Reworks
-* **Shoal Cave & Safari Zone Updates:** Reworking Shoal Cave and the Safari Zone into dedicated mini-hubs to act as natural habitats for some out-of-region Pokémon.
+* **Shoal Cave & Safari Zone Updates:** Reworking Shoal Cave and the Safari Zone into dedicated mini-hubs to act as natural habitats for some out-of-region(Kanto, Johto, Alola, Paldea, etc.) Pokémon. These reworks will require me to figure out how to add new tilesets.... yay.
 
-| Pokémon | Planned Location (Base Form) | Notes |
+| Pokémon Family | Planned Location (Base Form) | Notes |
 | :--- | :--- | :--- |
 | **Buneary** | Routes 104 & 117 | |
 | **Emolga** | Routes 110 & 116 | |
@@ -82,4 +84,4 @@ This project would be impossible without the massive foundations provided by the
 
 * **`pokeemerald-expansion` (v1.16.0)** - Developed and maintained by the **ROM Hacking Hideout (RHH)** group.
 * **Modern Emerald (v3.3.1)** - Developed by **Resetes12**.
-* **Feature Branches & Coding References:** Huge thanks to **ghoulslash**, **flashlucky**, **TheXaman**, **RavePossum**, and **Team Aqua's Hideout** for their public code repositories and documentation templates.
+* **Feature Branches & Coding References:** Very grateful to **ghoulslash**, **flashlucky**, **TheXaman**, **RavePossum**, and **Team Aqua's Hideout** for their public code repositories and documentation templates for features I've pulled in.
