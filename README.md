@@ -28,7 +28,7 @@ To keep the project scope focused, the following architecture serves as the acti
 * **Main Menu UI:** A custom startup dashboard that dynamically displays your active party (Archie & Mudskip).
 * **Custom UI Screens:** Porting over my custom FRLG-inspired Summary Screen (with active IV/EV trackers), and custom PokéDex layout.
 * **Expanded Starter Selection:** Custom selection logic at the start of the game. (Archie & Mudskip)
-* **Catch Mode & DexNav:** Streamlined catching sequences and custom DexNav logic. (FlashLucky & ghoulslash)
+* **Catch Mode & DexNav:** Streamlined catching sequences and custom DexNav logic. (FlashLucky & ghoulslash) (Also wondering if I can hook DexNav into the overworld Pokémon spawns so that if you're 'hunting' a specific mon, ONLY that monw will spawn...)
 * **Item Pickup Headers:** Pop-up header notifications when items are found or received.
 * **Map Changes:** Map layout changes across select routes and cities to smooth out overworld navigation and add a bit of character in places.
 * **Mega Evolutions:** Integration of Mega Evolution mechanics.

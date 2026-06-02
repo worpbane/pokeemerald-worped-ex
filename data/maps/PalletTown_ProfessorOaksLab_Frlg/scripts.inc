@@ -1452,7 +1452,7 @@ PalletTown_ProfessorOaksLab_Text_DeliveredOaksParcel::
 
 PalletTown_ProfessorOaksLab_Text_OakCustomBallIOrdered::
 	.string "Ah! \n"
-	.string "It's the custom POKé Ball!\p"
+	.string "It's the custom Poké Ball!\p"
 	.string "I had it on order.\n"
 	.string "Thank you!$"
 
@@ -1489,7 +1489,7 @@ PalletTown_ProfessorOaksLab_Text_ReceivedFivePokeBalls::
 PalletTown_ProfessorOaksLab_Text_OakExplainCatching::
 	.string "When a wild Pokémon appears,\n"
 	.string "it's fair game.\p"
-	.string "Just throw a POKé Ball at it and\n"
+	.string "Just throw a Poké Ball at it and\n"
 	.string "try to catch it!\p"
 	.string "This won't always work, however.\p"
 	.string "A healthy Pokémon can escape.\n"
