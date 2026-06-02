@@ -187,7 +187,7 @@ LilycoveCity_DepartmentStoreRooftop_EventScript_ExitVendingMachine::
 LilycoveCity_DepartmentStoreRooftop_Text_SetDatesForClearOutSales:
 	.string "Don't they have set dates for their\n"
 	.string "clear-out sales?\p"
-	.string "I watch TV, but they never show any\n"
+	.string "I watch Tv, but they never show any\n"
 	.string "commercials.$"
 
 LilycoveCity_DepartmentStoreRooftop_Text_BeenWaitingForClearOutSale:
@@ -200,7 +200,7 @@ LilycoveCity_DepartmentStoreRooftop_Text_BoneDryThirsty:
 	.string "Ohh… I'm bone-dry thirsty!$"
 
 LilycoveCity_DepartmentStoreRooftop_Text_WhichDrinkWouldYouLike:
-	.string "It's a VENDING MACHINE.\n"
+	.string "It's a Vending Machine.\n"
 	.string "Which drink would you like?$"
 
 LilycoveCity_DepartmentStoreRooftop_Text_CanOfDrinkDroppedDown:
