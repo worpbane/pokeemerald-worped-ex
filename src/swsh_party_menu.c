@@ -161,7 +161,7 @@ enum {
 #define TAG_MOVE_TYPES              55160
 
 #define PARTY_PAL_SELECTED     (1 << 0)
-#define PARTY_PAL_FAINTED      (1 << 1)
+#define PARTY_PAL_FAINTED      (1 << 1) // unused in swsh party menu
 #define PARTY_PAL_TO_SWITCH    (1 << 2)
 #define PARTY_PAL_MULTI_ALT    (1 << 3)
 #define PARTY_PAL_SWITCHING    (1 << 4)
@@ -879,7 +879,7 @@ static bool8 ShowPartyMenu(void)
             {
                 ShowButtonPrompt(promptType);
                 PutWindowTilemap(sPartyMenuInternal->promptWindowId);
-                ScheduleBgCopyTilemapToVram(0);
+                ScheduleBgCopyTilemapToVram(1);
             }
         }
         gMain.state++;
@@ -1033,7 +1033,7 @@ static bool8 ReloadPartyMenu(void)
             {
                 ShowButtonPrompt(promptType);
                 PutWindowTilemap(sPartyMenuInternal->promptWindowId);
-                ScheduleBgCopyTilemapToVram(0);
+                ScheduleBgCopyTilemapToVram(1);
             }
         }
         gMain.state++;
@@ -1129,10 +1129,10 @@ static void SetUpSlideInTransition(void)
         u8 height = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_HEIGHT);
         sAllSlotsTilemapBuffers[i] = Alloc(width * height * sizeof(u16));
         if (sAllSlotsTilemapBuffers[i] != NULL)
-            CopyToBufferFromBgTilemap(0, sAllSlotsTilemapBuffers[i], left, top, width, height);
+            CopyToBufferFromBgTilemap(1, sAllSlotsTilemapBuffers[i], left, top, width, height);
         ClearWindowTilemap(sPartyMenuBoxes[i].windowId);
     }
-    ScheduleBgCopyTilemapToVram(0);
+    ScheduleBgCopyTilemapToVram(1);
 
     for (i = 0; i < PARTY_SIZE; i++)
     {
@@ -1218,10 +1218,10 @@ static bool8 AllocPartyMenuBg(void)
     memset(sPartyBg3TilemapBuffer, 0, 0x800);
     ResetBgsAndClearDma3BusyFlags(0);
     InitBgsFromTemplates(0, sPartyMenuBgTemplates, ARRAY_COUNT(sPartyMenuBgTemplates));
-    SetBgTilemapBuffer(1, sPartyBgTilemapBuffer);
+    SetBgTilemapBuffer(2, sPartyBgTilemapBuffer);
     SetBgTilemapBuffer(3, sPartyBg3TilemapBuffer);
     ResetAllBgsCoordinates();
-    ScheduleBgCopyTilemapToVram(1);
+    ScheduleBgCopyTilemapToVram(2);
     ScheduleBgCopyTilemapToVram(3);
     SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
 
@@ -1246,7 +1246,7 @@ static bool8 DecompressGraphics(void)
             sPartyBgGfxTilemap = malloc_and_decompress(sPartyMenuBg_Gfx_SwSh, &sizeout);
         else
             sizeout = GetDecompressedDataSize(sPartyMenuBg_Gfx_SwSh);
-        LoadBgTiles(1, sPartyBgGfxTilemap, sizeout, 0);
+        LoadBgTiles(2, sPartyBgGfxTilemap, sizeout, 0);
         sPartyMenuInternal->switchCounter++;
         break;
     case 1:
@@ -1410,7 +1410,7 @@ static void RenderPartyMenuBox(u8 slot)
         }
         CopyWindowToVram(sPartyMenuBoxes[slot].windowId, COPYWIN_GFX);
         PutWindowTilemap(sPartyMenuBoxes[slot].windowId);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(1);
     }
     else if (gPartyMenu.menuType == PARTY_MENU_TYPE_MULTI_SHOWCASE && slot >= MULTI_PARTY_SIZE)
     {
@@ -1421,7 +1421,7 @@ static void RenderPartyMenuBox(u8 slot)
             LoadPartyBoxPalette(&sPartyMenuBoxes[slot], PARTY_PAL_MULTI_ALT);
         CopyWindowToVram(sPartyMenuBoxes[slot].windowId, COPYWIN_GFX);
         PutWindowTilemap(sPartyMenuBoxes[slot].windowId);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(1);
     }
     else if (gPartiesCount[B_TRAINER_PLAYER] != 0)
     {
@@ -1455,7 +1455,7 @@ static void RenderPartyMenuBox(u8 slot)
                 AnimatePartySlot(slot, 0);
         }
         PutWindowTilemap(sPartyMenuBoxes[slot].windowId);
-        ScheduleBgCopyTilemapToVram(0);
+        ScheduleBgCopyTilemapToVram(1);
     }
 }
 
@@ -1828,8 +1828,6 @@ static u8 GetPartyBoxPaletteFlags(u8 slot, u8 animNum)
 
     if (animNum == 1)
         palFlags |= PARTY_PAL_SELECTED;
-    if (GetMonData(GetPartyMonFromPartyMenuId(slot), MON_DATA_HP) == 0)
-        palFlags |= PARTY_PAL_FAINTED;
     if (PartyBoxPal_ParnterOrDisqualifiedInArena(slot) == TRUE)
         palFlags |= PARTY_PAL_MULTI_ALT;
     if (gPartyMenu.action == PARTY_ACTION_SWITCHING)
@@ -1852,7 +1850,7 @@ static bool8 PartyBoxPal_ParnterOrDisqualifiedInArena(u8 slot)
     if (gPartyMenu.layout == PARTY_LAYOUT_MULTI_FULL_PARTNER || gPartyMenu.layout == PARTY_LAYOUT_MULTI_FULL_SHOWCASE_PARTNER)
         return TRUE;
 
-    if (gPartyMenu.layout == PARTY_LAYOUT_MULTI && (slot == 1 || slot == 4 || slot == 5))
+    if (gPartyMenu.layout == PARTY_LAYOUT_MULTI && slot >= MULTI_PARTY_SIZE)
         return TRUE;
 
     if (slot < MULTI_PARTY_SIZE && (gBattleTypeFlags & BATTLE_TYPE_ARENA) && gMain.inBattle && (gBattleStruct->arenaLostPlayerMons >> GetPartyIdFromBattleSlot(slot) & 1))
@@ -2156,14 +2154,14 @@ static void HandleChooseMonSelection(u8 taskId, s8 *slotPtr)
                 // Can't select if mon doesn't belong to you
                 PlaySE(SE_FAILURE);
                 DisplayPartyMenuMessage(sText_CannotSendMonToBoxPartner, FALSE);
-                ScheduleBgCopyTilemapToVram(2);
+                ScheduleBgCopyTilemapToVram(0);
                 gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
             }
             else if (DoesSelectedMonKnowHM((u8 *)slotPtr))
             {
                 PlaySE(SE_FAILURE);
                 DisplayPartyMenuMessage(sText_CannotSendMonToBoxHM, FALSE);
-                ScheduleBgCopyTilemapToVram(2);
+                ScheduleBgCopyTilemapToVram(0);
                 gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
             }
             else
@@ -2172,7 +2170,7 @@ static void HandleChooseMonSelection(u8 taskId, s8 *slotPtr)
                 GetMonNickname(&gParties[B_TRAINER_PLAYER][partyId], gStringVar1);
                 StringExpandPlaceholders(gStringVar4, sText_SendThisMonToPC);
                 DisplayPartyMenuMessage(gStringVar4, TRUE);
-                ScheduleBgCopyTilemapToVram(2);
+                ScheduleBgCopyTilemapToVram(0);
                 gTasks[taskId].func = Task_SendMonToBoxYesNo;
             }
             break;
@@ -2264,7 +2262,7 @@ static bool8 DisplayCancelChooseMonYesNo(u8 taskId)
     PartyMenuRemoveWindow(&sPartyMenuInternal->windowId[1]);
     StringExpandPlaceholders(gStringVar4, stringPtr);
     DisplayPartyMenuMessage(gStringVar4, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = Task_CancelChooseMonYesNo;
     return TRUE;
 }
@@ -2506,7 +2504,7 @@ static s8 GetNewSlotDoubleLayout(s8 slotId, s8 movementDir)
         slotId += movementDir;
         if ((u8)slotId >= PARTY_SIZE)
             return -1;
-        if (GetMonData(&gParties[B_TRAINER_PLAYER][slotId], MON_DATA_SPECIES) != SPECIES_NONE)
+        if (GetMonData(GetPartyMonFromPartyMenuId(slotId), MON_DATA_SPECIES) != SPECIES_NONE)
             return slotId;
     }
 }
@@ -2546,7 +2544,7 @@ static void Task_PrintAndWaitForText(u8 taskId)
             ClearStdWindowAndFrameToTransparent(WIN_MSG, FALSE);
             ClearWindowTilemap(WIN_MSG);
             DestroyMessageWindowSprite();
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
         }
         DestroyTask(taskId);
     }
@@ -2574,7 +2572,7 @@ static void Task_ReturnToChooseMonAfterText(u8 taskId)
         ClearStdWindowAndFrameToTransparent(WIN_MSG, FALSE);
         ClearWindowTilemap(WIN_MSG);
         DestroyMessageWindowSprite();
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         {
             u8 promptType = GetButtonPromptType();
             if (promptType != BUTTON_PROMPT_NONE
@@ -2583,7 +2581,7 @@ static void Task_ReturnToChooseMonAfterText(u8 taskId)
             {
                 ShowButtonPrompt(promptType);
                 PutWindowTilemap(sPartyMenuInternal->promptWindowId);
-                ScheduleBgCopyTilemapToVram(0);
+                ScheduleBgCopyTilemapToVram(1);
             }
         }
         if (MenuHelpers_IsLinkActive() == TRUE)
@@ -2603,7 +2601,7 @@ static void DisplayGaveHeldItemMessage(struct Pokemon *mon, enum Item item, bool
     CopyItemName(item, gStringVar2);
     StringExpandPlaceholders(gStringVar4, gText_PkmnWasGivenItem);
     DisplayPartyMenuMessage(gStringVar4, keepOpen);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void DisplayTookHeldItemMessage(struct Pokemon *mon, enum Item item, bool8 keepOpen)
@@ -2612,7 +2610,7 @@ static void DisplayTookHeldItemMessage(struct Pokemon *mon, enum Item item, bool
     CopyItemName(item, gStringVar2);
     StringExpandPlaceholders(gStringVar4, gText_ReceivedItemFromPkmn);
     DisplayPartyMenuMessage(gStringVar4, keepOpen);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void DisplayAlreadyHoldingItemSwitchMessage(struct Pokemon *mon, enum Item item, bool8 keepOpen)
@@ -2621,7 +2619,7 @@ static void DisplayAlreadyHoldingItemSwitchMessage(struct Pokemon *mon, enum Ite
     CopyItemName(item, gStringVar2);
     StringExpandPlaceholders(gStringVar4, gText_PkmnAlreadyHoldingItemSwitch);
     DisplayPartyMenuMessage(gStringVar4, keepOpen);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void DisplaySwitchedHeldItemMessage(enum Item item, enum Item item2, bool8 keepOpen)
@@ -2630,7 +2628,7 @@ static void DisplaySwitchedHeldItemMessage(enum Item item, enum Item item2, bool
     CopyItemName(item2, gStringVar2);
     StringExpandPlaceholders(gStringVar4, gText_SwitchedPkmnItem);
     DisplayPartyMenuMessage(gStringVar4, keepOpen);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void GiveItemToMon(struct Pokemon *mon, enum Item item)
@@ -2837,7 +2835,7 @@ static void TryEnterMonForMinigame(u8 taskId, u8 slot)
     {
         PlaySE(SE_FAILURE);
         DisplayPartyMenuMessage(gText_PkmnCantParticipate, FALSE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
     }
 }
@@ -2845,7 +2843,7 @@ static void TryEnterMonForMinigame(u8 taskId, u8 slot)
 static void CancelParticipationPrompt(u8 taskId)
 {
     DisplayPartyMenuMessage(gText_CancelParticipation, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = Task_CancelParticipationYesNo;
 }
 
@@ -3236,21 +3234,6 @@ static void LoadPartyBoxPalette(struct PartyMenuBox *menuBox, u8 palFlags)
             LOAD_PARTY_TEXT_PAL(sPartyBoxSelectedForActionPalIds3, sPartyBoxPalOffsets3);
         }
     }
-    else if (palFlags & PARTY_PAL_FAINTED)
-    {
-        if (palFlags & PARTY_PAL_SELECTED)
-        {
-            LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionFaintedPalIds, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionPalIds2, sPartyBoxPalOffsets2);
-            LOAD_PARTY_TEXT_PAL(sPartyBoxCurrSelectionFaintedPalIds3, sPartyBoxPalOffsets3);
-        }
-        else
-        {
-            LOAD_PARTY_BOX_PAL(sPartyBoxFaintedPalIds1, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxFaintedPalIds2, sPartyBoxPalOffsets2);
-            LOAD_PARTY_TEXT_PAL(sPartyBoxFaintedPalIds3, sPartyBoxPalOffsets3);
-        }
-    }
     else if (palFlags & PARTY_PAL_MULTI_ALT)
     {
         if (palFlags & PARTY_PAL_SELECTED)
@@ -3581,7 +3564,7 @@ static void PartyMenuRemoveWindow(u8 *ptr)
         ClearStdWindowAndFrameToTransparent(*ptr, FALSE);
         RemoveWindow(*ptr);
         *ptr = WINDOW_NONE;
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
     }
 }
 
@@ -3608,7 +3591,7 @@ void UNUSED DisplayPartyMenuStdMessage(u32 stringId)
         ClearStdWindowAndFrameToTransparent(WIN_MSG, FALSE);
         ClearWindowTilemap(WIN_MSG);
         DestroyMessageWindowSprite();
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         return;
 
     case PARTY_MSG_DO_WHAT_WITH_MON:
@@ -3647,7 +3630,7 @@ void UNUSED DisplayPartyMenuStdMessage(u32 stringId)
         DrawStdFrameWithCustomTileAndPalette(*windowPtr, FALSE, 0x63, 13);
         StringExpandPlaceholders(gStringVar4, sActionStringTable[stringId]);
         AddTextPrinterParameterized(*windowPtr, FONT_NORMAL, gStringVar4, 0, 1, 0, 0);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
     }
 }
 
@@ -3680,7 +3663,7 @@ static u8 DisplaySelectionWindow(u8 windowType)
     switch (windowType)
     {
     case SELECTWINDOW_ACTIONS:
-        SetWindowTemplateFields(&window, 2, 19, 19 - (sPartyMenuInternal->numActions * 2), 10, sPartyMenuInternal->numActions * 2, 14, 0x2E9);
+        SetWindowTemplateFields(&window, 0, 19, 19 - (sPartyMenuInternal->numActions * 2), 10, sPartyMenuInternal->numActions * 2, 14, 0x2E9);
         break;
     case SELECTWINDOW_ITEM:
         window = sItemGiveTakeWindowTemplate;
@@ -3725,7 +3708,7 @@ static u8 DisplaySelectionWindow(u8 windowType)
     }
 
     InitMenuInUpperLeftCorner(sPartyMenuInternal->windowId[0], sPartyMenuInternal->numActions, 0, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 
     return sPartyMenuInternal->windowId[0];
 }
@@ -3733,11 +3716,11 @@ static u8 DisplaySelectionWindow(u8 windowType)
 static void PrintMessage(const u8 *text)
 {
     CreateMessageWindowSprite();
-    FillBgTilemapBufferRect(2, 0, 1, 15, 28, 4, 14);
+    FillBgTilemapBufferRect(0, 0, 1, 15, 28, 4, 14);
     PutWindowTilemap(WIN_MSG);
     FillWindowPixelBuffer(WIN_MSG, PIXEL_FILL(0));
     CopyWindowToVram(WIN_MSG, COPYWIN_GFX);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTextFlags.canABSpeedUpPrint = TRUE;
     AddTextPrinterParameterized2(WIN_MSG, FONT_NORMAL, text, GetPlayerTextSpeedDelay(), 0, TEXT_COLOR_WHITE, TEXT_COLOR_TRANSPARENT, TEXT_COLOR_DARK_GRAY);
 }
@@ -3891,7 +3874,7 @@ static bool8 CreateSelectionWindow(u8 taskId)
         {
             StringExpandPlaceholders(gStringVar4, gText_PkmnNotHolding);
             DisplayPartyMenuMessage(gStringVar4, TRUE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_UpdateHeldItemSprite;
             return FALSE;
         }
@@ -4051,8 +4034,8 @@ static void SwitchSelectedMons(u8 taskId)
         tSlot2SlideDir = -1;
         sSlot1TilemapBuffer = Alloc(tSlot1Width * (tSlot1Height << 1));
         sSlot2TilemapBuffer = Alloc(tSlot2Width * (tSlot2Height << 1));
-        CopyToBufferFromBgTilemap(0, sSlot1TilemapBuffer, tSlot1Left, tSlot1Top, tSlot1Width, tSlot1Height);
-        CopyToBufferFromBgTilemap(0, sSlot2TilemapBuffer, tSlot2Left, tSlot2Top, tSlot2Width, tSlot2Height);
+        CopyToBufferFromBgTilemap(1, sSlot1TilemapBuffer, tSlot1Left, tSlot1Top, tSlot1Width, tSlot1Height);
+        CopyToBufferFromBgTilemap(1, sSlot2TilemapBuffer, tSlot2Left, tSlot2Top, tSlot2Width, tSlot2Height);
         ClearWindowTilemap(windowIds[0]);
         ClearWindowTilemap(windowIds[1]);
         gPartyMenu.action = PARTY_ACTION_SWITCHING;
@@ -4096,9 +4079,9 @@ static void MoveAndBufferPartySlot(const void *rectSrc, s16 x, s16 y, s16 width,
 
     if (TryMovePartySlot(x, width, &srcX, &newX, &newWidth))
     {
-        FillBgTilemapBufferRect_Palette0(0, 0, newX, y, newWidth, height);
+        FillBgTilemapBufferRect_Palette0(1, 0, newX, y, newWidth, height);
         if (TryMovePartySlot(x + dir, width, &srcX, &newX, &newWidth))
-            CopyRectToBgTilemapBufferRect(0, rectSrc, srcX, 0, width, height, newX, y, newWidth, height, 17, 0, 0);
+            CopyRectToBgTilemapBufferRect(1, rectSrc, srcX, 0, width, height, newX, y, newWidth, height, 17, 0, 0);
     }
 }
 
@@ -4127,7 +4110,7 @@ static void SlidePartyMenuBoxOneStep(u8 taskId)
         MoveAndBufferPartySlot(sSlot1TilemapBuffer, tSlot1Left + tSlot1Offset, tSlot1Top, tSlot1Width, tSlot1Height, tSlot1SlideDir);
     if (tSlot2SlideDir != 0)
         MoveAndBufferPartySlot(sSlot2TilemapBuffer, tSlot2Left + tSlot2Offset, tSlot2Top, tSlot2Width, tSlot2Height, tSlot2SlideDir);
-    ScheduleBgCopyTilemapToVram(0);
+    ScheduleBgCopyTilemapToVram(1);
 }
 
 static void Task_SlideSelectedSlotsOffscreen(u8 taskId)
@@ -4152,8 +4135,8 @@ static void Task_SlideSelectedSlotsOffscreen(u8 taskId)
         DisplayPartyPokemonData(gPartyMenu.slotId2);
         PutWindowTilemap(sPartyMenuBoxes[gPartyMenu.slotId].windowId);
         PutWindowTilemap(sPartyMenuBoxes[gPartyMenu.slotId2].windowId);
-        CopyToBufferFromBgTilemap(0, sSlot1TilemapBuffer, tSlot1Left, tSlot1Top, tSlot1Width, tSlot1Height);
-        CopyToBufferFromBgTilemap(0, sSlot2TilemapBuffer, tSlot2Left, tSlot2Top, tSlot2Width, tSlot2Height);
+        CopyToBufferFromBgTilemap(1, sSlot1TilemapBuffer, tSlot1Left, tSlot1Top, tSlot1Width, tSlot1Height);
+        CopyToBufferFromBgTilemap(1, sSlot2TilemapBuffer, tSlot2Left, tSlot2Top, tSlot2Width, tSlot2Height);
         ClearWindowTilemap(sPartyMenuBoxes[gPartyMenu.slotId].windowId);
         ClearWindowTilemap(sPartyMenuBoxes[gPartyMenu.slotId2].windowId);
         gTasks[taskId].func = Task_SlideSelectedSlotsOnscreen;
@@ -4172,7 +4155,7 @@ static void Task_SlideSelectedSlotsOnscreen(u8 taskId)
     {
         PutWindowTilemap(sPartyMenuBoxes[gPartyMenu.slotId].windowId);
         PutWindowTilemap(sPartyMenuBoxes[gPartyMenu.slotId2].windowId);
-        ScheduleBgCopyTilemapToVram(0);
+        ScheduleBgCopyTilemapToVram(1);
         Free(sSlot1TilemapBuffer);
         Free(sSlot2TilemapBuffer);
         FinishTwoMonAction(taskId);
@@ -4228,8 +4211,8 @@ static void SnapshotMoveAbilityWindows(void)
 
     if (sMoveAbilityWindowBuffer != NULL)
     {
-        CopyToBufferFromBgTilemap(0, sMoveAbilityWindowBuffer, mLeft, mTop, mW, mH * MAX_MON_MOVES);
-        CopyToBufferFromBgTilemap(0, &sMoveAbilityWindowBuffer[mTiles], aLeft, aTop, aW, aH);
+        CopyToBufferFromBgTilemap(1, sMoveAbilityWindowBuffer, mLeft, mTop, mW, mH * MAX_MON_MOVES);
+        CopyToBufferFromBgTilemap(1, &sMoveAbilityWindowBuffer[mTiles], aLeft, aTop, aW, aH);
     }
 }
 
@@ -4311,7 +4294,7 @@ static void Task_SlideMultiBattlePartyView(u8 taskId)
                 u8 top = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_TILEMAP_TOP);
                 sAllSlotsTilemapBuffers[i] = Alloc(width * height * sizeof(u16));
                 if (sAllSlotsTilemapBuffers[i] != NULL)
-                    CopyToBufferFromBgTilemap(0, sAllSlotsTilemapBuffers[i], left, top, width, height);
+                    CopyToBufferFromBgTilemap(1, sAllSlotsTilemapBuffers[i], left, top, width, height);
             }
             if (gPartyMenu.menuType == PARTY_MENU_TYPE_IN_BATTLE)
                 SnapshotMoveAbilityWindows();
@@ -4329,7 +4312,7 @@ static void Task_SlideMultiBattlePartyView(u8 taskId)
             sSlideInPending = TRUE;
             data[2] = 1;
         }
-        ScheduleBgCopyTilemapToVram(0);
+        ScheduleBgCopyTilemapToVram(1);
         data[0]++;
         if (data[2] == 1)
             RefreshPartyMenu();
@@ -4355,7 +4338,7 @@ static void Task_SlideMultiBattlePartyView(u8 taskId)
             }
         }
 
-        ScheduleBgCopyTilemapToVram(0);
+        ScheduleBgCopyTilemapToVram(1);
         data[0]++;
 
         if (allDone)
@@ -4774,7 +4757,7 @@ static void CursorCb_TakeItem(u8 taskId)
         DisplayTookHeldItemMessage(mon, item, TRUE);
         break;
     }
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = Task_UpdateHeldItemSprite;
 }
 
@@ -6626,7 +6609,7 @@ void ItemUseCB_BattleScript(u8 taskId, TaskFunc task)
         gPartyMenuUseExitCallback = FALSE;
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = task;
     }
     else
@@ -6636,7 +6619,7 @@ void ItemUseCB_BattleScript(u8 taskId, TaskFunc task)
         PlaySE(SE_SELECT);
         if (!IsItemFlute(gSpecialVar_ItemId))
             RemoveBagItem(gSpecialVar_ItemId, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = task;
     }
 }
@@ -6702,7 +6685,7 @@ void ItemUseCB_Medicine(u8 taskId, TaskFunc task)
         gPartyMenuUseExitCallback = FALSE;
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         if (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD)
             gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
         else
@@ -6740,7 +6723,7 @@ void ItemUseCB_Medicine(u8 taskId, TaskFunc task)
         GetMonNickname(mon, gStringVar1);
         GetMedicineItemEffectMessage(item, oldStatus);
         DisplayPartyMenuMessage(gStringVar4, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         if (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD && CheckBagHasItem(item, 1))
             gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
         else
@@ -6770,7 +6753,7 @@ void Task_AbilityCapsule(u8 taskId)
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
             DisplayPartyMenuMessage(gText_WontHaveEffect, 1);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
             return;
         }
@@ -6780,7 +6763,7 @@ void Task_AbilityCapsule(u8 taskId)
         StringExpandPlaceholders(gStringVar4, sText_askText);
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gStringVar4, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         tState++;
         break;
     case 1:
@@ -6800,7 +6783,7 @@ void Task_AbilityCapsule(u8 taskId)
         case MENU_B_PRESSED:
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             // Don't exit party selections screen, return to choosing a mon.
             ClearStdWindowAndFrameToTransparent(6, 0);
             ClearWindowTilemap(6);
@@ -6813,7 +6796,7 @@ void Task_AbilityCapsule(u8 taskId)
         PlaySE(SE_USE_ITEM);
         StringExpandPlaceholders(gStringVar4, sText_doneText);
         DisplayPartyMenuMessage(gStringVar4, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         tState++;
         break;
     case 4:
@@ -6855,7 +6838,7 @@ void Task_AbilityPatch(u8 taskId)
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
             DisplayPartyMenuMessage(gText_WontHaveEffect, 1);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
             return;
         }
@@ -6865,7 +6848,7 @@ void Task_AbilityPatch(u8 taskId)
         StringExpandPlaceholders(gStringVar4, sText_askText);
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gStringVar4, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         tState++;
         break;
     case 1:
@@ -6885,7 +6868,7 @@ void Task_AbilityPatch(u8 taskId)
         case MENU_B_PRESSED:
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             // Don't exit party selections screen, return to choosing a mon.
             ClearStdWindowAndFrameToTransparent(6, 0);
             ClearWindowTilemap(6);
@@ -6898,7 +6881,7 @@ void Task_AbilityPatch(u8 taskId)
         PlaySE(SE_USE_ITEM);
         StringExpandPlaceholders(gStringVar4, sText_doneText);
         DisplayPartyMenuMessage(gStringVar4, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         tState++;
         break;
     case 4:
@@ -6955,7 +6938,7 @@ void Task_Mint(u8 taskId)
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
             DisplayPartyMenuMessage(gText_WontHaveEffect, 1);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
             return;
         }
@@ -6965,7 +6948,7 @@ void Task_Mint(u8 taskId)
         StringExpandPlaceholders(gStringVar4, sText_askText);
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gStringVar4, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         tState++;
         break;
     case 1:
@@ -6985,7 +6968,7 @@ void Task_Mint(u8 taskId)
         case MENU_B_PRESSED:
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             // Don't exit party selections screen, return to choosing a mon.
             ClearStdWindowAndFrameToTransparent(6, 0);
             ClearWindowTilemap(6);
@@ -6998,7 +6981,7 @@ void Task_Mint(u8 taskId)
         PlaySE(SE_USE_ITEM);
         StringExpandPlaceholders(gStringVar4, sText_doneText);
         DisplayPartyMenuMessage(gStringVar4, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         tState++;
         break;
     case 4:
@@ -7037,7 +7020,7 @@ static void Task_DisplayHPRestoredMessage(u8 taskId)
     GetMonNickname(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId], gStringVar1);
     StringExpandPlaceholders(gStringVar4, gText_PkmnHPRestoredByVar2);
     DisplayPartyMenuMessage(gStringVar4, FALSE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     HandleBattleLowHpMusicChange();
     if (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD && CheckBagHasItem(gSpecialVar_ItemId, 1))
         gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
@@ -7066,7 +7049,7 @@ void ItemUseCB_ResetEVs(u8 taskId, TaskFunc task)
         gPartyMenuUseExitCallback = FALSE;
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = task;
     }
     else
@@ -7077,7 +7060,7 @@ void ItemUseCB_ResetEVs(u8 taskId, TaskFunc task)
         GetMonNickname(mon, gStringVar1);
         StringExpandPlaceholders(gStringVar4, sText_BasePointsResetToZero);
         DisplayPartyMenuMessage(gStringVar4, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = task;
     }
 }
@@ -7097,7 +7080,7 @@ void ItemUseCB_ReduceEV(u8 taskId, TaskFunc task)
         gPartyMenuUseExitCallback = FALSE;
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = task;
     }
     else
@@ -7182,7 +7165,7 @@ static void ShowMoveSelectWindow(u8 slot)
             moveCount++;
     }
     InitMenuInUpperLeftCornerNormal(windowId, moveCount, 0);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void Task_HandleWhichMoveInput(u8 taskId)
@@ -7247,7 +7230,7 @@ static void TryUseItemOnMove(u8 taskId)
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
             DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
         }
         else
@@ -7256,7 +7239,7 @@ static void TryUseItemOnMove(u8 taskId)
             gBattleStruct->itemMoveIndex[gBattlerInMenuId] = ptr->data1;
             gPartyMenuUseExitCallback = TRUE;
             RemoveBagItem(gSpecialVar_ItemId, 1);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
         }
     }
@@ -7272,7 +7255,7 @@ static void TryUseItemOnMove(u8 taskId)
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
             DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
         }
         else
@@ -7284,7 +7267,7 @@ static void TryUseItemOnMove(u8 taskId)
             StringCopy(gStringVar1, GetMoveName(move));
             GetMedicineItemEffectMessage(item, 0);
             DisplayPartyMenuMessage(gStringVar4, TRUE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
         }
     }
@@ -7330,7 +7313,7 @@ static void DisplayLearnMoveMessage(const u8 *str)
 {
     StringExpandPlaceholders(gStringVar4, str);
     DisplayPartyMenuMessage(gStringVar4, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void DisplayLearnMoveMessageAndClose(u8 taskId, const u8 *str)
@@ -7395,7 +7378,7 @@ static void Task_LearnedMove(u8 taskId)
     StringCopy(gStringVar2, GetMoveName(move[0]));
     StringExpandPlaceholders(gStringVar4, gText_PkmnLearnedMove3);
     DisplayPartyMenuMessage(gStringVar4, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = Task_DoLearnedMoveFanfareAfterText;
 }
 
@@ -7523,7 +7506,7 @@ static void StopLearningMovePrompt(u8 taskId)
     StringCopy(gStringVar2, GetMoveName(gPartyMenu.data1));
     StringExpandPlaceholders(gStringVar4, (P_ASK_MOVE_CONFIRMATION) ? gText_StopLearningMove2 : gText_MoveNotLearned);
     DisplayPartyMenuMessage(gStringVar4, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = (P_ASK_MOVE_CONFIRMATION) ? Task_StopLearningMoveYesNo : Task_HandleStopLearningMove;
 }
 
@@ -7630,7 +7613,7 @@ void ItemUseCB_RareCandy(u8 taskId, TaskFunc task)
         {
             gPartyMenuUseExitCallback = FALSE;
             DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = task;
         }
     }
@@ -7675,7 +7658,7 @@ static void UpdateMonDisplayInfoAfterRareCandy(u8 slot, struct Pokemon *mon)
     DisplayPartyPokemonHPBarCheck(mon, &sPartyMenuBoxes[slot]);
     UpdatePartyMonHPBar(sPartyMenuBoxes[slot].monSpriteId, mon);
     AnimatePartySlot(slot, 1);
-    ScheduleBgCopyTilemapToVram(0);
+    ScheduleBgCopyTilemapToVram(1);
 }
 
 static void Task_DisplayLevelUpStatsPg1(u8 taskId)
@@ -7706,7 +7689,7 @@ static void DisplayLevelUpStatsPg1(u8 taskId)
     arrayPtr[12] = CreateLevelUpStatsWindow();
     DrawLevelUpWindowPg1(arrayPtr[12], arrayPtr, &arrayPtr[6], TEXT_COLOR_WHITE, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_LIGHT_GRAY);
     CopyWindowToVram(arrayPtr[12], COPYWIN_GFX);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void DisplayLevelUpStatsPg2(u8 taskId)
@@ -7715,7 +7698,7 @@ static void DisplayLevelUpStatsPg2(u8 taskId)
 
     DrawLevelUpWindowPg2(arrayPtr[12], &arrayPtr[6], TEXT_COLOR_WHITE, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_LIGHT_GRAY);
     CopyWindowToVram(arrayPtr[12], COPYWIN_GFX);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void Task_TryLearnNewMoves(u8 taskId)
@@ -7824,7 +7807,7 @@ static void DisplayMonNeedsToReplaceMove(u8 taskId)
     StringCopy(gStringVar2, GetMoveName(gMoveToLearn));
     StringExpandPlaceholders(gStringVar4, gText_PkmnNeedsToReplaceMove);
     DisplayPartyMenuMessage(gStringVar4, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gPartyMenu.data1 = gMoveToLearn;
     gTasks[taskId].func = Task_ReplaceMoveYesNo;
 }
@@ -7835,7 +7818,7 @@ static void DisplayMonLearnedMove(u8 taskId, u16 move)
     StringCopy(gStringVar2, GetMoveName(move));
     StringExpandPlaceholders(gStringVar4, gText_PkmnLearnedMove3);
     DisplayPartyMenuMessage(gStringVar4, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gPartyMenu.data1 = move;
     gTasks[taskId].func = Task_DoLearnedMoveFanfareAfterText;
 }
@@ -7869,7 +7852,7 @@ void Task_DynamaxCandy(u8 taskId)
             gPartyMenuUseExitCallback = FALSE;
             PlaySE(SE_SELECT);
             DisplayPartyMenuMessage(gText_WontHaveEffect, 1);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
             return;
         }
@@ -7882,7 +7865,7 @@ void Task_DynamaxCandy(u8 taskId)
         PlaySE(SE_USE_ITEM);
         StringExpandPlaceholders(gStringVar4, sText_doneText);
         DisplayPartyMenuMessage(gStringVar4, 1);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         tState++;
         break;
     case 2:
@@ -7971,7 +7954,7 @@ static void Task_SacredAshLoop(u8 taskId)
             {
                 gPartyMenuUseExitCallback = FALSE;
                 DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-                ScheduleBgCopyTilemapToVram(2);
+                ScheduleBgCopyTilemapToVram(0);
             }
             else
             {
@@ -7993,7 +7976,7 @@ static void Task_SacredAshDisplayHPRestored(u8 taskId)
     GetMonNickname(&gParties[B_TRAINER_PLAYER][gPartyMenu.slotId], gStringVar1);
     StringExpandPlaceholders(gStringVar4, gText_PkmnHPRestoredByVar2);
     DisplayPartyMenuMessage(gStringVar4, FALSE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = Task_SacredAshLoop;
 }
 
@@ -8009,7 +7992,7 @@ void ItemUseCB_EvolutionStone(u8 taskId, TaskFunc task)
     {
         gPartyMenuUseExitCallback = FALSE;
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
     }
     else
@@ -8274,7 +8257,7 @@ bool32 TryItemUseFusionChange(u8 taskId, TaskFunc task)
         gPartyMenuUseExitCallback = FALSE;
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = task;
         return FALSE;
     }
@@ -8461,7 +8444,7 @@ static void Task_TryItemUseFusionChange(u8 taskId)
             GetMonNickname(mon, gStringVar1);
             StringExpandPlaceholders(gStringVar4, gText_PkmnTransformed);
             DisplayPartyMenuMessage(gStringVar4, FALSE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].tState++;
         }
         break;
@@ -8539,7 +8522,7 @@ void ItemUseCB_Fusion(u8 taskId, TaskFunc taskFunc)
         {
             gPartyMenuUseExitCallback = FALSE;
             DisplayPartyMenuMessage(gText_YourPartysFull, TRUE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             task->func = Task_ReturnToChooseMonAfterText;
             return;
         }
@@ -8600,7 +8583,7 @@ void ItemUseCB_Fusion(u8 taskId, TaskFunc taskFunc)
                         CopyWindowToVram(sPartyMenuBoxes[i].windowId, COPYWIN_GFX);
                     }
                 }
-                ScheduleBgCopyTilemapToVram(2);
+                ScheduleBgCopyTilemapToVram(0);
                 task->func = Task_HandleChooseMonInput;
                 gPartyMenuUseExitCallback = FALSE;
                 sPartyMenuInternal->exitCallback = NULL;
@@ -8636,7 +8619,7 @@ void ItemUseCB_Fusion(u8 taskId, TaskFunc taskFunc)
     // No Effect - stay party menu
     gPartyMenuUseExitCallback = FALSE;
     DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     if (task->fusionType != FUSE_MON)
     {
         sFusionFirstMonSlot = 0;
@@ -8722,7 +8705,7 @@ static void Task_TryItemUseFormChange(u8 taskId)
             GetMonNickname(mon, gStringVar1);
             StringExpandPlaceholders(gStringVar4, gText_PkmnTransformed);
             DisplayPartyMenuMessage(gStringVar4, FALSE);
-            ScheduleBgCopyTilemapToVram(2);
+            ScheduleBgCopyTilemapToVram(0);
             gTasks[taskId].tState++;
         }
 
@@ -8773,7 +8756,7 @@ bool32 TryItemUseFormChange(u8 taskId, TaskFunc task)
         gPartyMenuUseExitCallback = FALSE;
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
         return FALSE;
     }
@@ -8822,7 +8805,7 @@ bool32 TryMultichoiceFormChange(u8 taskId)
         gPartyMenuUseExitCallback = FALSE;
         PlaySE(SE_SELECT);
         DisplayPartyMenuMessage(gText_WontHaveEffect, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = Task_ClosePartyMenuAfterText;
         return FALSE;
     }
@@ -9193,7 +9176,7 @@ static void Task_HandleSwitchItemsFromBagYesNoInput(u8 taskId)
 static void DisplayItemMustBeRemovedFirstMessage(u8 taskId)
 {
     DisplayPartyMenuMessage(gText_RemoveMailBeforeItem, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = Task_UpdateHeldItemSpriteAndClosePartyMenu;
 }
 
@@ -9229,7 +9212,7 @@ static void TryGiveMailToSelectedMon(u8 taskId)
         ClearMail(mail);
         DisplayPartyMenuMessage(gText_MailTransferredFromMailbox, TRUE);
     }
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     gTasks[taskId].func = Task_UpdateHeldItemSpriteAndClosePartyMenu;
 }
 
@@ -9342,7 +9325,7 @@ static void Task_ValidateChosenHalfParty(u8 taskId)
     {
         PlaySE(SE_FAILURE);
         DisplayPartyMenuMessage(msg, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = Task_ContinueChoosingHalfParty;
     }
     else
@@ -9470,6 +9453,9 @@ static u8 GetPartyMenuActionsTypeInBattle(struct Pokemon *mon)
     if (gPartyMenu.layout == PARTY_LAYOUT_MULTI_FULL_PARTNER)
         return ACTIONS_SUMMARY_ONLY;
 
+    if (gPartyMenu.layout == PARTY_LAYOUT_MULTI && gPartyMenu.slotId >= MULTI_PARTY_SIZE)
+        return ACTIONS_SUMMARY_ONLY;
+
     if (GetMonData(&gParties[B_TRAINER_PLAYER][1], MON_DATA_SPECIES) != SPECIES_NONE
         && GetMonData(mon, MON_DATA_IS_EGG) == FALSE)
     {
@@ -9492,9 +9478,9 @@ static bool8 TrySwitchInPokemon(void)
     GetPartyAndSlotFromPartyMenuId(slot, &party, &partySlot);
     battlePartyId = GetPartyIdFromBattleSlot(slot);
 
-    // In a 6v6 multi battle, slots 1, 4, and 5 are the partner's Pokémon
+    // In a 6v6 multi battle, slots 3-5 are the partner's Pokémon
     if (IsMultiBattle() == TRUE
-        && (slot == 1 || slot == 4 || slot == 5)
+        && slot >= MULTI_PARTY_SIZE
         && !AreMultiPartiesFullTeams())
     {
         StringCopy(gStringVar1, GetTrainerPartnerName());
@@ -9562,20 +9548,10 @@ static void BufferBattlePartyOrder(u8 *partyBattleOrder, u8 flankId)
 
     if (IsMultiBattle() == TRUE)
     {
-        // Party ids are packed in 4 bits at a time
-        // i.e. the party id order below would be 0, 3, 5, 4, 2, 1, and the two parties would be 0,5,4 and 3,2,1
-        if (flankId != 0)
-        {
-            partyBattleOrder[0] = 0 | (3 << 4);
-            partyBattleOrder[1] = 5 | (4 << 4);
-            partyBattleOrder[2] = 2 | (1 << 4);
-        }
-        else
-        {
-            partyBattleOrder[0] = 3 | (0 << 4);
-            partyBattleOrder[1] = 2 | (1 << 4);
-            partyBattleOrder[2] = 5 | (4 << 4);
-        }
+        // Player mons in slots 0-2, partner mons in slots 3-5
+        partyBattleOrder[0] = (0 << 4) | 1;
+        partyBattleOrder[1] = (2 << 4) | 3;
+        partyBattleOrder[2] = (4 << 4) | 5;
         return;
     }
     else if (IsDoubleBattle() == FALSE)
@@ -9644,18 +9620,13 @@ static void BufferBattlePartyOrderBySide(u8 *partyBattleOrder, u8 flankId, enum 
     }
     else if (IsMultiBattle() == TRUE)
     {
-        if (flankId != 0)
-        {
-            partyBattleOrder[0] = 0 | (3 << 4);
-            partyBattleOrder[1] = 5 | (4 << 4);
-            partyBattleOrder[2] = 2 | (1 << 4);
-        }
-        else
-        {
-            partyBattleOrder[0] = 3 | (0 << 4);
-            partyBattleOrder[1] = 2 | (1 << 4);
-            partyBattleOrder[2] = 5 | (4 << 4);
-        }
+        // Player mons in slots 0-2, partner mons in slots 3-5
+        // NOTE: In a link multi battle, battlerPartyOrders in battle_script_commands.c
+        // writes the received link buffer directly into battlerPartyOrders, bypassing this function.
+        // That path still encodes the old interleaved order and will need updating for 6v6
+        partyBattleOrder[0] = (0 << 4) | 1;
+        partyBattleOrder[1] = (2 << 4) | 3;
+        partyBattleOrder[2] = (4 << 4) | 5;
         return;
     }
     else if (IsDoubleBattle() == FALSE)
@@ -9823,26 +9794,15 @@ static void GetPartyAndSlotFromPartyMenuId(s8 menuId, struct Pokemon **party, s8
         }
         break;
     case PARTY_LAYOUT_MULTI:
-        switch (menuId)
+        if (menuId >= MULTI_PARTY_SIZE)
         {
-        case 1:
-            *party = gParties[B_TRAINER_PARTNER];
-            *partySlot = 0;
-            break;
-        case 4:
-        case 5:
             *party = gParties[B_TRAINER_PARTNER];
             *partySlot = menuId - MULTI_PARTY_SIZE;
-            break;
-        case 2:
-        case 3:
-            *party = gParties[B_TRAINER_PLAYER];
-            *partySlot = menuId - 1;
-            break;
-        default:
+        }
+        else
+        {
             *party = gParties[B_TRAINER_PLAYER];
             *partySlot = menuId;
-            break;
         }
         break;
     default:
@@ -9888,8 +9848,8 @@ static u8 CombinedToIndividualPartyId(u8 index)
     return index;
 }
 
-static const u8 sMultiBattlePartyIdToMenuId_Left[PARTY_SIZE] = { 0, 2, 3, 1, 4, 5 };
-static const u8 sMultiBattlePartyIdToMenuId_Right[PARTY_SIZE] = { 1, 4, 5, 0, 2, 3 };
+static const u8 sMultiBattlePartyIdToMenuId_Left[PARTY_SIZE]  = { 0, 1, 2, 3, 4, 5 };
+static const u8 sMultiBattlePartyIdToMenuId_Right[PARTY_SIZE] = { 3, 4, 5, 0, 1, 2 };
 
 static void UpdatePartyToBattleOrder(void)
 {
@@ -9972,10 +9932,25 @@ void ShowPartyMenuToShowcaseMultiBattleParty(void)
 
 static void Task_InitMultiPartnerPartySlideIn(u8 taskId)
 {
-    // The first slide step also sets the sprites offscreen
+    u8 i;
+    u8 width  = GetWindowAttribute(sPartyMenuBoxes[MULTI_PARTY_SIZE].windowId, WINDOW_WIDTH);
+    u8 height = GetWindowAttribute(sPartyMenuBoxes[MULTI_PARTY_SIZE].windowId, WINDOW_HEIGHT);
+
+    for (i = MULTI_PARTY_SIZE; i < PARTY_SIZE; i++)
+    {
+        u8 left = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_TILEMAP_LEFT);
+        u8 top  = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_TILEMAP_TOP);
+        sAllSlotsTilemapBuffers[i] = Alloc(width * height * sizeof(u16));
+        if (sAllSlotsTilemapBuffers[i] != NULL)
+        {
+            CopyToBufferFromBgTilemap(1, sAllSlotsTilemapBuffers[i], left, top, width, height);
+            ClearWindowTilemap(sPartyMenuBoxes[i].windowId);
+        }
+    }
+    ScheduleBgCopyTilemapToVram(1);
+
     gTasks[taskId].tXPos = 256;
     SlideMultiPartyMenuBoxSpritesOneStep(taskId);
-    ChangeBgX(2, 0x10000, BG_COORD_SET);
     gTasks[taskId].func = Task_MultiPartnerPartySlideIn;
 }
 
@@ -9987,14 +9962,21 @@ static void Task_MultiPartnerPartySlideIn(u8 taskId)
     if (!gPaletteFade.active)
     {
         tXPos -= 8;
-        SlideMultiPartyMenuBoxSpritesOneStep(taskId);
-        if (tXPos == 0)
+        if (tXPos > 0)
+        {
+            SlideMultiPartyMenuBoxSpritesOneStep(taskId);
+        }
+        else
         {
             for (i = MULTI_PARTY_SIZE; i < PARTY_SIZE; i++)
             {
+                Free(sAllSlotsTilemapBuffers[i]);
+                sAllSlotsTilemapBuffers[i] = NULL;
+                PutWindowTilemap(sPartyMenuBoxes[i].windowId);
                 if (gMultiPartnerParty[i - MULTI_PARTY_SIZE].species != SPECIES_NONE)
                     AnimateSelectedPartyIcon(sPartyMenuBoxes[i].monSpriteId, 0);
             }
+            ScheduleBgCopyTilemapToVram(1);
             PlaySE(SE_M_HARDEN); // The Harden SE plays once the partners party mons have slid on screen
             gTasks[taskId].func = Task_WaitAfterMultiPartnerPartySlideIn;
         }
@@ -10064,8 +10046,16 @@ static void SlideMultiPartyMenuBoxSpritesOneStep(u8 taskId)
             MoveMultiPartyMenuBoxSprite(sPartyMenuBoxes[i].itemSpriteId, tXPos - 8);
             MoveMultiPartyMenuBoxSprite(sPartyMenuBoxes[i].statusSpriteId, tXPos - 8);
         }
+        if (sAllSlotsTilemapBuffers[i] != NULL)
+        {
+            u8 left   = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_TILEMAP_LEFT);
+            u8 top    = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_TILEMAP_TOP);
+            u8 width  = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_WIDTH);
+            u8 height = GetWindowAttribute(sPartyMenuBoxes[i].windowId, WINDOW_HEIGHT);
+            MoveAndBufferPartySlot(sAllSlotsTilemapBuffers[i], left + tXPos / 8, top, width, height, -1);
+        }
     }
-    ChangeBgX(2, 0x800, BG_COORD_ADD);
+    ScheduleBgCopyTilemapToVram(1);
 }
 
 #undef tXpos
@@ -10403,7 +10393,7 @@ void CursorCb_MoveItemCallback(u8 taskId)
 
         // return to the main party menu
         DestroySelectFrame();
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         CreateHoverSprite(&sPartyMenuBoxes[gPartyMenu.slotId], gPartyMenu.slotId);
         gTasks[taskId].func = Task_UpdateHeldItemSprite;
         break;
@@ -10447,7 +10437,7 @@ void CursorCb_MoveItem(u8 taskId)
         DisplayPartyMenuMessage(gStringVar4, TRUE);
 
         // return to the main party menu
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = Task_UpdateHeldItemSprite;
     }
 }
@@ -10466,7 +10456,7 @@ static void DisplayGiveHowManyMessage(void)
     GetMonNickname(mon, gStringVar2);
     StringExpandPlaceholders(gStringVar4, COMPOUND_STRING("Give how many {STR_VAR_1}\nto {STR_VAR_2}?"));
     DisplayPartyMenuMessage(gStringVar4, TRUE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static bool8 DoesItemIncreaseEV(u8 itemType)
@@ -10496,8 +10486,8 @@ static void ClearHowManyItemsWindow(u8 taskId)
     ClearWindowTilemap(WIN_MSG);
     DestroyMessageWindowSprite();
     DestroyMultiuseWindowSprite();
-    FillBgTilemapBufferRect(2, 0, 23, 10, 6, 4, 13);
-    ScheduleBgCopyTilemapToVram(2);
+    FillBgTilemapBufferRect(0, 0, 23, 10, 6, 4, 13);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void PrintHowManyItemsWindow(u8 taskId)
@@ -10518,11 +10508,11 @@ static void Task_GiveHowManyItems(u8 taskId)
     if (IsPartyMenuTextPrinterActive() != TRUE)
     {
         tWindowId = AddWindow(&sGiveHowManyItemsWindowTemplate);
-        FillBgTilemapBufferRect(2, 0, 23, 10, 6, 4, 13);
+        FillBgTilemapBufferRect(0, 0, 23, 10, 6, 4, 13);
         PutWindowTilemap(tWindowId);
         PrintHowManyItemsWindow(taskId);
         CopyWindowToVram(tWindowId, COPYWIN_GFX);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
 
         gTasks[taskId].func = Task_GiveHowManyItemsHandleInput;
     }
@@ -10611,7 +10601,7 @@ static void ItemUse_ApplyEvReduceBerry(u8 taskId)
         StringExpandPlaceholders(gStringVar4, gText_PkmnAdoresBaseVar2Fell);
     }
     DisplayPartyMenuMessage(gStringVar4, FALSE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     if (CountTotalItemQuantityInBag(gSpecialVar_ItemId) == 0)
         gTasks[taskId].func = Task_ClosePartyMenuAfterText;
     else
@@ -10635,7 +10625,7 @@ static void ItemUse_ApplyEvIncreaseItem(u8 taskId)
     GetMonNickname(mon, gStringVar1);
     GetMedicineItemEffectMessage(item, 0);
     DisplayPartyMenuMessage(gStringVar4, FALSE);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
     if (CountTotalItemQuantityInBag(gSpecialVar_ItemId) == 0)
         gTasks[taskId].func = Task_ClosePartyMenuAfterText;
     else
@@ -10676,7 +10666,7 @@ static void ItemUse_ApplyExpCandy(u8 taskId)
         }
 
         DisplayPartyMenuMessage(gStringVar4, TRUE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         gTasks[taskId].func = Task_DisplayLevelUpStatsPg1;
     }
     else
@@ -10686,7 +10676,7 @@ static void ItemUse_ApplyExpCandy(u8 taskId)
         ConvertIntToDecimalStringN(gStringVar2, sExpCandyExperienceTable[tHoldEffectParam - 1] * tItemCount, STR_CONV_MODE_LEFT_ALIGN, 7);
         StringExpandPlaceholders(gStringVar4, gText_PkmnGainedExp);
         DisplayPartyMenuMessage(gStringVar4, FALSE);
-        ScheduleBgCopyTilemapToVram(2);
+        ScheduleBgCopyTilemapToVram(0);
         if (CountTotalItemQuantityInBag(gSpecialVar_ItemId) == 0)
             gTasks[taskId].func = Task_ClosePartyMenuAfterText;
         else
@@ -10723,7 +10713,7 @@ static void FirstBattleEnterParty_DestroyVoiceoverWindow(u8 windowId)
     ClearWindowTilemap(windowId);
     ClearDialogWindowAndFrameToTransparent(windowId, FALSE);
     RemoveWindow(windowId);
-    ScheduleBgCopyTilemapToVram(2);
+    ScheduleBgCopyTilemapToVram(0);
 }
 
 static void Task_FirstBattleEnterParty_WaitFadeIn(u8 taskId)

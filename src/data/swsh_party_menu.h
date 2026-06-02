@@ -59,7 +59,7 @@ static const struct BgTemplate sPartyMenuBgTemplates[] =
         .mapBaseIndex = 31,
         .screenSize = 0,
         .paletteMode = 0,
-        .priority = 1,
+        .priority = 0,
         .baseTile = 0
     },
     {
@@ -68,16 +68,16 @@ static const struct BgTemplate sPartyMenuBgTemplates[] =
         .mapBaseIndex = 30,
         .screenSize = 0,
         .paletteMode = 0,
-        .priority = 2,
+        .priority = 1,
         .baseTile = 0
     },
     {
         .bg = 2,
         .charBaseIndex = 0,
         .mapBaseIndex = 28,
-        .screenSize = 1,
+        .screenSize = 0,
         .paletteMode = 0,
-        .priority = 0,
+        .priority = 2,
         .baseTile = 0
     },
     {
@@ -136,20 +136,20 @@ static const u8 sPartyMenuSpriteCoords[PARTY_LAYOUT_COUNT][PARTY_SIZE][4 * 2] =
     [PARTY_LAYOUT_MULTI] =
     {
         { 26,  18,  32,  28, 100,  27,  16,  18},
-        { 26,  42,  32,  52, 100,  51,  16,  74},
-        { 34,  66,  40,  76, 108,  75, 102,  33},
-        { 34,  90,  40, 100, 108,  99, 102,  57},
-        { 34, 114,  40, 124, 108, 123, 102,  89},
-        { 34, 138,  40, 148, 108, 147, 102, 113},
+        { 34,  42,  40,  52, 108,  51, 102,  25},
+        { 34,  66,  40,  76, 108,  75, 102,  49},
+        { 26,  90,  32, 100, 100,  99,  16,  90},
+        { 34, 114,  40, 124, 108, 123, 102,  97},
+        { 34, 138,  40, 148, 108, 147, 102, 121},
     },
     [PARTY_LAYOUT_MULTI_SHOWCASE] =
     {
-        { 26,  18,  32,  28, 100,  27,  16,  26},
-        { 34,  66,  40,  76, 108,  75, 102,  65},
-        { 34,  90,  40, 100, 108,  99, 102,  98},
-        { 26,  42,  32,  52, 100,  51,  16,  41},
-        { 34, 114,  40, 124, 108, 123, 102, 113},
-        { 34, 138,  40, 148, 108, 147, 102, 137},
+        { 26,  18,  32,  28, 100,  27,  16,  18},
+        { 34,  42,  40,  52, 108,  51, 102,  25},
+        { 34,  66,  40,  76, 108,  75, 102,  49},
+        { 26,  90,  32, 100, 100,  99,  16,  90},
+        { 34, 114,  40, 124, 108, 123, 102,  97},
+        { 34, 138,  40, 148, 108, 147, 102, 121},
     },
     // MULTI_FULL* layouts use the same positions as SINGLE
     [PARTY_LAYOUT_MULTI_FULL] =
@@ -489,7 +489,7 @@ static const struct WindowTemplate sShowcaseMultiPartyMenuWindowTemplate[] =
 static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
 {
     { // Party mon 1
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 1,
         .width = 14,
@@ -498,7 +498,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x6F,
     },
     { // Party mon 2
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 4,
         .width = 14,
@@ -507,7 +507,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x99,
     },
     { // Party mon 3
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 7,
         .width = 14,
@@ -516,7 +516,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0xC3,
     },
     { // Party mon 4
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 10,
         .width = 14,
@@ -525,7 +525,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0xED,
     },
     { // Party mon 5
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 13,
         .width = 14,
@@ -534,7 +534,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x117,
     },
     { // Party mon 6
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 16,
         .width = 14,
@@ -543,7 +543,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x141,
     },
     [WIN_MSG] = {
-        .bg = 2,
+        .bg = 0,
         .tilemapLeft = 1,
         .tilemapTop = 15,
         .width = 28,
@@ -552,7 +552,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x16B,
     },
     [PARTY_LABEL_WINDOW_PROMPT] = {
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 16,
         .tilemapTop = 18,
         .width = 14,
@@ -566,7 +566,7 @@ static const struct WindowTemplate sSinglePartyMenuWindowTemplate_SwSh[] =
 static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
 {
     { // Party mon 1
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 1,
         .tilemapTop = 1,
         .width = 14,
@@ -575,7 +575,7 @@ static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x6F,
     },
     { // Party mon 2
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 1,
         .tilemapTop = 4,
         .width = 14,
@@ -584,7 +584,7 @@ static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x99,
     },
     { // Party mon 3
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 7,
         .width = 14,
@@ -593,7 +593,7 @@ static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0xC3,
     },
     { // Party mon 4
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 10,
         .width = 14,
@@ -602,7 +602,7 @@ static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0xED,
     },
     { // Party mon 5
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 13,
         .width = 14,
@@ -611,7 +611,7 @@ static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x117,
     },
     { // Party mon 6
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 16,
         .width = 14,
@@ -620,7 +620,7 @@ static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x141,
     },
     [WIN_MSG] = {
-        .bg = 2,
+        .bg = 0,
         .tilemapLeft = 1,
         .tilemapTop = 15,
         .width = 28,
@@ -633,8 +633,8 @@ static const struct WindowTemplate sDoublePartyMenuWindowTemplate_SwSh[] =
 
 static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
 {
-    { // Party mon 1
-        .bg = 0,
+    { // Party mon 1 (player lead)
+        .bg = 1,
         .tilemapLeft = 1,
         .tilemapTop = 1,
         .width = 14,
@@ -643,8 +643,8 @@ static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x6F,
     },
     { // Party mon 2
-        .bg = 0,
-        .tilemapLeft = 1,
+        .bg = 1,
+        .tilemapLeft = 2,
         .tilemapTop = 4,
         .width = 14,
         .height = 3,
@@ -652,7 +652,7 @@ static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x99,
     },
     { // Party mon 3
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 7,
         .width = 14,
@@ -660,9 +660,9 @@ static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
         .paletteNum = 5,
         .baseBlock = 0xC3,
     },
-    { // Party mon 4
-        .bg = 0,
-        .tilemapLeft = 2,
+    { // Party mon 4 (partner lead)
+        .bg = 1,
+        .tilemapLeft = 1,
         .tilemapTop = 10,
         .width = 14,
         .height = 3,
@@ -670,7 +670,7 @@ static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0xED,
     },
     { // Party mon 5
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 13,
         .width = 14,
@@ -679,7 +679,7 @@ static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x117,
     },
     { // Party mon 6
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 16,
         .width = 14,
@@ -688,7 +688,7 @@ static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
         .baseBlock = 0x141,
     },
     [WIN_MSG] = {
-        .bg = 2,
+        .bg = 0,
         .tilemapLeft = 1,
         .tilemapTop = 15,
         .width = 28,
@@ -701,8 +701,8 @@ static const struct WindowTemplate sMultiPartyMenuWindowTemplate_SwSh[] =
 
 static const struct WindowTemplate sShowcaseMultiPartyMenuWindowTemplate_SwSh[] =
 {
-    { // Party mon 1
-        .bg = 0,
+    { // Party mon 1 (player lead)
+        .bg = 1,
         .tilemapLeft = 1,
         .tilemapTop = 1,
         .width = 14,
@@ -711,34 +711,34 @@ static const struct WindowTemplate sShowcaseMultiPartyMenuWindowTemplate_SwSh[] 
         .baseBlock = 0x6F,
     },
     { // Party mon 2
-        .bg = 0,
+        .bg = 1,
+        .tilemapLeft = 2,
+        .tilemapTop = 4,
+        .width = 14,
+        .height = 3,
+        .paletteNum = 4,
+        .baseBlock = 0x99,
+    },
+    { // Party mon 3
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 7,
         .width = 14,
         .height = 3,
         .paletteNum = 5,
-        .baseBlock = 0x99,
+        .baseBlock = 0xC3,
     },
-    { // Party mon 3
-        .bg = 0,
-        .tilemapLeft = 2,
+    { // Party mon 4 (partner lead)
+        .bg = 1,
+        .tilemapLeft = 1,
         .tilemapTop = 10,
         .width = 14,
         .height = 3,
         .paletteNum = 6,
-        .baseBlock = 0xC3,
-    },
-    { // Party mon 4
-        .bg = 2,
-        .tilemapLeft = 1,
-        .tilemapTop = 4,
-        .width = 14,
-        .height = 3,
-        .paletteNum = 4,
         .baseBlock = 0xED,
     },
     { // Party mon 5
-        .bg = 2,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 13,
         .width = 14,
@@ -747,7 +747,7 @@ static const struct WindowTemplate sShowcaseMultiPartyMenuWindowTemplate_SwSh[] 
         .baseBlock = 0x117,
     },
     { // Party mon 6
-        .bg = 2,
+        .bg = 1,
         .tilemapLeft = 2,
         .tilemapTop = 16,
         .width = 14,
@@ -760,7 +760,7 @@ static const struct WindowTemplate sShowcaseMultiPartyMenuWindowTemplate_SwSh[] 
 
 static const struct WindowTemplate sDefaultPartyMsgWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 1,
     .tilemapTop = 17,
     .width = 21,
@@ -771,7 +771,7 @@ static const struct WindowTemplate sDefaultPartyMsgWindowTemplate =
 
 static const struct WindowTemplate sWindowTemplate_FirstBattleOakVoiceover =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 2,
     .tilemapTop = 15,
     .width = 27,
@@ -826,7 +826,7 @@ static const struct WindowTemplate sWindowTemplate_FirstBattleOakVoiceover =
 
 static const struct WindowTemplate sAlreadyHoldingOneMsgWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 1,
     .tilemapTop = 15,
     .width = 20,
@@ -837,7 +837,7 @@ static const struct WindowTemplate sAlreadyHoldingOneMsgWindowTemplate =
 
 static const struct WindowTemplate sOrderWhichApplianceMsgWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 1,
     .tilemapTop = 15,
     .width = 14,
@@ -848,7 +848,7 @@ static const struct WindowTemplate sOrderWhichApplianceMsgWindowTemplate =
 
 static const struct WindowTemplate sItemGiveTakeWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 23,
     .tilemapTop = 11,
     .width = 6,
@@ -859,7 +859,7 @@ static const struct WindowTemplate sItemGiveTakeWindowTemplate =
 
 static const struct WindowTemplate sMailReadTakeWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 21,
     .tilemapTop = 13,
     .width = 8,
@@ -870,7 +870,7 @@ static const struct WindowTemplate sMailReadTakeWindowTemplate =
 
 static const struct WindowTemplate sMoveSelectWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 19,
     .tilemapTop = 11,
     .width = 10,
@@ -881,7 +881,7 @@ static const struct WindowTemplate sMoveSelectWindowTemplate =
 
 static const struct WindowTemplate sCatalogSelectWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 17,
     .tilemapTop = 5,
     .width = 12,
@@ -892,7 +892,7 @@ static const struct WindowTemplate sCatalogSelectWindowTemplate =
 
 static const struct WindowTemplate sZygardeCubeSelectWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 18,
     .tilemapTop = 13,
     .width = 11,
@@ -903,7 +903,7 @@ static const struct WindowTemplate sZygardeCubeSelectWindowTemplate =
 
 static const struct WindowTemplate sPartyMenuYesNoWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 21,
     .tilemapTop = 9,
     .width = 5,
@@ -914,7 +914,7 @@ static const struct WindowTemplate sPartyMenuYesNoWindowTemplate =
 
 static const struct WindowTemplate sLevelUpStatsWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 19,
     .tilemapTop = 1,
     .width = 10,
@@ -925,7 +925,7 @@ static const struct WindowTemplate sLevelUpStatsWindowTemplate =
 
 static const struct WindowTemplate sGiveHowManyItemsWindowTemplate =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 20,
     .tilemapTop = 11,
     .width = 4,
@@ -937,7 +937,7 @@ static const struct WindowTemplate sGiveHowManyItemsWindowTemplate =
 static const struct WindowTemplate sMoveInfoWindowTemplate_SwSh[] =
 {
     { // Move slot 1
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 16,
         .tilemapTop = 2,
         .width = 14,
@@ -946,7 +946,7 @@ static const struct WindowTemplate sMoveInfoWindowTemplate_SwSh[] =
         .baseBlock = 0x331,
     },
     { // Move slot 2
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 16,
         .tilemapTop = 4,
         .width = 14,
@@ -955,7 +955,7 @@ static const struct WindowTemplate sMoveInfoWindowTemplate_SwSh[] =
         .baseBlock = 0x34D,
     },
     { // Move slot 3
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 16,
         .tilemapTop = 6,
         .width = 14,
@@ -964,7 +964,7 @@ static const struct WindowTemplate sMoveInfoWindowTemplate_SwSh[] =
         .baseBlock = 0x369,
     },
     { // Move slot 4
-        .bg = 0,
+        .bg = 1,
         .tilemapLeft = 16,
         .tilemapTop = 8,
         .width = 14,
@@ -976,7 +976,7 @@ static const struct WindowTemplate sMoveInfoWindowTemplate_SwSh[] =
 
 static const struct WindowTemplate sAbilityInfoWindowTemplate =
 {
-    .bg = 0,
+    .bg = 1,
     .tilemapLeft = 17,
     .tilemapTop = 11,
     .width = 13,
@@ -987,7 +987,7 @@ static const struct WindowTemplate sAbilityInfoWindowTemplate =
 
 static const struct WindowTemplate sUnusedWindowTemplate1 =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 2,
     .tilemapTop = 15,
     .width = 27,
@@ -998,7 +998,7 @@ static const struct WindowTemplate sUnusedWindowTemplate1 =
 
 static const struct WindowTemplate sUnusedWindowTemplate2 =
 {
-    .bg = 2,
+    .bg = 0,
     .tilemapLeft = 0,
     .tilemapTop = 13,
     .width = 18,
@@ -1131,26 +1131,26 @@ struct
     TaskFunc func;
 } static const sCursorOptions[MENU_FIELD_MOVES] =
 {
-    [MENU_SUMMARY]         = {COMPOUND_STRING("SUMMARY"),         CursorCb_Summary},
-    [MENU_SWITCH]          = {COMPOUND_STRING("SWITCH"),          CursorCb_Switch},
-    [MENU_CANCEL1]         = {gText_Cancel2,                      CursorCb_Cancel1},
-    [MENU_ITEM]            = {COMPOUND_STRING("ITEM"),            CursorCb_Item},
-    [MENU_GIVE]            = {gMenuText_Give,                     CursorCb_Give},
-    [MENU_TAKE_ITEM]       = {COMPOUND_STRING("TAKE"),            CursorCb_TakeItem},
-    [MENU_MOVE_ITEM]       = {COMPOUND_STRING("MOVE"),            CursorCb_MoveItem},
-    [MENU_MAIL]            = {COMPOUND_STRING("MAIL"),            CursorCb_Mail},
-    [MENU_TAKE_MAIL]       = {COMPOUND_STRING("TAKE"),            CursorCb_TakeMail},
-    [MENU_READ]            = {COMPOUND_STRING("READ"),            CursorCb_Read},
-    [MENU_CANCEL2]         = {gText_Cancel2,                      CursorCb_Cancel2},
-    [MENU_SHIFT]           = {COMPOUND_STRING("SHIFT"),           CursorCb_SendMon},
-    [MENU_SEND_OUT]        = {COMPOUND_STRING("SEND OUT"),        CursorCb_SendMon},
-    [MENU_ENTER]           = {COMPOUND_STRING("ENTER"),           CursorCb_Enter},
-    [MENU_NO_ENTRY]        = {COMPOUND_STRING("NO ENTRY"),        CursorCb_NoEntry},
-    [MENU_STORE]           = {COMPOUND_STRING("STORE"),           CursorCb_Store},
-    [MENU_REGISTER]        = {gText_Register,                     CursorCb_Register},
-    [MENU_TRADE1]          = {sText_Trade4,                       CursorCb_Trade1},
-    [MENU_TRADE2]          = {sText_Trade4,                       CursorCb_Trade2},
-    [MENU_TOSS]            = {gMenuText_Toss,                     CursorCb_Toss},
+    [MENU_SUMMARY]         = {COMPOUND_STRING("Summary"),         CursorCb_Summary},
+    [MENU_SWITCH]          = {COMPOUND_STRING("Switch"),          CursorCb_Switch},
+    [MENU_CANCEL1]         = {COMPOUND_STRING("Cancel"),          CursorCb_Cancel1},
+    [MENU_ITEM]            = {COMPOUND_STRING("Item"),            CursorCb_Item},
+    [MENU_GIVE]            = {COMPOUND_STRING("Give"),            CursorCb_Give},
+    [MENU_TAKE_ITEM]       = {COMPOUND_STRING("Take"),            CursorCb_TakeItem},
+    [MENU_MOVE_ITEM]       = {COMPOUND_STRING("Move"),            CursorCb_MoveItem},
+    [MENU_MAIL]            = {COMPOUND_STRING("Mail"),            CursorCb_Mail},
+    [MENU_TAKE_MAIL]       = {COMPOUND_STRING("Take"),            CursorCb_TakeMail},
+    [MENU_READ]            = {COMPOUND_STRING("Read"),            CursorCb_Read},
+    [MENU_CANCEL2]         = {COMPOUND_STRING("Cancel"),          CursorCb_Cancel2},
+    [MENU_SHIFT]           = {COMPOUND_STRING("Shift"),           CursorCb_SendMon},
+    [MENU_SEND_OUT]        = {COMPOUND_STRING("Send Out"),        CursorCb_SendMon},
+    [MENU_ENTER]           = {COMPOUND_STRING("Enter"),           CursorCb_Enter},
+    [MENU_NO_ENTRY]        = {COMPOUND_STRING("No Entry"),        CursorCb_NoEntry},
+    [MENU_STORE]           = {COMPOUND_STRING("Store"),           CursorCb_Store},
+    [MENU_REGISTER]        = {COMPOUND_STRING("Register"),        CursorCb_Register},
+    [MENU_TRADE1]          = {COMPOUND_STRING("Trade"),           CursorCb_Trade1},
+    [MENU_TRADE2]          = {COMPOUND_STRING("Trade"),           CursorCb_Trade2},
+    [MENU_TOSS]            = {COMPOUND_STRING("Toss"),            CursorCb_Toss},
     [MENU_CATALOG_BULB]    = {COMPOUND_STRING("Light bulb"),      CursorCb_CatalogBulb},
     [MENU_CATALOG_OVEN]    = {COMPOUND_STRING("Microwave oven"),  CursorCb_CatalogOven},
     [MENU_CATALOG_WASHING] = {COMPOUND_STRING("Washing machine"), CursorCb_CatalogWashing},
