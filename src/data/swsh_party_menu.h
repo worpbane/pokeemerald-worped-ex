@@ -214,11 +214,12 @@ static const u8 sFontColorTable[][3] =
     {TEXT_COLOR_WHITE,       TEXT_COLOR_BLUE,       TEXT_COLOR_LIGHT_BLUE}, // Field moves
     {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_WHITE,      TEXT_COLOR_DARK_GRAY},  // Unused
     {TEXT_COLOR_WHITE,       TEXT_COLOR_RED,        TEXT_COLOR_LIGHT_RED},  // Move relearner
-    {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_GREEN,      TEXT_COLOR_LIGHT_GREEN},// PP state 0 (FG 6  / SH  7)
-    {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_BLUE,       TEXT_COLOR_LIGHT_BLUE}, // PP state 1 (FG 8  / SH  9)
-    {TEXT_COLOR_TRANSPARENT, TEXT_DYNAMIC_COLOR_1,  TEXT_DYNAMIC_COLOR_2},  // PP state 2 (FG 10 / SH 11)
-    {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_RED,        TEXT_COLOR_LIGHT_RED},  // PP state 3 (FG 4  / SH  5)
-    {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_RED,        TEXT_COLOR_LIGHT_GREEN},  // Item multiuse (FG 4 / SH 7)
+    {0,  5,  6},  // PP state 0 (yellow)
+    {0,  7,  8},  // PP state 1 (orange)
+    {0,  9, 10},  // PP state 2 (red)
+    {0,  3,  4},  // PP state 3 (white)
+    {0,  1,  2},  // Ability name, move names
+    {0,  3,  6},  // Item multiuse
 };
 
 static const struct WindowTemplate sSinglePartyMenuWindowTemplate[] =
@@ -981,7 +982,7 @@ static const struct WindowTemplate sAbilityInfoWindowTemplate =
     .tilemapTop = 11,
     .width = 13,
     .height = 4,
-    .paletteNum = 0,
+    .paletteNum = 1,
     .baseBlock = 0x3A7,
 };
 
@@ -1024,40 +1025,29 @@ static const u8 sMoveTilemap_Empty_SwSh[] = INCBIN_U8("graphics/party_menu/swsh/
 static const u8 sAbilityTilemap_SwSh[]    = INCBIN_U8("graphics/party_menu/swsh/ability_box.bin");
 
 // Palette offsets
-static const u8 sGenderPalOffsets[] = {11, 12};
-static const u8 sHPBarPalOffsets[] = {9, 10};
-static const u8 sPartyBoxPalOffsets1[] = {4, 5, 6};
-static const u8 sPartyBoxPalOffsets2[] = {1, 7, 8};
-static const u8 sPartyBoxPalOffsets3[] = {2, 3};
-static const u8 sPartyBoxNoMonPalOffsets[] = {1, 11, 12};
+static const u8 sGenderPalOffsets[]     = {11, 12};
+static const u8 sHPBarPalOffset         = 9;
+static const u8 sPartyBoxPalOffset1     = 1;
+static const u8 sPartyBoxPalOffsets3[]  = {2, 3};
 
 // Palette ids
-static const u8 sGenderMalePalIds[] = {59, 60};
-static const u8 sGenderFemalePalIds[] = {75, 76};
-static const u8 sHPBarGreenPalIds[] = {57, 58};
-static const u8 sHPBarYellowPalIds[] = {73, 74};
-static const u8 sHPBarRedPalIds[] = {89, 90};
-static const u8 sPartyBoxEmptySlotPalIds1[] = {52, 53, 54};
-static const u8 sPartyBoxMultiPalIds1[] = {68, 69, 70};
-static const u8 sPartyBoxFaintedPalIds1[] = {84, 85, 86};
-static const u8 sPartyBoxCurrSelectionPalIds1[] = {116, 117, 118};
-static const u8 sPartyBoxCurrSelectionMultiPalIds[] = {132, 133, 134};
-static const u8 sPartyBoxCurrSelectionFaintedPalIds[] = {148, 149, 150};
-static const u8 sPartyBoxSelectedForActionPalIds1[] = {100, 101, 102};
-static const u8 sPartyBoxEmptySlotPalIds2[] = {49, 55, 56};
-static const u8 sPartyBoxMultiPalIds2[] = {65, 71, 72};
-static const u8 sPartyBoxFaintedPalIds2[] = {81, 87, 88};
-static const u8 sPartyBoxCurrSelectionPalIds2[] = {97, 103, 104};
-static const u8 sPartyBoxSelectedForActionPalIds2[] = {161, 167, 168};
-static const u8 sPartyBoxNoMonPalIds[] = {17, 27, 28};
+static const u8 sGenderMalePalIds[]               = {11, 12};
+static const u8 sGenderFemalePalIds[]             = {13, 14};
+static const u8 sHPBarPalIds[]                    = {7, 8, 9};
+static const u8 sHPBarEmptyPalId                  = 10;
+static const u8 sPartyBoxNoMonPalId               = 17;
+static const u8 sPartyBoxEmptySlotPalId1          = 33;
+static const u8 sPartyBoxMultiPalId1              = 49;
+static const u8 sPartyBoxSelectedForActionPalId1  = 65;
+static const u8 sPartyBoxCurrSelectionPalId1      = 81;
+static const u8 sPartyBoxCurrSelectionMultiPalId  = 97;
+
 // Text palettes
-static const u8 sPartyBoxEmptySlotPalIds3[] = {50, 51};
-static const u8 sPartyBoxMultiPalIds3[] = {66, 67};
-static const u8 sPartyBoxFaintedPalIds3[] = {82, 83};
-static const u8 sPartyBoxCurrSelectionPalIds3[] = {114, 115};
-static const u8 sPartyBoxCurrSelectionMultiPalIds3[] = {130, 131};
-static const u8 sPartyBoxCurrSelectionFaintedPalIds3[] = {146, 147};
-static const u8 sPartyBoxSelectedForActionPalIds3[] = {98, 99};
+static const u8 sPartyBoxEmptySlotPalIds3[]          = {34, 35};
+static const u8 sPartyBoxMultiPalIds3[]              = {50, 51};
+static const u8 sPartyBoxSelectedForActionPalIds3[]  = {66, 67};
+static const u8 sPartyBoxCurrSelectionPalIds3[]      = {82, 83};
+static const u8 sPartyBoxCurrSelectionMultiPalIds3[] = {98, 99};
 
 static const u8 *const sActionStringTable[] =
 {

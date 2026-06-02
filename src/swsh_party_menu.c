@@ -1262,8 +1262,8 @@ static bool8 DecompressGraphics(void)
         sPartyMenuInternal->switchCounter++;
         break;
     case 3:
-        LoadPalette(sPartyMenuBg_Pal_SwSh, BG_PLTT_ID(0), 11 * PLTT_SIZE_4BPP);
-        CpuCopy16(gPlttBufferUnfaded, sPartyMenuInternal->palBuffer, 11 * PLTT_SIZE_4BPP);
+        LoadPalette(sPartyMenuBg_Pal_SwSh, BG_PLTT_ID(0), 7 * PLTT_SIZE_4BPP);
+        CpuCopy16(gPlttBufferUnfaded, sPartyMenuInternal->palBuffer, 7 * PLTT_SIZE_4BPP);
         sPartyMenuInternal->switchCounter++;
         break;
     case 4:
@@ -1551,7 +1551,7 @@ static void DisplayPartyPokemonAbility(u8 windowId, u8 slot)
             ability = GetAbilityBySpecies(species, abilityNum);
             name = gAbilitiesInfo[ability].name;
             x = GetStringCenterAlignXOffset(FONT_SMALL, name, 104);
-            AddTextPrinterParameterized3(windowId, FONT_SMALL, x, y, sFontColorTable[9], 0, name);
+            AddTextPrinterParameterized3(windowId, FONT_SMALL, x, y, sFontColorTable[11], 0, name);
         }
     }
     CopyWindowToVram(windowId, COPYWIN_GFX);
@@ -3177,13 +3177,6 @@ static void DrawEmptySlot(u8 windowId)
     BlitBitmapToPartyWindow(windowId, sSlotTilemap_Empty_SwSh, 14, 0, 0, 14, 3);
 }
 
-#define LOAD_PARTY_BOX_PAL(paletteIds, paletteOffsets)                                                    \
-{                                                                                                         \
-    LoadPalette(GetPartyMenuPalBufferPtr(paletteIds[0]), paletteOffsets[0] + palOffset, PLTT_SIZEOF(1));  \
-    LoadPalette(GetPartyMenuPalBufferPtr(paletteIds[1]), paletteOffsets[1] + palOffset, PLTT_SIZEOF(1));  \
-    LoadPalette(GetPartyMenuPalBufferPtr(paletteIds[2]), paletteOffsets[2] + palOffset, PLTT_SIZEOF(1));  \
-}
-
 #define LOAD_PARTY_TEXT_PAL(paletteIds, paletteOffsets)                                                   \
 {                                                                                                         \
     LoadPalette(GetPartyMenuPalBufferPtr(paletteIds[0]), paletteOffsets[0] + palOffset, PLTT_SIZEOF(1));  \
@@ -3196,69 +3189,34 @@ static void LoadPartyBoxPalette(struct PartyMenuBox *menuBox, u8 palFlags)
 
     if (palFlags & PARTY_PAL_NO_MON)
     {
-        LOAD_PARTY_BOX_PAL(sPartyBoxNoMonPalIds, sPartyBoxNoMonPalOffsets);
+        LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxNoMonPalId), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
     }
-    else if (palFlags & PARTY_PAL_TO_SOFTBOIL)
+    else if (palFlags & (PARTY_PAL_TO_SOFTBOIL | PARTY_PAL_SWITCHING | PARTY_PAL_TO_SWITCH))
     {
-        if (palFlags & PARTY_PAL_SELECTED)
-        {
-            LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds1, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionPalIds2, sPartyBoxPalOffsets2);
-            LOAD_PARTY_TEXT_PAL(sPartyBoxSelectedForActionPalIds3, sPartyBoxPalOffsets3);
-        }
-        else
-        {
-            LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds1, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds2, sPartyBoxPalOffsets2);
-            LOAD_PARTY_TEXT_PAL(sPartyBoxSelectedForActionPalIds3, sPartyBoxPalOffsets3);
-        }
-    }
-    else if (palFlags & PARTY_PAL_SWITCHING)
-    {
-        LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds1, sPartyBoxPalOffsets1);
-        LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds2, sPartyBoxPalOffsets2);
+        LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxSelectedForActionPalId1), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
         LOAD_PARTY_TEXT_PAL(sPartyBoxSelectedForActionPalIds3, sPartyBoxPalOffsets3);
-    }
-    else if (palFlags & PARTY_PAL_TO_SWITCH)
-    {
-        if (palFlags & PARTY_PAL_SELECTED)
-        {
-            LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds1, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionPalIds2, sPartyBoxPalOffsets2);
-            LOAD_PARTY_TEXT_PAL(sPartyBoxSelectedForActionPalIds3, sPartyBoxPalOffsets3);
-        }
-        else
-        {
-            LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds1, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxSelectedForActionPalIds2, sPartyBoxPalOffsets2);
-            LOAD_PARTY_TEXT_PAL(sPartyBoxSelectedForActionPalIds3, sPartyBoxPalOffsets3);
-        }
     }
     else if (palFlags & PARTY_PAL_MULTI_ALT)
     {
         if (palFlags & PARTY_PAL_SELECTED)
         {
-            LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionMultiPalIds, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionPalIds2, sPartyBoxPalOffsets2);
+            LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxCurrSelectionMultiPalId), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
             LOAD_PARTY_TEXT_PAL(sPartyBoxCurrSelectionMultiPalIds3, sPartyBoxPalOffsets3);
         }
         else
         {
-            LOAD_PARTY_BOX_PAL(sPartyBoxMultiPalIds1, sPartyBoxPalOffsets1);
-            LOAD_PARTY_BOX_PAL(sPartyBoxMultiPalIds2, sPartyBoxPalOffsets2);
+            LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxMultiPalId1), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
             LOAD_PARTY_TEXT_PAL(sPartyBoxMultiPalIds3, sPartyBoxPalOffsets3);
         }
     }
     else if (palFlags & PARTY_PAL_SELECTED)
     {
-        LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionPalIds1, sPartyBoxPalOffsets1);
-        LOAD_PARTY_BOX_PAL(sPartyBoxCurrSelectionPalIds2, sPartyBoxPalOffsets2);
+        LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxCurrSelectionPalId1), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
         LOAD_PARTY_TEXT_PAL(sPartyBoxCurrSelectionPalIds3, sPartyBoxPalOffsets3);
     }
     else
     {
-        LOAD_PARTY_BOX_PAL(sPartyBoxEmptySlotPalIds1, sPartyBoxPalOffsets1);
-        LOAD_PARTY_BOX_PAL(sPartyBoxEmptySlotPalIds2, sPartyBoxPalOffsets2);
+        LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxEmptySlotPalId1), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
         LOAD_PARTY_TEXT_PAL(sPartyBoxEmptySlotPalIds3, sPartyBoxPalOffsets3);
     }
 }
@@ -3300,7 +3258,7 @@ static void DisplayPartyPokemonMoves(u8 windowId, int m, enum Move move, u8 pp, 
     if (sMoveSlots[m].typeSpriteId != MAX_SPRITES)
         StartSpriteAnim(&gSprites[sMoveSlots[m].typeSpriteId], type);
     AddTextPrinterParameterized3(windowId, GetFontIdToFit(name, FONT_SMALL, 0, info->dimensions[2]),
-                                 info->dimensions[0], info->dimensions[1], sFontColorTable[0], 0, name);
+                                 info->dimensions[0], info->dimensions[1], sFontColorTable[11], 0, name);
     PrintMovePPToWindow(windowId, FONT_SMALL, move, pp, ppBonuses, m, info->dimensions[4], info->dimensions[5], info->dimensions[6]);
 }
 
@@ -3510,25 +3468,22 @@ static void DisplayPartyPokemonHPBar(u16 hp, u16 maxhp, struct PartyMenuBox *men
     {
     case HP_BAR_GREEN:
     case HP_BAR_FULL:
-        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarGreenPalIds[0]), sHPBarPalOffsets[0] + palOffset, PLTT_SIZEOF(1));
-        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarGreenPalIds[1]), sHPBarPalOffsets[1] + palOffset, PLTT_SIZEOF(1));
+        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarPalIds[0]), sHPBarPalOffset + palOffset, PLTT_SIZEOF(1));
         break;
     case HP_BAR_YELLOW:
-        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarYellowPalIds[0]), sHPBarPalOffsets[0] + palOffset, PLTT_SIZEOF(1));
-        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarYellowPalIds[1]), sHPBarPalOffsets[1] + palOffset, PLTT_SIZEOF(1));
+        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarPalIds[1]), sHPBarPalOffset + palOffset, PLTT_SIZEOF(1));
         break;
     default:
-        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarRedPalIds[0]), sHPBarPalOffsets[0] + palOffset, PLTT_SIZEOF(1));
-        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarRedPalIds[1]), sHPBarPalOffsets[1] + palOffset, PLTT_SIZEOF(1));
+        LoadPalette(GetPartyMenuPalBufferPtr(sHPBarPalIds[2]), sHPBarPalOffset + palOffset, PLTT_SIZEOF(1));
         break;
     }
 
     hpFraction = GetScaledHPFraction(hp, maxhp, menuBox->infoRects->dimensions[22]);
-    FillWindowPixelRect(menuBox->windowId, sHPBarPalOffsets[1], menuBox->infoRects->dimensions[20], menuBox->infoRects->dimensions[21], hpFraction, menuBox->infoRects->dimensions[23]);
+    LoadPalette(GetPartyMenuPalBufferPtr(sHPBarEmptyPalId), sHPBarEmptyPalId + palOffset, PLTT_SIZEOF(1));
+    FillWindowPixelRect(menuBox->windowId, sHPBarPalOffset, menuBox->infoRects->dimensions[20], menuBox->infoRects->dimensions[21], hpFraction, menuBox->infoRects->dimensions[23]);
     if (hpFraction != menuBox->infoRects->dimensions[22])
     {
-        // This appears to be an alternating fill
-        FillWindowPixelRect(menuBox->windowId, 0x0D, menuBox->infoRects->dimensions[20] + hpFraction, menuBox->infoRects->dimensions[21], menuBox->infoRects->dimensions[22] - hpFraction, menuBox->infoRects->dimensions[23]);
+        FillWindowPixelRect(menuBox->windowId, sHPBarEmptyPalId, menuBox->infoRects->dimensions[20] + hpFraction, menuBox->infoRects->dimensions[21], menuBox->infoRects->dimensions[22] - hpFraction, menuBox->infoRects->dimensions[23]);
     }
     CopyWindowToVram(menuBox->windowId, COPYWIN_GFX);
 }
@@ -10498,7 +10453,7 @@ static void PrintHowManyItemsWindow(u8 taskId)
     FillWindowPixelBuffer(tWindowId, PIXEL_FILL(0));
     ConvertIntToDecimalStringN(gStringVar1, tItemCount, STR_CONV_MODE_LEADING_ZEROS, MAX_ITEM_DIGITS);
     StringExpandPlaceholders(gStringVar3, gText_xVar1);
-    AddTextPrinterParameterized4(tWindowId, FONT_NORMAL, 4, 0, 0, -2, sFontColorTable[11], TEXT_SPEED_INSTANT, gStringVar3);
+    AddTextPrinterParameterized4(tWindowId, FONT_NORMAL, 4, 0, 0, -2, sFontColorTable[12], TEXT_SPEED_INSTANT, gStringVar3);
 }
 
 static void Task_GiveHowManyItems(u8 taskId)
