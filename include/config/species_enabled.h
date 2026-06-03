@@ -536,7 +536,7 @@
 #define P_FAMILY_TAROUNTULA              P_GEN_9_POKEMON
 #define P_FAMILY_NYMBLE                  P_GEN_9_POKEMON
 #define P_FAMILY_PAWMI                   P_GEN_9_POKEMON
-#define P_FAMILY_TANDEMAUS               P_GEN_9_POKEMON
+#define P_FAMILY_TANDEMAUS               TRUE
 #define P_FAMILY_FIDOUGH                 P_GEN_9_POKEMON
 #define P_FAMILY_SMOLIV                  P_GEN_9_POKEMON
 #define P_FAMILY_SQUAWKABILLY            P_GEN_9_POKEMON
