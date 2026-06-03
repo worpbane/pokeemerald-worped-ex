@@ -228,9 +228,6 @@ static void SwapMonMoves(struct Pokemon *, u8, u8);
 static void SwapBoxMonMoves(struct BoxPokemon *, u8, u8);
 static void Task_SetHandleReplaceMoveInput(u8);
 static void Task_HandleReplaceMoveInput(u8);
-static bool8 CanReplaceMove(void);
-static void ShowCantForgetHMsWindow(u8);
-static void Task_HandleInputCantForgetHMsMoves(u8);
 static void DrawPagination(void);
 static void PositionPowerAccSlidingWindow(u16, s16);
 static void Task_SlidePowerAccWindow(u8);
@@ -290,7 +287,6 @@ static void PrintMoveDetails(enum Move move);
 static void PrintNewMoveDetailsOrCancelText(void);
 static void AddAndFillMoveNamesWindow(void);
 static void SwapMovesNamesPP(u8, u8);
-static void PrintHMMovesCantBeForgotten(void);
 static void ResetSpriteIds(void);
 static void SetSpriteInvisibility(u8, bool8);
 static void HidePageSpecificSprites(void);
@@ -2653,20 +2649,12 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
             }
             else if (JOY_NEW(A_BUTTON))
             {
-                if (CanReplaceMove() == TRUE)
-                {
-                    StopPokemonAnimations();
-                    PlaySE(SE_SELECT);
-                    sMoveSlotToReplace = sMonSummaryScreen->firstMoveIndex;
-                    gSpecialVar_0x8005 = sMoveSlotToReplace;
-                    gSpecialVar_Result = TRUE;
-                    BeginCloseSummaryScreen(taskId);
-                }
-                else
-                {
-                    PlaySE(SE_FAILURE);
-                    ShowCantForgetHMsWindow(taskId);
-                }
+				StopPokemonAnimations();
+				PlaySE(SE_SELECT);
+				sMoveSlotToReplace = sMonSummaryScreen->firstMoveIndex;
+				gSpecialVar_0x8005 = sMoveSlotToReplace;
+				gSpecialVar_Result = TRUE;
+				BeginCloseSummaryScreen(taskId);
             }
             else if (JOY_NEW(B_BUTTON))
             {
@@ -2677,94 +2665,6 @@ static void Task_HandleReplaceMoveInput(u8 taskId)
                 gSpecialVar_Result = FALSE;
                 BeginCloseSummaryScreen(taskId);
             }
-        }
-    }
-}
-
-static bool8 CanReplaceMove(void)
-{
-    if (sMonSummaryScreen->firstMoveIndex == MAX_MON_MOVES
-        || sMonSummaryScreen->newMove == MOVE_NONE
-        || !CannotForgetMove(sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex]))
-        return TRUE;
-    else
-        return FALSE;
-}
-
-static void ShowCantForgetHMsWindow(u8 taskId)
-{
-    ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_POWER_ACC);
-    ClearWindowTilemap(PSS_LABEL_WINDOW_MOVES_APPEAL_JAM);
-    gSprites[sMonSummaryScreen->categoryIconSpriteId].invisible = TRUE;
-    ScheduleBgCopyTilemapToVram(0);
-    PositionPowerAccSlidingWindow(0, 3);
-    PositionAppealJamSlidingWindow(0, 3, 0);
-    PrintHMMovesCantBeForgotten();
-    gTasks[taskId].func = Task_HandleInputCantForgetHMsMoves;
-}
-
-// This redraws the power/accuracy window when the player scrolls out of the "HM Moves can't be forgotten" message
-static void Task_HandleInputCantForgetHMsMoves(u8 taskId)
-{
-    s16 *data = gTasks[taskId].data;
-    enum Move move;
-    if (FuncIsActiveTask(Task_SlidePowerAccWindow) != 1)
-    {
-        if (JOY_NEW(DPAD_UP))
-        {
-            data[1] = 1;
-            data[0] = 4;
-            ChangeSelectedMove(&data[0], -1, &sMonSummaryScreen->firstMoveIndex);
-            data[1] = 0;
-            gTasks[taskId].func = Task_HandleReplaceMoveInput;
-        }
-        else if (JOY_NEW(DPAD_DOWN))
-        {
-            data[1] = 1;
-            data[0] = 4;
-            ChangeSelectedMove(&data[0], 1, &sMonSummaryScreen->firstMoveIndex);
-            data[1] = 0;
-            gTasks[taskId].func = Task_HandleReplaceMoveInput;
-        }
-        else if (JOY_NEW(DPAD_LEFT) || GetLRKeysPressed() == MENU_L_PRESSED)
-        {
-            if (sMonSummaryScreen->currPageIndex != PSS_PAGE_BATTLE_MOVES)
-            {
-                ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
-                if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
-                    ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
-                move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
-                gTasks[taskId].func = Task_HandleReplaceMoveInput;
-                ChangePage(taskId, -1);
-                PositionPowerAccSlidingWindow(9, -2);
-                PositionAppealJamSlidingWindow(9, -2, move);
-            }
-        }
-        else if (JOY_NEW(DPAD_RIGHT) || GetLRKeysPressed() == MENU_R_PRESSED)
-        {
-            if (sMonSummaryScreen->currPageIndex != PSS_PAGE_CONTEST_MOVES)
-            {
-                ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
-                if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
-                    ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
-                move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
-                gTasks[taskId].func = Task_HandleReplaceMoveInput;
-                ChangePage(taskId, 1);
-                PositionPowerAccSlidingWindow(9, -2);
-                PositionAppealJamSlidingWindow(9, -2, move);
-            }
-        }
-        else if (JOY_NEW(A_BUTTON | B_BUTTON))
-        {
-            ClearWindowTilemap(PSS_LABEL_WINDOW_PORTRAIT_SPECIES);
-            if (!gSprites[sMonSummaryScreen->spriteIds[SPRITE_ARR_ID_STATUS]].invisible)
-                ClearWindowTilemap(PSS_LABEL_WINDOW_POKEMON_SKILLS_STATUS);
-            move = sMonSummaryScreen->summary.moves[sMonSummaryScreen->firstMoveIndex];
-            PrintMoveDetails(move);
-            ScheduleBgCopyTilemapToVram(0);
-            PositionPowerAccSlidingWindow(9, -3);
-            PositionAppealJamSlidingWindow(9, -3, move);
-            gTasks[taskId].func = Task_HandleReplaceMoveInput;
         }
     }
 }
@@ -4266,13 +4166,6 @@ static void SwapMovesNamesPP(u8 moveIndex1, u8 moveIndex2)
 
     PrintMoveNameAndPP(moveIndex1);
     PrintMoveNameAndPP(moveIndex2);
-}
-
-static void PrintHMMovesCantBeForgotten(void)
-{
-    u8 windowId = AddWindowFromTemplateList(sPageMovesTemplate, PSS_DATA_WINDOW_MOVE_DESCRIPTION);
-    FillWindowPixelBuffer(windowId, PIXEL_FILL(0));
-    PrintTextOnWindow(windowId, gText_HMMovesCantBeForgotten2, 6, 1, 0, 0);
 }
 
 static void ResetSpriteIds(void)
