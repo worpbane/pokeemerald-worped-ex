@@ -16,7 +16,7 @@ LilycoveCity_DepartmentStore_1F_Text_PleaseVisitAgain:
 
 LilycoveCity_DepartmentStore_1F_Text_PleasePickTicket:
 	.string "Please pick a Loto Ticket.\n"
-	.string "…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}…{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}{PAUSE 0x0F}$"
+	.string "…{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}…{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}…{PAUSE 15}{PAUSE 15}{PAUSE 15}{PAUSE 15}$"
 
 LilycoveCity_DepartmentStore_1F_Text_TicketNumberIsXPleaseWait:
 	.string "The Loto Ticket number is {STR_VAR_1}.\p"
