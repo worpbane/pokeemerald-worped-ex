@@ -5533,6 +5533,14 @@ bool8 MonKnowsMove(struct Pokemon *mon, enum Move move)
     return FALSE;
 }
 
+bool8 MonCanLearnMoveFld(struct Pokemon *mon, enum Move move)
+{
+    if (CanTeachMove(mon, move) == CANNOT_LEARN_MOVE)
+        return FALSE;
+
+    return TRUE;
+}
+
 bool8 BoxMonKnowsMove(struct BoxPokemon *boxMon, enum Move move)
 {
     u8 i;

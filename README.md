@@ -15,6 +15,17 @@ I grew up playing Gen 3, and it remains my favorite generation to this day (I ac
 
 ---
 
+## ✅ Currently Implemented Features
+
+This section tracks everything that has been successfully merged, coded, and compiled into the active **Worped Ex** build. 
+
+### ⚙️ Engine Baselines & QoL Mechanics
+* **Modern Poison Survival (Gen 4+):** Poisoned Pokémon drop down to 1 HP in the overworld and are cured, preventing blackouts while exploring. *(Native Expansion engine configuration)*
+* **Smart HMs & Automatic Field Triggers:** Bypasses the need to clutter active battle movesets with utility actions. If the player possesses the physical HM item and has defeated the required Gym Leader, any compatible Pokémon in the party can instantly perform the move in the overworld. Furthermore, conversational prompt menus for Cut, Strength, and Rock Smash have been entirely removed—simply walking up to an obstacle and pressing A automatically triggers the action seamlessly. *(Custom Framework).*
+* **Comprehensive Text Decapitalization:** Every town name, map layout, string array identifier, possessive marker, and intro dialogue line has been systematically decapitalized into clean, modern Title Case. *(Work in Progress)*
+
+---
+
 ## 🗺️ Feature Architecture & Implementation Wish List
 
 To keep the project scope focused, the following architecture serves as the active roadmap and development wish list for **Worped Ex**. This outlines the specific features I hope to fully implement, blending established systems from the original *Modern Emerald* project with custom, ground-up mechanics unique to *Worped*.
@@ -28,7 +39,7 @@ To keep the project scope focused, the following architecture serves as the acti
 * **Main Menu UI:** A custom startup dashboard that dynamically displays your active party (Archie & Mudskip).
 * **Custom UI Screens:** Porting over my custom FRLG-inspired Summary Screen (with active IV/EV trackers), and custom PokéDex layout.
 * **Expanded Starter Selection:** Custom selection logic at the start of the game. (Archie & Mudskip)
-* **Catch Mode & DexNav:** Streamlined catching sequences and custom DexNav logic. (FlashLucky & ghoulslash) (Also wondering if I can hook DexNav into the overworld Pokémon spawns so that if you're 'hunting' a specific mon, ONLY that monw will spawn...)
+* **Catch Mode & DexNav:** Streamlined catching sequences and custom DexNav logic. (FlashLucky & ghoulslash) (Also wondering if I can hook DexNav into the overworld Pokémon spawns so that if you're 'hunting' a specific mon, ONLY that mon will spawn...)
 * **Item Pickup Headers:** Pop-up header notifications when items are found or received.
 * **Map Changes:** Map layout changes across select routes and cities to smooth out overworld navigation and add a bit of character in places.
 * **Mega Evolutions:** Integration of Mega Evolution mechanics.
