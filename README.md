@@ -2,7 +2,7 @@
 
 This is a personal fork of **`pokeemerald-expansion` 1.16.0** by the ROM Hacking Hideout (RHH). 
 
-**🧪 Testing On:** New Nintendo 3DS w/ `open_agb_firm` & Steam Deck (`mGBA`)
+**🧪 Testing On:** New Nintendo 3DS w/ `open_agb_firm` & Steam Deck w/ `mGBA`
 
 ---
 
