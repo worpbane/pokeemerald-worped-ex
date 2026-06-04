@@ -2995,7 +2995,8 @@ static const struct {
     [BUTTON_PROMPT_NONE]         = {BUTTON_NONE,    0,                    NULL,  0},
     [BUTTON_PROMPT_CONFIRM]      = {BUTTON_START,  25,       sMenuText_Confirm, 60},
     [BUTTON_PROMPT_SWITCH]       = {BUTTON_L,      15,        sMenuText_Switch, 45},
-    [BUTTON_PROMPT_BOXES]        = {BUTTON_R,      15,         sMenuText_Boxes, 41},
+    //[BUTTON_PROMPT_BOXES]        = {BUTTON_R,      15,         sMenuText_Boxes, 41},
+    [BUTTON_PROMPT_BOXES]        = {BUTTON_NONE,	0,					  NULL,  0}, //So if I remove this, the button promps at the bottom never appear. I don't get it.
     [BUTTON_PROMPT_VIEW_PARTNER] = {BUTTON_R,      15,                    NULL,  0},
     [BUTTON_PROMPT_VIEW_PLAYER]  = {BUTTON_R,      15,                    NULL,  0},
 };
@@ -3697,31 +3698,69 @@ static void SetPartyMonFieldSelectionActions(struct Pokemon *mons, u8 slotId)
     u8 i, j;
 
     sPartyMenuInternal->numActions = 0;
-    AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_SUMMARY);
+    AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_SUMMARY); //Adds Summary Button
 
-    // Add field moves to action list
-    for (i = 0; i < MAX_MON_MOVES; i++)
-    {
-        for (j = 0; j != FIELD_MOVES_COUNT; j++)
-        {
-            if (GetMonData(&mons[slotId], i + MON_DATA_MOVE1) == FieldMove_GetMoveId(j))
-            {
-                AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, j + MENU_FIELD_MOVES);
-                break;
-            }
-        }
-    }
+	// Add field moves to action list
+	for (j = 0; j < FIELD_MOVES_COUNT; j++) //Go through the list of Field moves
+	{
+		u16 moveId = FieldMove_GetMoveId(j);
+		u16 hmItem = ITEM_NONE;
+		bool8 canUseMove = FALSE;
+		
+		//Forcably skip these moves since they can be done in the overworld by pressing the A or B buttons.
+		if (j == FIELD_MOVE_CUT || j == FIELD_MOVE_SURF || j == FIELD_MOVE_STRENGTH || j == FIELD_MOVE_ROCK_SMASH || j == FIELD_MOVE_WATERFALL || j == FIELD_MOVE_DIVE || j == FIELD_MOVE_SECRET_POWER)
+		{
+			continue;
+		}
+		
+		//Check bag for HM/TM
+		switch (j)
+		{
+			//Included them all just incase someone finds this useful.
+			//case FIELD_MOVE_CUT:        hmItem = ITEM_HM01; break;
+			case FIELD_MOVE_FLY:        hmItem = ITEM_HM02; break;
+			//case FIELD_MOVE_SURF:       hmItem = ITEM_HM03; break;
+			//case FIELD_MOVE_STRENGTH:   hmItem = ITEM_HM04; break;
+			case FIELD_MOVE_FLASH:      hmItem = ITEM_HM05; break;
+			//case FIELD_MOVE_ROCK_SMASH: hmItem = ITEM_HM06; break;
+			//case FIELD_MOVE_WATERFALL:  hmItem = ITEM_HM07; break;
+			//case FIELD_MOVE_DIVE:       hmItem = ITEM_HM08; break;
+			//case FIELD_MOVE_SECRET_POWER: hmItem = ITEM_TM43; break; 
+		}
+		
+		if (hmItem != ITEM_NONE)
+		{
+			//If the field move is given by HM/TM, check if the mon can learn it
+			if (CheckBagHasItem(hmItem, 1) && MonCanUseFldMove(&mons[slotId], moveId))
+			{
+				canUseMove = TRUE;
+			}
+		}
+		else
+		{
+			//Else, check if the mon can learn the move naturally (IE: Ralts learns Teleport at lvl 15)
+			for (i = 0; i < MAX_MON_MOVES; i++)
+			{
+				if (GetMonData(&mons[slotId], i + MON_DATA_MOVE1) == moveId)
+				{
+					canUseMove = TRUE;
+					break;
+				}
+			}
+		}
+		if (canUseMove) AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, j + MENU_FIELD_MOVES); // Adds Field Move
+	}
 
     if (!InBattlePike())
     {
         if (GetMonData(&mons[1], MON_DATA_SPECIES) != SPECIES_NONE)
-            AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_SWITCH);
+            AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_SWITCH); //Adds Switch Action
         if (ItemIsMail(GetMonData(&mons[slotId], MON_DATA_HELD_ITEM)))
-            AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_MAIL);
+            AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_MAIL); //Adds Mail Action
         else
-            AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_ITEM);
+            AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_ITEM); //Adds Item Action
     }
-    AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_CANCEL1);
+    AppendToList(sPartyMenuInternal->actions, &sPartyMenuInternal->numActions, MENU_CANCEL1); //Adds Cancel button
 }
 
 static u8 GetPartyMenuActionsType(struct Pokemon *mon)
