@@ -389,7 +389,6 @@ static void HandleChooseMonSelection(u8, s8 *);
 static u16 PartyMenuButtonHandler(s8 *);
 static s8 *GetCurrentPartySlotPtr(void);
 static bool8 IsSelectedMonNotEgg(u8 *);
-static bool8 DoesSelectedMonKnowHM(u8 *);
 static void PartyMenuRemoveWindow(u8 *);
 static void CB2_SetUpExitToBattleScreen(void);
 static void Task_ClosePartyMenuAfterText(u8);
@@ -620,7 +619,6 @@ static void Task_FirstBattleEnterParty_WaitFadeNormal(u8 taskId);
 static const u8 sText_askText[] = _("Would you like to change {STR_VAR_1}'s\nability to {STR_VAR_2}?");
 static const u8 sText_doneText[] = _("{STR_VAR_1}'s ability became\n{STR_VAR_2}!{PAUSE_UNTIL_PRESS}");
 static const u8 sText_BasePointsResetToZero[] = _("{STR_VAR_1}'s base points\nwere all reset to zero!{PAUSE_UNTIL_PRESS}");
-static const u8 sText_CannotSendMonToBoxHM[] = _("Cannot send that mon to the box,\nbecause it knows a HM move.{PAUSE_UNTIL_PRESS}");
 static const u8 sText_CannotSendMonToBoxPartner[] = _("Cannot send a mon that doesn't\nbelong to you to the box.{PAUSE_UNTIL_PRESS}");
 
 #define tItemCount          data[5]
@@ -2157,13 +2155,6 @@ static void HandleChooseMonSelection(u8 taskId, s8 *slotPtr)
                 ScheduleBgCopyTilemapToVram(0);
                 gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
             }
-            else if (DoesSelectedMonKnowHM((u8 *)slotPtr))
-            {
-                PlaySE(SE_FAILURE);
-                DisplayPartyMenuMessage(sText_CannotSendMonToBoxHM, FALSE);
-                ScheduleBgCopyTilemapToVram(0);
-                gTasks[taskId].func = Task_ReturnToChooseMonAfterText;
-            }
             else
             {
                 PlaySE(SE_SELECT);
@@ -2193,19 +2184,6 @@ static bool8 IsSelectedMonNotEgg(u8 *slotPtr)
         return FALSE;
     }
     return TRUE;
-}
-
-static bool8 DoesSelectedMonKnowHM(u8 *slotPtr)
-{
-    if (B_CATCH_SWAP_CHECK_HMS == FALSE)
-        return FALSE;
-
-    for (u32 i = 0; i < MAX_MON_MOVES; i++)
-    {
-        if (IsMoveHM(GetMonData(&gParties[B_TRAINER_PLAYER][*slotPtr], MON_DATA_MOVE1 + i)))
-            return TRUE;
-    }
-    return FALSE;
 }
 
 static void HandleChooseMonCancel(u8 taskId, s8 *slotPtr)
@@ -7250,6 +7228,14 @@ bool8 MonKnowsMove(struct Pokemon *mon, enum Move move)
             return TRUE;
     }
     return FALSE;
+}
+
+bool8 MonCanUseFldMove(struct Pokemon *mon, enum Move move)
+{
+    if (CanTeachMove(mon, move) == CANNOT_LEARN_MOVE)
+        return FALSE;
+
+    return TRUE;
 }
 
 bool8 BoxMonKnowsMove(struct BoxPokemon *boxMon, enum Move move)
