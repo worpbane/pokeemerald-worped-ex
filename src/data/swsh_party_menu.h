@@ -1054,8 +1054,12 @@ static const u8 sPartyBoxPalOffsets4And5[] = {4, 5};
 static const u8 sPartyBoxEmptySlotPalIds4And5[]       = {36, 37}; //Unselected (Palette 2)
 static const u8 sPartyBoxMultiPalIds4And5[]           = {52, 53}; //Multi-Battle (Palette 3)
 static const u8 sPartyBoxSelectedForActionPalIds4And5[] = {68, 69}; //Moving/Action (Palette 4)
-static const u8 sPartyBoxCurrSelectionPalIds4And5[]   = {84, 85}; //Selected/Hovered (Palette 5)
-static const u8 sPartyBoxCurrSelectionMultiPalIds4And5[] = {100, 101}; //No clue (Palette 5)
+static const u8 sPartyBoxCurrSelectionPalIds4And5[]   = {84, 85}; //Hovered Over (Palette 5)
+static const u8 sPartyBoxCurrSelectionMultiPalIds4And5[] = {100, 101}; //Partner Mon Hoverered Over (Palette 5)
+
+static const u8 sPartyBoxFaintedPalId1                 = 33; //Fainted Outline
+static const u8 sPartyBoxFaintedPalIds3[]              = {34, 35}; //Fainted Text Palette
+static const u8 sPartyBoxFaintedPalIds4And5[]          = {38, 39}; //Fainted Box Fill
 
 static const u8 *const sActionStringTable[] =
 {

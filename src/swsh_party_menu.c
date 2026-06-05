@@ -1831,9 +1831,16 @@ void AnimatePartySlot(u8 slot, u8 animNum)
 static u8 GetPartyBoxPaletteFlags(u8 slot, u8 animNum)
 {
     u8 palFlags = 0;
+	struct Pokemon *mon = GetPartyMonFromPartyMenuId(slot);
 
     if (animNum == 1)
+	{
         palFlags |= PARTY_PAL_SELECTED;
+	}
+	else if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE && GetMonData(mon, MON_DATA_HP) == 0)
+    {
+        palFlags |= PARTY_PAL_FAINTED;
+    }
     if (PartyBoxPal_ParnterOrDisqualifiedInArena(slot) == TRUE)
         palFlags |= PARTY_PAL_MULTI_ALT;
     if (gPartyMenu.action == PARTY_ACTION_SWITCHING)
@@ -3184,6 +3191,12 @@ static void LoadPartyBoxPalette(struct PartyMenuBox *menuBox, u8 palFlags)
     if (palFlags & PARTY_PAL_NO_MON)
     {
         LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxNoMonPalId), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
+    }
+	else if (palFlags & PARTY_PAL_FAINTED) 
+    {
+        LoadPalette(GetPartyMenuPalBufferPtr(sPartyBoxFaintedPalId1), sPartyBoxPalOffset1 + palOffset, PLTT_SIZEOF(1));
+        LOAD_PARTY_TEXT_PAL(sPartyBoxFaintedPalIds3, sPartyBoxPalOffsets3);
+        LOAD_PARTY_BOX_FILL_PAL(sPartyBoxFaintedPalIds4And5, sPartyBoxPalOffsets4And5);
     }
     else if (palFlags & (PARTY_PAL_TO_SOFTBOIL | PARTY_PAL_SWITCHING | PARTY_PAL_TO_SWITCH))
     {
