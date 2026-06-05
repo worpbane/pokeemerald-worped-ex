@@ -36,8 +36,6 @@ static const u32 sHeldItemGfx[]          = INCGFX_U32("graphics/party_menu/hold_
 const u16 gHeldItemPalette[]             = INCGFX_U16("graphics/party_menu/hold_icons.png", ".gbapal");
 #endif
 
-static const u32 sHoverCursorGfx[]        = INCGFX_U32("graphics/party_menu/swsh/hover_cursor.png", ".4bpp.smol");
-static const u32 sSelectFrameGfx[]        = INCGFX_U32("graphics/party_menu/swsh/select_frame.png", ".4bpp.smol");
 static const u32 sMessageWindowGfx[]      = INCGFX_U32("graphics/party_menu/swsh/message_window.png", ".4bpp.smol");
 static const u32 sMultiuseWindowGfx[]     = INCGFX_U32("graphics/party_menu/swsh/multiuse_window.png", ".4bpp.smol");
 static const u16 sMonShadowPalette[]      = INCGFX_U16("graphics/party_menu/swsh/shadow.pal", ".gbapal");
@@ -1285,102 +1283,6 @@ static const struct SpriteTemplate sSpriteTemplate_HeldItem =
     .paletteTag = TAG_HELD_ITEM,
     .oam = &sOamData_HeldItem,
     .anims = sSpriteAnimTable_HeldItem,
-};
-
-static const struct OamData sOamData_HoverCursor =
-{
-    .affineMode = ST_OAM_AFFINE_OFF,
-    .objMode = ST_OAM_OBJ_NORMAL,
-    .bpp = ST_OAM_4BPP,
-    .shape = SPRITE_SHAPE(16x16),
-    .size = SPRITE_SIZE(16x16),
-    .priority = 1,
-};
-
-static const struct CompressedSpriteSheet sSpriteSheet_HoverCursor =
-{
-    .data = sHoverCursorGfx,
-    .size = (16 * 16 * 3) / 2,
-    .tag = TAG_HOVER_CURSOR
-};
-
-static const union AnimCmd sAnim_HoverCursor[] =
-{
-    ANIMCMD_FRAME(0, 8),
-    ANIMCMD_FRAME(4, 8),
-    ANIMCMD_FRAME(8, 8),
-    ANIMCMD_FRAME(4, 8),
-    ANIMCMD_JUMP(0)
-};
-
-static const union AnimCmd *const sAnims_HoverCursor[] =
-{
-    sAnim_HoverCursor,
-};
-
-static const struct SpriteTemplate sSpriteTemplate_HoverCursor =
-{
-    .tileTag = TAG_HOVER_CURSOR,
-    .paletteTag = TAG_HELD_ITEM,
-    .oam = &sOamData_HoverCursor,
-    .anims = sAnims_HoverCursor,
-};
-
-static const struct OamData sOamData_SelectFrame =
-{
-    .y = 0,
-    .affineMode = ST_OAM_AFFINE_OFF,
-    .objMode = ST_OAM_OBJ_NORMAL,
-    .mosaic = FALSE,
-    .bpp = ST_OAM_4BPP,
-    .size = SPRITE_SIZE(16x32),
-    .x = 0,
-    .matrixNum = 0,
-    .shape = SPRITE_SHAPE(16x32),
-    .tileNum = 0,
-    .priority = 0,
-    .paletteNum = 0,
-    .affineParam = 0,
-};
-
-static const union AnimCmd sSpriteAnim_SelectFrameLeft[] = {
-    ANIMCMD_FRAME(0, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_SelectFrameRight[] = {
-    ANIMCMD_FRAME(0, 0, TRUE, FALSE),
-    ANIMCMD_END
-};
-static const union AnimCmd sSpriteAnim_SelectFrameMiddle[] = {
-    ANIMCMD_FRAME(8, 0, FALSE, FALSE),
-    ANIMCMD_END
-};
-
-static const union AnimCmd *const sSpriteAnimTable_SelectFrame[] = {
-    sSpriteAnim_SelectFrameLeft,
-    sSpriteAnim_SelectFrameRight,
-    sSpriteAnim_SelectFrameMiddle,
-};
-
-static const struct CompressedSpriteSheet sSpriteSheet_SelectFrame =
-{
-    .data = sSelectFrameGfx,
-    .size = (16 * 32 * 2) / 2,
-    .tag = TAG_SELECT_FRAME,
-};
-
-static const struct SpritePalette sSpritePal_SelectFrame =
-{
-    .data = gHeldItemPalette,
-    .tag = TAG_HELD_ITEM,
-};
-
-static const struct SpriteTemplate sSpriteTemplate_SelectFrame =
-{
-    .tileTag = TAG_SELECT_FRAME ,
-    .paletteTag = TAG_HELD_ITEM,
-    .oam = &sOamData_SelectFrame,
-    .anims = sSpriteAnimTable_SelectFrame,
 };
 
 static const struct OamData sOamData_MessageWindow =
