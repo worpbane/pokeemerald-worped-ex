@@ -22,7 +22,8 @@ I'll try to call out from where a feature was inspired/pulled from. Major featur
 ### Gameplay Mechanics:
 * **QoL HMs:** HM moves don't need to be taught, as long as you have the HM, the Badge, and a mon who can use it, you can perform the field move. *(Custom Code)*
 * **Gen IV Poison:** Pokémon will survivie poison with 1 hp outside of battles. *(Expansion Setting)*
-### UI Related:
+### UI & Visuals:
+* **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic Poké Ball next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works.
 * **Text Decapitalization:** Working on making text accross the game decapped. *(WIP)*
 
 ---
