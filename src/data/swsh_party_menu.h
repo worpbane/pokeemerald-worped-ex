@@ -1,5 +1,5 @@
-static const u32 sPartyMenuBg_Gfx_SwSh[]            = INCBIN_U32("graphics/party_menu/swsh/tiles.4bpp.smol");
-static const u16 sPartyMenuBg_Pal_SwSh[]            = INCBIN_U16("graphics/party_menu/swsh/tiles.gbapal");
+static const u32 sPartyMenuBg_Gfx_SwSh[]            = INCGFX_U32("graphics/party_menu/swsh/tiles.png", ".4bpp.smol");
+static const u16 sPartyMenuBg_Pal_SwSh[]            = INCGFX_U16("graphics/party_menu/swsh/tiles.png", ".gbapal");
 static const u32 sPartyMenuBg_Main_Tilemap_SwSh[]   = INCBIN_U32("graphics/party_menu/swsh/bg_main.bin.smolTM");
 static const u32 sPartyMenuBg_Scroll_Tilemap_SwSh[] = INCBIN_U32("graphics/party_menu/swsh/bg_scroll.bin.smolTM");
 
@@ -12,10 +12,10 @@ enum {
 };
 
 static const u8 sButtons_Gfx[][4 * TILE_SIZE_4BPP] = {
-    [BUTTON_START]  = INCBIN_U8("graphics/party_menu/swsh/button_start.4bpp"),
-    [BUTTON_SELECT] = INCBIN_U8("graphics/party_menu/swsh/button_select.4bpp"),
-    [BUTTON_L]      = INCBIN_U8("graphics/party_menu/swsh/button_l.4bpp"),
-    [BUTTON_R]      = INCBIN_U8("graphics/party_menu/swsh/button_r.4bpp"),
+    [BUTTON_START]  = INCGFX_U8("graphics/party_menu/swsh/button_start.png", ".4bpp"),
+    [BUTTON_SELECT] = INCGFX_U8("graphics/party_menu/swsh/button_select.png", ".4bpp"),
+    [BUTTON_L]      = INCGFX_U8("graphics/party_menu/swsh/button_l.png", ".4bpp"),
+    [BUTTON_R]      = INCGFX_U8("graphics/party_menu/swsh/button_r.png", ".4bpp"),
 };
 
 static const struct OamData sOamData_Button = {
@@ -25,23 +25,23 @@ static const struct OamData sOamData_Button = {
 };
 
 #if SWSH_PARTY_MENU == TRUE
-static const u32 sStatusGfx_Icons_SwSh[] = INCBIN_U32("graphics/party_menu/swsh/status_icons.4bpp.smol");
+static const u32 sStatusGfx_Icons_SwSh[] = INCGFX_U32("graphics/party_menu/swsh/status_icons.png", ".4bpp.smol");
 // Palette loaded to keep with vanilla structure, but not actually used
-static const u16 sStatusPal_Icons_SwSh[] = INCBIN_U16("graphics/party_menu/swsh/status_icons.gbapal");
+static const u16 sStatusPal_Icons_SwSh[] = INCGFX_U16("graphics/party_menu/swsh/status_icons.png", ".gbapal");
 
-static const u32 sHeldItemGfx[]          = INCBIN_U32("graphics/party_menu/swsh/hold_icons.4bpp");
-const u16 gHeldItemPalette[]             = INCBIN_U16("graphics/party_menu/swsh/hold_icons.gbapal");
+static const u32 sHeldItemGfx[]          = INCGFX_U32("graphics/party_menu/swsh/hold_icons.png", ".4bpp");
+const u16 gHeldItemPalette[]             = INCGFX_U16("graphics/party_menu/swsh/hold_icons.png", ".gbapal");
 #else
-static const u32 sHeldItemGfx[]          = INCBIN_U32("graphics/party_menu/hold_icons.4bpp");
-const u16 gHeldItemPalette[]             = INCBIN_U16("graphics/party_menu/hold_icons.gbapal");
+static const u32 sHeldItemGfx[]          = INCGFX_U32("graphics/party_menu/hold_icons.png", ".4bpp");
+const u16 gHeldItemPalette[]             = INCGFX_U16("graphics/party_menu/hold_icons.png", ".gbapal");
 #endif
 
-static const u32 sHoverCursorGfx[]        = INCBIN_U32("graphics/party_menu/swsh/hover_cursor.4bpp.smol");
-static const u32 sSelectFrameGfx[]        = INCBIN_U32("graphics/party_menu/swsh/select_frame.4bpp.smol");
-static const u32 sMessageWindowGfx[]      = INCBIN_U32("graphics/party_menu/swsh/message_window.4bpp.smol");
-static const u32 sMultiuseWindowGfx[]     = INCBIN_U32("graphics/party_menu/swsh/multiuse_window.4bpp.smol");
-static const u16 sMonShadowPalette[]      = INCBIN_U16("graphics/party_menu/swsh/shadow.gbapal");
-static const u32 sMoveTypes_Gfx[]         = INCBIN_U32("graphics/party_menu/swsh/move_types.4bpp.smol");
+static const u32 sHoverCursorGfx[]        = INCGFX_U32("graphics/party_menu/swsh/hover_cursor.png", ".4bpp.smol");
+static const u32 sSelectFrameGfx[]        = INCGFX_U32("graphics/party_menu/swsh/select_frame.png", ".4bpp.smol");
+static const u32 sMessageWindowGfx[]      = INCGFX_U32("graphics/party_menu/swsh/message_window.png", ".4bpp.smol");
+static const u32 sMultiuseWindowGfx[]     = INCGFX_U32("graphics/party_menu/swsh/multiuse_window.png", ".4bpp.smol");
+static const u16 sMonShadowPalette[]      = INCGFX_U16("graphics/party_menu/swsh/shadow.pal", ".gbapal");
+static const u32 sMoveTypes_Gfx[]         = INCGFX_U32("graphics/party_menu/swsh/move_types.png", ".4bpp.smol");
 
 static const u8 sText_EggNickname[POKEMON_NAME_LENGTH + 1]  = _("Egg");
 static const u8 sMenuText_Confirm[]                         = _("Confirm");
@@ -1048,6 +1048,14 @@ static const u8 sPartyBoxMultiPalIds3[]              = {50, 51};
 static const u8 sPartyBoxSelectedForActionPalIds3[]  = {66, 67};
 static const u8 sPartyBoxCurrSelectionPalIds3[]      = {82, 83};
 static const u8 sPartyBoxCurrSelectionMultiPalIds3[] = {98, 99};
+
+//Worped Reskin
+static const u8 sPartyBoxPalOffsets4And5[] = {4, 5};
+static const u8 sPartyBoxEmptySlotPalIds4And5[]       = {36, 37}; //Unselected (Palette 2)
+static const u8 sPartyBoxMultiPalIds4And5[]           = {52, 53}; //Multi-Battle (Palette 3)
+static const u8 sPartyBoxSelectedForActionPalIds4And5[] = {68, 69}; //Moving/Action (Palette 4)
+static const u8 sPartyBoxCurrSelectionPalIds4And5[]   = {84, 85}; //Selected/Hovered (Palette 5)
+static const u8 sPartyBoxCurrSelectionMultiPalIds4And5[] = {100, 101}; //No clue (Palette 5)
 
 static const u8 *const sActionStringTable[] =
 {
