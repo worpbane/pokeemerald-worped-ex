@@ -23,8 +23,10 @@ I'll try to call out from where a feature was inspired/pulled from. Major featur
 * **QoL HMs:** HM moves don't need to be taught, as long as you have the HM, the Badge, and a mon who can use it, you can perform the field move. *(Custom Code)*
 * **Gen IV Poison:** Pokémon will survivie poison with 1 hp outside of battles. *(Expansion Setting)*
 ### UI & Visuals:
-* **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic Poké Ball next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works.
+* **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic PokéBall next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works.
 * **Text Decapitalization:** Working on making text accross the game decapped. *(WIP)*
+### Other QoL:
+* **PokéBall Swapping:** You can use Pokéballs in the bag to rehome your Pokémon. (Lunos)
 
 ---
 
@@ -87,7 +89,7 @@ This second table contains Pokémon I wanted to add, but it got to be a pain in 
 | **Alolan Sandshrew** | *TBD* | Tracking for future route mapping. |
 | **Espurr** | *TBD* | Tracking for future route mapping. |
 
-### Poké Balls:
+### PokéBalls:
 * **Dream Ball:** Will be obtainable once per day from a unique Nurse NPC stationed on the Lilycove City Shoreline after showing her a Pokémon that knows a sleep-inducing move.
 * **Heal Ball:** To be added as a custom inventory line item at the Lavaridge Town PokéMart.
 * **Love Ball:** To be added as a custom inventory line item at the Verdanturf Town PokéMart.
