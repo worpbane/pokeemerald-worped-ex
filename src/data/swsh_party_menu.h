@@ -31,6 +31,9 @@ static const u16 sStatusPal_Icons_SwSh[] = INCBIN_U16("graphics/party_menu/swsh/
 
 static const u32 sHeldItemGfx[]          = INCBIN_U32("graphics/party_menu/swsh/hold_icons.4bpp");
 const u16 gHeldItemPalette[]             = INCBIN_U16("graphics/party_menu/swsh/hold_icons.gbapal");
+
+static const u32 wPartyPokeballs[]          = INCBIN_U32("graphics/party_menu/swsh/pokeballs_sheet.4bpp");
+const u16 wPartyPokeballsPalette[]             = INCBIN_U16("graphics/party_menu/swsh/pokeballs_sheet.gbapal");
 #else
 static const u32 sHeldItemGfx[]          = INCBIN_U32("graphics/party_menu/hold_icons.4bpp");
 const u16 gHeldItemPalette[]             = INCBIN_U16("graphics/party_menu/hold_icons.gbapal");
