@@ -753,7 +753,7 @@
 #define FLAG_OAKS_RATING_IS_VIA_PC                       0x2FF
 
 // Unused?
-#define FLAG_0x300               0x300
+#define FLAG_EXP_SHARE_ON               0x300
 #define FLAG_0x301               0x301
 #define FLAG_0x302               0x302
 #define FLAG_0x303               0x303
@@ -2590,7 +2590,7 @@
 #define FLAG_UNUSED_0x8E3                           0 // Unused Flag
 #define FLAG_RECEIVED_POKEDEX_FROM_BIRCH            0
 
-#define FLAG_EXP_SHARE_ON                           0
+#define FLAG_UNUSED_0x8E5                           0
 #define FLAG_UNUSED_0x8E6                           0
 #define FLAG_UNUSED_0x8E7                           0
 #define FLAG_UNUSED_0x8E8                           0
