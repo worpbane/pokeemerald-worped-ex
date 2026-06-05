@@ -10759,4 +10759,9 @@ static void UpdatePartyMonPokeballSprite(u8 oldSlotId, u8 newSlotId)
     }
 }
 
+void Test_UpdatePartySelectionSingleLayout(void)
+{
+    //heh
+}
+
 #endif // SWSH_PARTY_MENU
