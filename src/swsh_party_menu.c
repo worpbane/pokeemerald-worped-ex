@@ -231,6 +231,7 @@ struct PartyMenuBox
     u8 windowId;
     u8 monSpriteId;
     u8 itemSpriteId;
+    u8 pokeballSpriteId;
     u8 statusSpriteId;
 };
 
@@ -592,6 +593,10 @@ static void FieldCallback_RockClimb(void);
 static void SavePartyMenuStateForPC(void);
 void CB2_ReopenPartyMenuFromPC(void);
 #endif
+//Dynamic Poke Ball
+//Second attempt at implementing.
+static void CreatePartyMonPokeballSprite(struct Pokemon *mon, struct PartyMenuBox *menuBox, u8 slotId);
+static void UpdatePartyMonPokeballSprite(u8 oldSlotId, u8 newSlotId);
 // Multiuse item code from Kasen
 static void DisplayGiveHowManyMessage(void);
 static bool8 DoesItemIncreaseEV(u8 itemType);
@@ -1137,6 +1142,7 @@ static void SetUpSlideInTransition(void)
         struct PartyMenuBox *box = &sPartyMenuBoxes[i];
         if (box->monSpriteId != SPRITE_NONE)    gSprites[box->monSpriteId].x2 = slideOff;
         if (box->itemSpriteId != SPRITE_NONE)   gSprites[box->itemSpriteId].x2 = slideOff;
+        if (box->pokeballSpriteId != SPRITE_NONE)   gSprites[box->itemSpriteId].x2 = slideOff;
         if (box->statusSpriteId != SPRITE_NONE) gSprites[box->statusSpriteId].x2 = slideOff;
     }
 
@@ -1389,6 +1395,7 @@ static void LoadPartyMenuBoxes(enum PartyMenuLayout layout)
         sPartyMenuBoxes[i].windowId = i;
         sPartyMenuBoxes[i].monSpriteId = SPRITE_NONE;
         sPartyMenuBoxes[i].itemSpriteId = SPRITE_NONE;
+        sPartyMenuBoxes[i].pokeballSpriteId = SPRITE_NONE;
         sPartyMenuBoxes[i].statusSpriteId = SPRITE_NONE;
     }
 }
@@ -1784,6 +1791,7 @@ static void CreatePartyMonSprites(u8 slot)
             CreatePartyMonIconSprite(mon, &sPartyMenuBoxes[slot], slot);
             CreatePartyMonHeldItemSprite(mon, &sPartyMenuBoxes[slot]);
             CreatePartyMonStatusSprite(mon, &sPartyMenuBoxes[slot]);
+			CreatePartyMonPokeballSprite(mon, &sPartyMenuBoxes[slot], slot);
         }
     }
 }
@@ -2372,6 +2380,7 @@ static void UpdateCurrentPartySelection(s8 *slotPtr, s8 movementDir)
             UpdatePartyMoveWindows(*slotPtr);
 
         UpdatePartyMonSprite(*slotPtr);
+		UpdatePartyMonPokeballSprite(newSlotId, *slotPtr);
     }
 }
 
@@ -4060,6 +4069,7 @@ static void MoveAndBufferPartySlot(const void *rectSrc, s16 x, s16 y, s16 width,
 static void MovePartyMenuBoxSprites(struct PartyMenuBox *menuBox, s16 offset)
 {
     gSprites[menuBox->itemSpriteId].x2 += offset * 8;
+    gSprites[menuBox->pokeballSpriteId].x2 += offset * 8;
     gSprites[menuBox->monSpriteId].x2 += offset * 8;
     gSprites[menuBox->statusSpriteId].x2 += offset * 8;
 }
@@ -4152,6 +4162,7 @@ static void SlideMultiBattlePartyBoxSprites(u8 slot, s16 tileOffset)
     s16 x2 = tileOffset * 8;
     if (box->monSpriteId != SPRITE_NONE) gSprites[box->monSpriteId].x2 = x2;
     if (box->itemSpriteId != SPRITE_NONE) gSprites[box->itemSpriteId].x2 = x2;
+    if (box->pokeballSpriteId != SPRITE_NONE) gSprites[box->pokeballSpriteId].x2 = x2;
     if (box->statusSpriteId != SPRITE_NONE) gSprites[box->statusSpriteId].x2 = x2;
 }
 
@@ -4366,6 +4377,7 @@ static void SwitchPartyMon(void)
     *mon2 = *monBuffer;
     Free(monBuffer);
     SwitchMenuBoxSprites(&menuBoxes[0]->itemSpriteId, &menuBoxes[1]->itemSpriteId);
+    SwitchMenuBoxSprites(&menuBoxes[0]->pokeballSpriteId, &menuBoxes[1]->pokeballSpriteId);
     SwitchMenuBoxSprites(&menuBoxes[0]->monSpriteId, &menuBoxes[1]->monSpriteId);
     SwitchMenuBoxSprites(&menuBoxes[0]->statusSpriteId, &menuBoxes[1]->statusSpriteId);
 }
@@ -10024,6 +10036,7 @@ static void SlideMultiPartyMenuBoxSpritesOneStep(u8 taskId)
         {
             MoveMultiPartyMenuBoxSprite(sPartyMenuBoxes[i].monSpriteId, tXPos - 8);
             MoveMultiPartyMenuBoxSprite(sPartyMenuBoxes[i].itemSpriteId, tXPos - 8);
+            MoveMultiPartyMenuBoxSprite(sPartyMenuBoxes[i].pokeballSpriteId, tXPos - 8);
             MoveMultiPartyMenuBoxSprite(sPartyMenuBoxes[i].statusSpriteId, tXPos - 8);
         }
         if (sAllSlotsTilemapBuffers[i] != NULL)
@@ -10781,7 +10794,7 @@ static void Task_FirstBattleEnterParty_WaitFadeNormal(u8 taskId)
 
 void ItemUseCB_PokeBall(u8 taskId, TaskFunc task)
 {
-    struct Pokemon *mon = &gPlayerParty[gPartyMenu.slotId];
+    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartyMenu.slotId];
     u16 currBall = GetMonData(mon, MON_DATA_POKEBALL);
     u16 newBall = gSpecialVar_ItemId;
     static const u8 sText_MonBallWasChanged[] = _("{STR_VAR_1} was put in the {STR_VAR_2}.{PAUSE_UNTIL_PRESS}");
@@ -10807,4 +10820,70 @@ void ItemUseCB_PokeBall(u8 taskId, TaskFunc task)
         RemoveBagItem(newBall, 1);
     }
 }
+
+static void CreatePartyMonPokeballSprite(struct Pokemon *mon, struct PartyMenuBox *menuBox, u8 slotId)
+{
+	struct CompressedSpriteSheet sheet;
+	u8 ballType;
+	u16 tileTag;
+	struct SpriteTemplate localTemplate;
+	
+	if (GetMonData(mon, MON_DATA_SPECIES) == SPECIES_NONE)
+		return;
+	
+	ballType = GetMonData(mon, MON_DATA_POKEBALL);
+	tileTag = BALL_TILE_TAG(ballType);
+	
+	sheet.data = sPartyBallGfxTable[ballType];
+	sheet.size = 0x400;
+	sheet.tag = tileTag;
+	LoadCompressedSpriteSheet(&sheet);
+	
+	LoadSpritePalette(&sSpritePalette_PartyBall);
+	
+	localTemplate = sSpriteTemplate_PartyBall;
+	localTemplate.tileTag = tileTag;
+	
+	s16 ballX = menuBox->spriteCoords[0] - 14;
+	s16 ballY = menuBox->spriteCoords[1] + 3;
+	
+	menuBox->pokeballSpriteId = CreateSprite(&localTemplate, ballX, ballY, 0);
+	
+	if(menuBox->pokeballSpriteId != MAX_SPRITES)
+	{
+		gSprites[menuBox->pokeballSpriteId].oam.priority = 1;
+		gSprites[menuBox->pokeballSpriteId].subpriority = 11;
+        
+		if (slotId == gPartyMenu.slotId)
+		{
+			StartSpriteAnim(&gSprites[menuBox->pokeballSpriteId], 1);
+		}
+		else 
+		{
+			StartSpriteAnim(&gSprites[menuBox->pokeballSpriteId], 0);
+		}
+	}
+}
+
+static void UpdatePartyMonPokeballSprite(u8 oldSlotId, u8 newSlotId)
+{
+    if (oldSlotId < PARTY_SIZE)
+    {
+        u8 oldSpriteId = sPartyMenuBoxes[oldSlotId].pokeballSpriteId;
+        if (oldSpriteId != MAX_SPRITES && gSprites[oldSpriteId].animNum != 0)
+        {
+            StartSpriteAnim(&gSprites[oldSpriteId], 0);
+        }
+    }
+
+    if (newSlotId < PARTY_SIZE)
+    {
+        u8 newSpriteId = sPartyMenuBoxes[newSlotId].pokeballSpriteId;
+        if (newSpriteId != MAX_SPRITES && gSprites[newSpriteId].animNum != 1)
+        {
+            StartSpriteAnim(&gSprites[newSpriteId], 1);
+        }
+    }
+}
+
 #endif // SWSH_PARTY_MENU

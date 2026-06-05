@@ -31,9 +31,6 @@ static const u16 sStatusPal_Icons_SwSh[] = INCBIN_U16("graphics/party_menu/swsh/
 
 static const u32 sHeldItemGfx[]          = INCBIN_U32("graphics/party_menu/swsh/hold_icons.4bpp");
 const u16 gHeldItemPalette[]             = INCBIN_U16("graphics/party_menu/swsh/hold_icons.gbapal");
-
-static const u32 wPartyPokeballs[]          = INCBIN_U32("graphics/party_menu/swsh/pokeballs_sheet.4bpp");
-const u16 wPartyPokeballsPalette[]             = INCBIN_U16("graphics/party_menu/swsh/pokeballs_sheet.gbapal");
 #else
 static const u32 sHeldItemGfx[]          = INCBIN_U32("graphics/party_menu/hold_icons.4bpp");
 const u16 gHeldItemPalette[]             = INCBIN_U16("graphics/party_menu/hold_icons.gbapal");
@@ -1796,4 +1793,121 @@ static const u16 sRotomFormChangeMoves[5] =
     ROTOM_FROST_MOVE,
     ROTOM_FAN_MOVE,
     ROTOM_MOW_MOVE,
+};
+
+//Dynamic Poke Balls
+
+#define TAG_SWSH_BALL_TILES		0x5754
+#define TAG_SWSH_BALL_PAL		0x5755
+#define BALL_TILE_TAG(ballId) (TAG_SWSH_BALL_TILES + (ballId * 32))
+
+static const u32 wPartyBall_Strange[]   = INCGFX_U32("graphics/party_menu/wPartyBalls/strange.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Poke[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/poke.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Great[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/great.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Ultra[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/ultra.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Master[]    = INCGFX_U32("graphics/party_menu/wPartyBalls/master.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Premier[]   = INCGFX_U32("graphics/party_menu/wPartyBalls/premier.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Heal[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/heal.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Net[]       = INCGFX_U32("graphics/party_menu/wPartyBalls/net.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Nest[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/nest.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Dive[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/dive.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Dusk[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/dusk.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Timer[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/timer.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Quick[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/quick.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Repeat[]    = INCGFX_U32("graphics/party_menu/wPartyBalls/repeat.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Luxury[]    = INCGFX_U32("graphics/party_menu/wPartyBalls/luxury.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Level[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/level.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Lure[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/lure.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Moon[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/moon.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Friend[]    = INCGFX_U32("graphics/party_menu/wPartyBalls/friend.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Love[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/love.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Fast[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/fast.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Heavy[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/heavy.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Dream[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/dream.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Safari[]    = INCGFX_U32("graphics/party_menu/wPartyBalls/safari.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Sport[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/sport.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Park[]      = INCGFX_U32("graphics/party_menu/wPartyBalls/park.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Beast[]     = INCGFX_U32("graphics/party_menu/wPartyBalls/beast.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+static const u32 wPartyBall_Cherish[]   = INCGFX_U32("graphics/party_menu/wPartyBalls/cherish.png", ".4bpp.smol", "-mwidth 4 -mheight 4");
+const u16 wPartyBall_Pal[]				= INCGFX_U16("graphics/party_menu/wPartyBalls/strange.png", ".gbapal");
+
+static const u32 *const sPartyBallGfxTable[] = 
+{
+	[BALL_STRANGE]	 = wPartyBall_Strange,
+    [BALL_POKE] 	 = wPartyBall_Poke,
+    [BALL_GREAT]	 = wPartyBall_Great,
+    [BALL_ULTRA]	 = wPartyBall_Ultra,
+    [BALL_MASTER] 	 = wPartyBall_Master,
+    [BALL_PREMIER]	 = wPartyBall_Premier,
+    [BALL_HEAL] 	 = wPartyBall_Heal,
+    [BALL_NET] 		 = wPartyBall_Net,
+    [BALL_NEST]		 = wPartyBall_Nest,
+    [BALL_DIVE]	 	 = wPartyBall_Dive,
+    [BALL_DUSK]		 = wPartyBall_Dusk,
+    [BALL_TIMER]	 = wPartyBall_Timer,
+    [BALL_QUICK] 	 = wPartyBall_Quick,
+    [BALL_REPEAT] 	 = wPartyBall_Repeat,
+    [BALL_LUXURY] 	 = wPartyBall_Luxury,
+    [BALL_LEVEL]	 = wPartyBall_Level,
+    [BALL_LURE] 	 = wPartyBall_Lure,
+    [BALL_MOON]		 = wPartyBall_Moon,
+    [BALL_FRIEND]	 = wPartyBall_Friend,
+    [BALL_LOVE] 	 = wPartyBall_Love,
+    [BALL_FAST]		 = wPartyBall_Fast,
+    [BALL_HEAVY] 	 = wPartyBall_Heavy,
+    [BALL_DREAM] 	 = wPartyBall_Dream,
+    [BALL_SAFARI]	 = wPartyBall_Safari,
+    [BALL_SPORT]	 = wPartyBall_Sport,
+    [BALL_PARK]		 = wPartyBall_Park,
+    [BALL_BEAST]	 = wPartyBall_Beast,
+    [BALL_CHERISH]	 = wPartyBall_Cherish,
+};
+	
+static const struct OamData sOamData_PartyBall =
+{
+    .y = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = FALSE,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(32x32),
+    .size = SPRITE_SIZE(32x32),
+    .tileNum = 0,
+    .paletteNum = 0,
+    .priority = 1,
+};
+
+static const union AnimCmd sSpriteAnim_PartyBallClosed[] =
+{
+    ANIMCMD_FRAME(0, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+
+static const union AnimCmd sSpriteAnim_PartyBallOpen[] =
+{
+    ANIMCMD_FRAME(16, 0, FALSE, FALSE),
+    ANIMCMD_END
+};
+
+static const union AnimCmd *const sSpriteAnimTable_PartyBall[] =
+{
+    [0] = sSpriteAnim_PartyBallClosed,
+    [1] = sSpriteAnim_PartyBallOpen,
+};
+
+static const struct SpritePalette sSpritePalette_PartyBall =
+{
+    .data = wPartyBall_Pal,
+    .tag = TAG_SWSH_BALL_PAL
+};
+
+static const struct SpriteTemplate sSpriteTemplate_PartyBall =
+{
+    .tileTag = TAG_SWSH_BALL_TILES,
+    .paletteTag = TAG_SWSH_BALL_PAL,
+    .oam = &sOamData_PartyBall,
+    .anims = sSpriteAnimTable_PartyBall,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
 };
