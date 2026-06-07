@@ -24,6 +24,7 @@ I'll try to call out from where a feature was inspired/pulled from. Major featur
 * **Gen IV Poison:** Pokémon will survivie poison with 1 hp outside of battles. *(Expansion Setting)*
 ### UI & Visuals:
 * **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic PokéBall next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works.
+* **Modified Montblanc's [SwSh Storage System](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_storage_system):** Another great feature that I liked the utility of. I've modified it quite a bit, visually matching it to my own FRLG inspired UI, adding an indicator for current cursor mode, and backporting the Platinum wallpapers.
 * **Text Decapitalization:** Working on making text accross the game decapped. *(WIP)*
 ### Other QoL:
 * **PokéBall Swapping:** You can use Pokéballs in the bag to rehome your Pokémon. (Lunos)

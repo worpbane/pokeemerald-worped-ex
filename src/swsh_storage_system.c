@@ -133,26 +133,30 @@ enum {
     MENU_SWITCH,
     MENU_BAG,
     MENU_SELECT,
-    MENU_BASE,
-    MENU_NORMAL,
-    MENU_FIGHTING,
-    MENU_FLYING,
-    MENU_POISON,
-    MENU_GROUND,
-    MENU_ROCK,
-    MENU_BUG,
-    MENU_GHOST,
-    MENU_STEEL,
-    MENU_FIRE,
-    MENU_WATER,
-    MENU_GRASS,
-    MENU_ELECTRIC,
-    MENU_PSYCHIC,
-    MENU_ICE,
-    MENU_DRAGON,
-    MENU_DARK,
-    MENU_FAIRY,
-    MENU_STELLAR,
+	//Wallpapers Page 1
+    MENU_BASE,			//Default
+    MENU_PLAINS, 		//Plains (Grass / Meadow)
+    MENU_CITY,			//City
+    MENU_DESERT, 		//Desert
+    MENU_CENTER, 		//PokeCenter
+	//Wallpapers Page 2
+    MENU_SHORE,			//Surface Water
+    MENU_OCEAN,		 	//Underwater)
+    MENU_MOUNTAIN, 		//Mountain
+    MENU_VOLCANO,		//Volcano
+    MENU_CAVE, 			//Cave
+	//Wallpapers Page 3
+    MENU_BEACH,			//Beach
+    MENU_SNOW, 			//Snow
+    MENU_SKY, 			//Sky
+    MENU_COMPUTA, 		//PC
+    MENU_CUTE, 			//Cute (Cross Stitch)
+	//Wallpapers Page 4
+    MENU_SPACE,			// Spaic
+    MENU_DAYCARE,		// Daycare
+    MENU_CONTEST,		// Contest Stage
+    MENU_CLASSIC,		// Classic
+    MENU_CLASSIC2,		// Classic 2
     MENU_COUNT,
 };
 
@@ -245,7 +249,7 @@ enum {
     GFXTAG_SHINY_ICON,
     GFXTAG_STAT_LABELS,
     GFXTAG_BOX_TITLE,
-    GFXTAG_BOX_TITLE_FRAME,
+    GFXTAG_BOX_TITLE_FRAME, //Unused
     GFXTAG_BOX_TITLE_ARROW,
     GFXTAG_ITEM_ICON_0,
     GFXTAG_ITEM_ICON_1, // Used implicitly in CreateItemIconSprites
@@ -813,7 +817,7 @@ static void UpdateMonInfoTilemap(void);
 static void CreateMainMenu(u8, s16 *);
 static void EnterPokeStorage(u8 boxOption);
 static u8 GetCurrentBoxOption(void);
-static void ScrollBackground(void);
+//static void ScrollBackground(void);
 static void GiveChosenBagItem(void);
 static void LoadPokeStorageMenuGfx(void);
 static void InitPokeStorageBg0(void);
@@ -1098,7 +1102,12 @@ static void CreateMainMenu(u8 whichMenu, s16 *windowIdPtr)
 static void CB2_ExitPokeStorage(void)
 {
     sPreviousBoxOption = GetCurrentBoxOption();
-    gFieldCallback = FieldTask_ReturnToPcMenu;
+#if SWSH_PARTY_MENU_PC_ACCESS
+	if (PokemonPC_HasReturnToPartyCallback())
+		gFieldCallback = CB2_ReopenPartyMenuFromPC;
+	else
+#endif
+	gFieldCallback = FieldTask_ReturnToPcMenu;
     SetMainCallback2(CB2_ReturnToField);
 }
 
@@ -1467,7 +1476,7 @@ static void CB2_PokeStorage(void)
 {
     RunTasks();
     DoScheduledBgTilemapCopiesToVram();
-    ScrollBackground();
+    //ScrollBackground();
     AnimateSprites();
     BuildOamBuffer();
 }
@@ -1665,7 +1674,7 @@ static void Task_InitPokeStorage(u8 taskId)
     case 11:
         // Alpha blend BG2 with BG3
         SetGpuReg(REG_OFFSET_BLDCNT, BLDCNT_TGT1_BG2 | BLDCNT_EFFECT_BLEND | BLDCNT_TGT2_BG3);
-        SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(10, 6));
+        SetGpuReg(REG_OFFSET_BLDALPHA, BLDALPHA_BLEND(4, 12));
         SetMonIconTransparency();
         if (!sStorage->isReopening)
         {
@@ -3448,11 +3457,13 @@ static void SetScrollingBackground(void)
     LoadPalette(sSwShWallpapers[wallpaperId].palettes, BG_PLTT_ID(1), PLTT_SIZE_4BPP);
 }
 
+/*
 static void ScrollBackground(void)
 {
     ChangeBgX(3, 64, BG_COORD_ADD);
     ChangeBgY(3, 64, BG_COORD_ADD);
 }
+*/
 
 static void LoadPokeStorageMenuGfx(void)
 {
@@ -3462,7 +3473,7 @@ static void LoadPokeStorageMenuGfx(void)
     SetBgTilemapBuffer(1, sStorage->displayMenuTilemapBuffer);
     ShowBg(1);
     ScheduleBgCopyTilemapToVram(1);
-
+	
     DecompressDataWithHeaderWram(sSwShStorage_BG2_Tilemap, sStorage->wallpaperBgTilemapBuffer);
     SetBgTilemapBuffer(2, sStorage->wallpaperBgTilemapBuffer);
     ShowBg(2);
@@ -5268,7 +5279,8 @@ static void SetUpScrollToBox(u8 boxId)
     sStorage->scrollState = 0;
 }
 
-#define BOX_TITLE_SPRITE_X  (DISPLAY_WIDTH - 76 - 32)
+#define BOX_TITLE_SPRITE_X  136
+
 
 static void UpdateBoxTitle(u8 boxId)
 {
@@ -5301,7 +5313,7 @@ static void UpdateBoxTitle(u8 boxId)
 
     for (i = 0; i < 2; i++)
     {
-        u8 spriteId = CreateSprite(&template, BOX_TITLE_SPRITE_X + i * 32, 20, 24);
+        u8 spriteId = CreateSprite(&template, BOX_TITLE_SPRITE_X + i * 32, 21, 24);
         sStorage->curBoxTitleSprites[i] = &gSprites[spriteId];
         StartSpriteAnim(sStorage->curBoxTitleSprites[i], i);
     }
@@ -5477,6 +5489,7 @@ static bool32 WaitForWallpaperGfxLoad(void)
 //  SECTION: Box Title
 //------------------------------------------------------------------------------
 
+/*
 static void CreateBoxTitleFrame(u8 boxId)
 {
     u8 i;
@@ -5490,7 +5503,7 @@ static void CreateBoxTitleFrame(u8 boxId)
         StartSpriteAnim(sStorage->boxTitleFrameSprites[i], sBoxTitleFrameAnims[i]);
     }
 }
-
+*/
 static void InitBoxTitle(u8 boxId)
 {
     u8 tagIndex;
@@ -5527,12 +5540,12 @@ static void InitBoxTitle(u8 boxId)
 
     for (i = 0; i < 2; i++)
     {
-        u8 spriteId = CreateSprite(&sSpriteTemplate_BoxTitle, BOX_TITLE_SPRITE_X + i * 32, 20, 23);
+        u8 spriteId = CreateSprite(&sSpriteTemplate_BoxTitle, BOX_TITLE_SPRITE_X + i * 32, 21, 23);
         sStorage->curBoxTitleSprites[i] = &gSprites[spriteId];
         StartSpriteAnim(sStorage->curBoxTitleSprites[i], i);
     }
     sStorage->boxTitleCycleId = 0;
-    CreateBoxTitleFrame(boxId);
+    //CreateBoxTitleFrame(boxId);
 }
 
 static void UpdateBoxTitlePalette(void)
@@ -5601,10 +5614,11 @@ static void RenderBoxTitleCentered(const u8 *boxName)
 static void CreateBoxScrollArrows(void)
 {
     u16 i;
+    static const u8 arrowXPositions[] = {92, 212};
 
     for (i = 0; i < 2; i++)
     {
-        u8 spriteId = CreateSprite(&sSpriteTemplate_BoxTitleArrow, 98 + i * 100, 21, 24);
+        u8 spriteId = CreateSprite(&sSpriteTemplate_BoxTitleArrow, arrowXPositions[i], 23, 24);
         if (spriteId != MAX_SPRITES)
         {
             struct Sprite *sprite = &gSprites[spriteId];
@@ -5715,8 +5729,8 @@ static void GetCursorCoordsByPos(u8 cursorArea, u8 cursorPosition, u16 *x, u16 *
         *y = cursorPosition * 24 + 8;
         break;
     case CURSOR_AREA_BOX_TITLE:
-        *x = 147;
-        *y = 8;
+        *x = 152;
+        *y = 10;
         break;
     case CURSOR_AREA_IN_CHOOSE_BOX:
         *x = 88 + (cursorPosition % 5) * 32;
@@ -7669,6 +7683,13 @@ static void CreateCursorSprites(void)
     }
 }
 
+//Tiles Array
+static const u16 sModeIconTiles[3][4] = {
+    [CURSOR_MODE_NORMAL]     = {27, 28, 43, 44},
+    [CURSOR_MODE_AUTO_ACTION] = {29, 30, 45, 46},
+    [CURSOR_MODE_MULTI_MOVE]  = {77, 78, 39, 31},
+};
+
 static void ToggleCursorAutoAction(void)
 {
     if (sCursorMode == CURSOR_MODE_AUTO_ACTION)
@@ -7697,6 +7718,18 @@ static void ToggleCursorAutoAction(void)
             UpdateMonInfoTilemap();
         }
     }
+	
+	u16 *tilemap = GetBgTilemapBuffer(1);
+    u16 *modeIcons = (u16*)sModeIconTiles[sCursorMode];
+	int pos = (0 * 32) + 24; 
+	u16 paletteBits = (2 << 12);
+	tilemap[pos]           = modeIcons[0] | paletteBits;
+    tilemap[pos + 1]       = modeIcons[1] | paletteBits;
+    tilemap[pos + 32]      = modeIcons[2] | paletteBits;
+    tilemap[pos + 33]      = modeIcons[3] | paletteBits;
+	ScheduleBgCopyTilemapToVram(1);
+	
+	PlaySE(SE_CLICK);
 }
 
 static u8 GetCursorPosition(void)

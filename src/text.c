@@ -2388,8 +2388,13 @@ static void DecompressGlyph_Normal(u16 glyphId, bool32 isJapanese)
     }
     else
     {
-        glyphs = gFontNormalLatinGlyphs + (0x20 * glyphId);
+#if !W_FRLG_FONT
+        glyphs = gFontNormalLatinGlyphs_FRLG + (0x20 * glyphId); //WorpTodo: Add an option to the menu/saveblock for the font
+        gCurGlyph.width = gFontNormalLatinGlyphWidths_FRLG[glyphId];
+#else
+		glyphs = gFontNormalLatinGlyphs + (0x20 * glyphId);
         gCurGlyph.width = gFontNormalLatinGlyphWidths[glyphId];
+#endif
 
         if (gCurGlyph.width <= 8)
         {
