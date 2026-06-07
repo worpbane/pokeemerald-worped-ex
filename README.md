@@ -114,3 +114,7 @@ This project would be impossible without the massive foundations provided by the
 ## 📝 Note on Generative AI
 
 *   **100% Human Code & (Bad) Design:** Every script edit, C function, map change, and feature in **`pokeemerald-worped-ex`** is entirely custom-configured / hand-coded by me. No generative AI models are utilized for code creation or game asset generation.
+
+---
+
+Based off RHH's pokeemerald-expansion 1.16.1 https://github.com/rh-hideout/pokeemerald-expansion/
