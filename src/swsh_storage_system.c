@@ -3551,7 +3551,7 @@ static void CreateMarkingComboSprite(void)
     sStorage->markingComboSprite->oam.priority = 0;
     sStorage->markingComboSprite->subpriority = 1;
     sStorage->markingComboSprite->x = 52 + (136 * sStorage->monInfoTilemapId);
-    sStorage->markingComboSprite->y = 149;
+    sStorage->markingComboSprite->y = 150;
     sStorage->markingComboTilesPtr = (void *) OBJ_VRAM0 + 32 * GetSpriteTileStartByTag(GFXTAG_MARKING_COMBO);
 }
 
@@ -3585,7 +3585,7 @@ static void UpdateMarkingComboSprite(void)
     }
 
     u8 spriteX = 52 + (136 * sStorage->monInfoTilemapId);
-    u8 spriteY = 149;
+    u8 spriteY = 150;
 
     if (sStorage->markingComboSprite == NULL)
     {
@@ -3658,7 +3658,7 @@ static void UpdateShinyIconSprite(void)
     if (sStorage->displayMon.isShiny && !sStorage->displayMon.isEgg)
     {
         u8 spriteX = 95 + (136 * sStorage->monInfoTilemapId);
-        u8 spriteY = 49;
+        u8 spriteY = 50;
 
         if (sStorage->shinyIconSprite == NULL)
         {
@@ -3724,7 +3724,7 @@ static void UpdateTypeIconsSprite(void)
 
     spriteX1 = 20 + (136 * sStorage->monInfoTilemapId);
     spriteX2 = 56 + (136 * sStorage->monInfoTilemapId);
-    spriteY = 48;
+    spriteY = 50;
 
     if (sStorage->typeIconSprites[0] == NULL)
     {
@@ -4781,7 +4781,7 @@ static void CreatePartyMonsSprites(bool8 visible)
         DestroyBoxMonIcon(sStorage->partySprites[0]);
         sStorage->partySprites[0] = NULL;
     }
-    sStorage->partySprites[0] = CreateMonIconSprite(species, personality, 40, 16, 1, 12, isEgg);
+    sStorage->partySprites[0] = CreateMonIconSprite(species, personality, 38, 16, 1, 12, isEgg);
     count = 1;
     for (i = 1; i < PARTY_SIZE; i++)
     {
@@ -4796,7 +4796,7 @@ static void CreatePartyMonsSprites(bool8 visible)
         if (species != SPECIES_NONE)
         {
             personality = GetMonData(&gParties[B_TRAINER_PLAYER][i], MON_DATA_PERSONALITY);
-            sStorage->partySprites[i] = CreateMonIconSprite(species, personality, 40,  24 * i + 16, 1, 12, isEgg);
+            sStorage->partySprites[i] = CreateMonIconSprite(species, personality, 38,  24 * i + 16, 1, 12, isEgg);
             count++;
         }
     }
