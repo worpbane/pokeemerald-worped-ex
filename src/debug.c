@@ -3739,6 +3739,14 @@ static void DebugAction_PCBag_Fill_PCBoxes_Fast(u8 taskId) //Credit: Sierraffini
     {
         for (boxPosition = 0; boxPosition < IN_BOX_COUNT; boxPosition++, species++)
         {
+			while (species < NUM_SPECIES && !IsSpeciesEnabled(species))
+            {
+                species++;
+            }
+			
+			if (species >= NUM_SPECIES)
+                break;
+			
             if (!GetBoxMonData(&gPokemonStoragePtr->boxes[boxId][boxPosition], MON_DATA_SANITY_HAS_SPECIES))
             {
                 StringCopy(speciesName, GetSpeciesName(species));
@@ -3746,8 +3754,12 @@ static void DebugAction_PCBag_Fill_PCBoxes_Fast(u8 taskId) //Credit: Sierraffini
                 SetBoxMonData(&boxMon, MON_DATA_SPECIES, &species);
                 GiveBoxMonInitialMoveset(&boxMon);
                 gPokemonStoragePtr->boxes[boxId][boxPosition] = boxMon;
+				
+				species++;
             }
         }
+		if (species >= NUM_SPECIES)
+            break;
     }
 
     // Set flag for user convenience
@@ -3767,6 +3779,14 @@ static void DebugAction_PCBag_Fill_PCBoxes_Slow(u8 taskId)
     {
         for (boxPosition = 0; boxPosition < IN_BOX_COUNT; boxPosition++)
         {
+			while (species < NUM_SPECIES && !IsSpeciesEnabled(species))
+            {
+                species++;
+            }
+			
+			if (species >= NUM_SPECIES)
+                break;
+			
             if (!GetBoxMonData(&gPokemonStoragePtr->boxes[boxId][boxPosition], MON_DATA_SANITY_HAS_SPECIES))
             {
                 if (!spaceAvailable)
@@ -3779,6 +3799,8 @@ static void DebugAction_PCBag_Fill_PCBoxes_Slow(u8 taskId)
                 spaceAvailable = TRUE;
             }
         }
+		if (species >= NUM_SPECIES)
+            break;
     }
 
     // Set flag for user convenience

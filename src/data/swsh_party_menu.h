@@ -1,7 +1,7 @@
 static const u32 sPartyMenuBg_Gfx_SwSh[]            = INCGFX_U32("graphics/party_menu/swsh/tiles.png", ".4bpp.smol");
 static const u16 sPartyMenuBg_Pal_SwSh[]            = INCGFX_U16("graphics/party_menu/swsh/tiles.png", ".gbapal");
-static const u32 sPartyMenuBg_Main_Tilemap_SwSh[]   = INCBIN_U32("graphics/party_menu/swsh/bg_main.bin.smolTM");
-static const u32 sPartyMenuBg_Scroll_Tilemap_SwSh[] = INCBIN_U32("graphics/party_menu/swsh/bg_scroll.bin.smolTM");
+static const u32 sPartyMenuBg_Main_Tilemap_SwSh[]   = INCGFX_U32("graphics/party_menu/swsh/bg_main.bin", ".smolTM");
+static const u32 sPartyMenuBg_Scroll_Tilemap_SwSh[] = INCGFX_U32("graphics/party_menu/swsh/bg_scroll.bin", ".smolTM");
 
 enum {
     BUTTON_START,
@@ -24,20 +24,16 @@ static const struct OamData sOamData_Button = {
     .priority = 0,
 };
 
-#if SWSH_PARTY_MENU == TRUE
 static const u32 sStatusGfx_Icons_SwSh[] = INCGFX_U32("graphics/party_menu/swsh/status_icons.png", ".4bpp.smol");
-// Palette loaded to keep with vanilla structure, but not actually used
 static const u16 sStatusPal_Icons_SwSh[] = INCGFX_U16("graphics/party_menu/swsh/status_icons.png", ".gbapal");
+static const u32 sPokerusGfx_Icon_SwSh[] = INCGFX_U32("graphics/party_menu/swsh/pokerus_tab.png", ".4bpp.smol");
 
+//These all use the same palette
 static const u32 sHeldItemGfx[]          = INCGFX_U32("graphics/party_menu/swsh/hold_icons.png", ".4bpp");
 const u16 gHeldItemPalette[]             = INCGFX_U16("graphics/party_menu/swsh/hold_icons.png", ".gbapal");
-#else
-static const u32 sHeldItemGfx[]          = INCGFX_U32("graphics/party_menu/hold_icons.png", ".4bpp");
-const u16 gHeldItemPalette[]             = INCGFX_U16("graphics/party_menu/hold_icons.png", ".gbapal");
-#endif
-
 static const u32 sMessageWindowGfx[]      = INCGFX_U32("graphics/party_menu/swsh/message_window.png", ".4bpp.smol");
 static const u32 sMultiuseWindowGfx[]     = INCGFX_U32("graphics/party_menu/swsh/multiuse_window.png", ".4bpp.smol");
+
 static const u16 sMonShadowPalette[]      = INCGFX_U16("graphics/party_menu/swsh/shadow.pal", ".gbapal");
 static const u32 sMoveTypes_Gfx[]         = INCGFX_U32("graphics/party_menu/swsh/move_types.png", ".4bpp.smol");
 
@@ -1009,7 +1005,7 @@ static const struct WindowTemplate sUnusedWindowTemplate2 =
 // Plain tilemaps for party menu slots.
 // The versions with no HP bar are used by eggs, and in certain displays like registering at a battle facility.
 // There is no empty version of the main slot because it shouldn't ever be empty.
-static const u8 sSlotTilemap_Main[]      = INCBIN_U8("graphics/party_menu/slot_main.bin");
+static const u8 sSlotTilemap_Main[]      = INCBIN_U8("graphics/party_menu/slot_main.bin"); //WorpTodo
 static const u8 sSlotTilemap_MainNoHP[]  = INCBIN_U8("graphics/party_menu/slot_main_no_hp.bin");
 static const u8 sSlotTilemap_Wide[]      = INCBIN_U8("graphics/party_menu/slot_wide.bin");
 static const u8 sSlotTilemap_WideNoHP[]  = INCBIN_U8("graphics/party_menu/slot_wide_no_hp.bin");
@@ -1123,7 +1119,7 @@ static const u16 sUnusedData[] =
     0x0121, 0x013b, 0x000f, 0x0013, 0x0039, 0x0046, 0x0094, 0x00f9, 0x007f, 0x0123,
 };
 
-static const u8 sText_Trade4[] = _("TRADE");
+static const u8 sText_Trade4[] = _("Trade");
 
 struct
 {
@@ -1438,7 +1434,7 @@ static const struct OamData sOamData_StatusCondition =
     .size = SPRITE_SIZE(32x8),
     .tileNum = 0,
     .priority = 1,
-    .paletteNum = 0,
+    .paletteNum = 11,
     .affineParam = 0
 };
 
@@ -1504,11 +1500,7 @@ static const union AnimCmd *const sSpriteTemplate_StatusCondition[] =
 
 static const struct CompressedSpriteSheet sSpriteSheet_StatusIcons =
 {
-#if SWSH_PARTY_MENU == TRUE
     .data = sStatusGfx_Icons_SwSh,
-#else
-    .data = gStatusGfx_Icons,
-#endif
     .size = 0x400,
     .tag = TAG_STATUS_ICONS
 };
@@ -1516,15 +1508,61 @@ static const struct CompressedSpriteSheet sSpriteSheet_StatusIcons =
 static const struct SpritePalette sSpritePalette_StatusIcons =
 {
     .data = sStatusPal_Icons_SwSh,
-    .tag = TAG_HELD_ITEM
+    .tag = TAG_STATUS_ICONS
 };
 
 const struct SpriteTemplate gSpriteTemplate_StatusIcons =
 {
     .tileTag = TAG_STATUS_ICONS,
-    .paletteTag = TAG_HELD_ITEM,
+    .paletteTag = TAG_STATUS_ICONS,
     .oam = &sOamData_StatusCondition,
     .anims = sSpriteTemplate_StatusCondition,
+};
+
+static const struct OamData sOamData_PokerusTab =
+{
+    .y = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = FALSE,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(16x8),
+    .x = 0,
+    .matrixNum = 0,
+    .size = SPRITE_SIZE(16x8),
+    .tileNum = 0,
+    .priority = 1,
+    .paletteNum = 11,
+    .affineParam = 0
+};
+
+static const union AnimCmd sSpriteAnim_PokerusTabNormal[] =
+{
+    ANIMCMD_FRAME(0, 0),
+    ANIMCMD_END
+};
+
+static const union AnimCmd *const sSpriteAnimTable_PokerusTab[] =
+{
+    sSpriteAnim_PokerusTabNormal
+};
+
+static const struct CompressedSpriteSheet sSpriteSheet_PokerusTab =
+{
+    .data = sPokerusGfx_Icon_SwSh,
+    .size = 0x40,
+    .tag = TAG_POKERUS_TAB
+};
+
+const struct SpriteTemplate gSpriteTemplate_PokerusTab =
+{
+    .tileTag = TAG_POKERUS_TAB,
+    .paletteTag = 0xFFFF,
+    .oam = &sOamData_PokerusTab,
+    .anims = sSpriteAnimTable_PokerusTab,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
 };
 
 static const struct OamData sOamData_MoveTypes =

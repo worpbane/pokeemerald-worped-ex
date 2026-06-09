@@ -37,6 +37,8 @@
 #include "trig.h"
 #include "walda_phrase.h"
 #include "window.h"
+#include "chooseboxmon.h"
+#include "party_menu.h"
 #include "constants/form_change_types.h"
 #include "constants/items.h"
 #include "constants/party_menu.h"
@@ -44,8 +46,7 @@
 #include "constants/rgb.h"
 #include "constants/songs.h"
 #include "constants/pokemon_icon.h"
-#include "chooseboxmon.h"
-#include "party_menu.h"
+#include "swsh_storage_system.h"
 
 /*
     NOTE: This file is large. Some general groups of functions have
@@ -858,20 +859,20 @@ void SetMonFormPSS(struct BoxPokemon *boxMon, enum FormChanges method);
 void SetMonFormPSS_ItemHold(struct BoxPokemon *boxMon);
 void UpdateSpeciesSpritePSS(struct BoxPokemon *boxmon);
 
-static const u8 gText_JustOnePkmn[] = _("There is just one POKéMON with you.");
+static const u8 gText_JustOnePkmn[] = _("There is just one Pokémon with you.");
 static const u8 gText_PartyFull[] = _("Your party is full!");
-static const u8 gText_Box[] = _("BOX");
+static const u8 gText_Box[] = _("Box");
 
 struct {
     const u8 *text;
     const u8 *desc;
 } static const sMainMenuTexts[OPTIONS_COUNT] =
 {
-    [OPTION_WITHDRAW]   = {COMPOUND_STRING("WITHDRAW POKéMON"), COMPOUND_STRING("Move POKéMON stored in BOXES to\nyour party.")},
-    [OPTION_DEPOSIT]    = {COMPOUND_STRING("DEPOSIT POKéMON"),  COMPOUND_STRING("Store POKéMON in your party in BOXES.")},
-    [OPTION_MOVE_MONS]  = {COMPOUND_STRING("MOVE POKéMON"),     COMPOUND_STRING("Organize the POKéMON in BOXES and\nin your party.")},
-    [OPTION_MOVE_ITEMS] = {COMPOUND_STRING("MOVE ITEMS"),       COMPOUND_STRING("Move items held by any POKéMON\nin a BOX or your party.")},
-    [OPTION_EXIT]       = {COMPOUND_STRING("SEE YA!"),          COMPOUND_STRING("Return to the previous menu.")}
+    [OPTION_WITHDRAW]   = {COMPOUND_STRING("Withdraw Pokémon"), COMPOUND_STRING("Move Pokémon stored in Boxes to\nyour party.")},
+    [OPTION_DEPOSIT]    = {COMPOUND_STRING("Deposit Pokémon"),  COMPOUND_STRING("Store Pokémon in your party in Boxes.")},
+    [OPTION_MOVE_MONS]  = {COMPOUND_STRING("Move Pokémon"),     COMPOUND_STRING("Organize the Pokémon in Boxes and\nin your party.")},
+    [OPTION_MOVE_ITEMS] = {COMPOUND_STRING("Move Items"),       COMPOUND_STRING("Move items held by any Pokémon\nin a Box or your party.")},
+    [OPTION_EXIT]       = {COMPOUND_STRING("See Ya!"),          COMPOUND_STRING("Return to the previous menu.")}
 };
 
 static const struct WindowTemplate sWindowTemplate_MainMenu =
@@ -1621,6 +1622,12 @@ static void Task_PCMainMenu(u8 taskId)
 
 void ShowPokemonStorageSystemPC(void)
 {
+    if (SWSH_STORAGE_SYSTEM)
+    {
+        ShowPokemonStorageSystemPC_SwSh();
+        return;
+    }
+
     u8 taskId = CreateTask(Task_PCMainMenu, 80);
     gTasks[taskId].tState = 0;
     gTasks[taskId].tSelectedOption = 0;
@@ -1659,8 +1666,18 @@ void PokemonPC_SetReturnToPartyCallback(MainCallback cb)
     sReturnToPartyCallback = cb;
 }
 
+bool8 PokemonPC_HasReturnToPartyCallback(void)
+{
+    return sReturnToPartyCallback != NULL;
+}
+
 void ShowPokemonPCFromParty(void)
 {
+	if (SWSH_STORAGE_SYSTEM)
+	{
+		ShowPokemonPCFromParty_SwSh();
+		return;
+	}
     EnterPokeStorage(OPTION_MOVE_MONS);
 }
 
@@ -6975,12 +6992,24 @@ static void ReshowDisplayMon(void)
 
 void SetMonFormPSS(struct BoxPokemon *boxMon, enum FormChanges method)
 {
+    if (SWSH_STORAGE_SYSTEM)
+    {
+        SetMonFormPSS_SwSh(boxMon, method);
+        return;
+    }
+
     if (TryBoxMonFormChange(boxMon, method))
         sRefreshDisplayMonGfx = TRUE;
 }
 
 void SetMonFormPSS_ItemHold(struct BoxPokemon *boxMon)
 {
+    if (SWSH_STORAGE_SYSTEM)
+    {
+        SetMonFormPSS_ItemHold_SwSh(boxMon);
+        return;
+    }
+
     if (TryBoxMonFormChange(boxMon, FORM_CHANGE_ITEM_HOLD))
         sRefreshDisplayMonGfx = TRUE;
     UpdateSpeciesSpritePSS(boxMon);
@@ -10093,6 +10122,12 @@ static void TilemapUtil_Draw(u8 id)
 
 void UpdateSpeciesSpritePSS(struct BoxPokemon *boxMon)
 {
+    if (SWSH_STORAGE_SYSTEM)
+    {
+        UpdateSpeciesSpritePSS_SwSh(boxMon);
+        return;
+    }
+
     enum Species species = GetBoxMonData(boxMon, MON_DATA_SPECIES);
     bool32 isShiny = GetBoxMonData(boxMon, MON_DATA_IS_SHINY);
     u32 pid = GetBoxMonData(boxMon, MON_DATA_PERSONALITY);
@@ -10128,6 +10163,12 @@ void UpdateSpeciesSpritePSS(struct BoxPokemon *boxMon)
 
 void ChooseMonFromStorage(void)
 {
+    if (SWSH_STORAGE_SYSTEM)
+    {
+        ChooseMonFromStorage_SwSh();
+        return;
+    }
+
     EnterPokeStorage(OPTION_SELECT_MON);
 }
 
