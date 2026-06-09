@@ -1790,6 +1790,9 @@ static void Task_PokeStorageMain(u8 taskId)
             SetPokeStorageTask(Task_OnSelectedMon);
             break;
         case INPUT_SCROLL_RIGHT:
+			if (sStorage->state == MSTATE_SCROLL_BOX) //Prevent spamming left/right breaking the box title lol
+			break;
+			
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() + 1;
             if (sStorage->newCurrBoxId >= TOTAL_BOXES_COUNT)
@@ -1806,6 +1809,9 @@ static void Task_PokeStorageMain(u8 taskId)
             }
             break;
         case INPUT_SCROLL_LEFT:
+			if (sStorage->state == MSTATE_SCROLL_BOX) //Prevent spamming left/right breaking the box title lol
+			break;
+	
             PlaySE(SE_SELECT);
             sStorage->newCurrBoxId = StorageGetCurrentBox() - 1;
             if (sStorage->newCurrBoxId < 0)
@@ -4562,10 +4568,10 @@ static void InitBoxMonSprites(u8 boxId)
             if (species != SPECIES_NONE)
             {
                 personality = GetBoxMonDataAt(boxId, boxPosition, MON_DATA_PERSONALITY);
-                sStorage->boxMonsSprites[count] = CreateMonIconSprite(species, personality, 8 * (3 * j) + 92, 8 * (3 * i) + 40, 1, 19 - j, isEgg);
+                sStorage->boxMonsSprites[count] = CreateMonIconSprite(species, personality, 8 * (3 * j) + 92, 8 * (3 * i) + 40, 2, 19 - j, isEgg);
 
                 if (ShouldBoxmonSpriteBeTransparent(boxId, boxPosition))
-                    sStorage->boxMonsSprites[boxPosition]->oam.objMode = ST_OAM_OBJ_BLEND;
+                    sStorage->boxMonsSprites[count]->oam.objMode = ST_OAM_OBJ_BLEND;
             }
             else
             {
@@ -4622,7 +4628,7 @@ static void SpriteCB_BoxMonIconScrollIn(struct Sprite *sprite)
         // Icon moving
         sprite->sDistance--;
         sprite->x += sprite->sSpeed;
-        if (sprite->x <= 84 || sprite->x >= 252)
+        if (sprite->x <= 64 || sprite->x >= 252)
             sprite->invisible = TRUE;
         else
             sprite->invisible = FALSE;
@@ -4650,7 +4656,7 @@ static void SpriteCB_BoxMonIconScrollOut(struct Sprite *sprite)
         sprite->sScrollOutX = sprite->x + sprite->x2;
 
         // Check if icon offscreen
-        if (sprite->sScrollOutX <= 84 || sprite->sScrollOutX >= 252)
+        if (sprite->sScrollOutX <= 64 || sprite->sScrollOutX >= 252)
             sprite->callback = SpriteCallbackDummy;
     }
 }
@@ -4742,7 +4748,7 @@ static bool8 UpdateBoxMonIconScroll(void)
     {
     case 0:
         sStorage->iconScrollPos += sStorage->iconScrollSpeed;
-        if (sStorage->iconScrollPos <= 80 || sStorage->iconScrollPos >= 252)
+        if (sStorage->iconScrollPos <= 60 || sStorage->iconScrollPos >= 252)
         {
             // A column of icons has gone offscreen, destroy them
             DestroyBoxMonIconsInColumn(sStorage->iconScrollCurColumn);
@@ -5392,31 +5398,37 @@ static bool8 ScrollToBox(void)
             Free(sStorage->wallpaperTiles);
             sStorage->wallpaperTiles = NULL;
         }
+		
         InitBoxMonIconScroll(sStorage->scrollToBoxId, sStorage->scrollDirection);
         AnimateBoxScrollArrow(sStorage->scrollDirection);
+		
+		StartLoadWallpaperGfx(sStorage->scrollToBoxId, 0);
+		UpdateWallpaperGfx(sStorage->scrollToBoxId, 0);
+		
+		BeginNormalPaletteFade(1 << 1, 0, 16, 0, RGB_WHITEALPHA);
+		
+		sStorage->scrollState++;
         break;
     case 2:
         iconsScrolling = UpdateBoxMonIconScroll();
+		UpdatePaletteFade();
+		
         if (sStorage->scrollTimer != 0)
         {
             if (--sStorage->scrollTimer != 0)
                 return TRUE;
-            StartLoadWallpaperGfx(sStorage->scrollToBoxId, 0);
             sStorage->scrollState++;
             return TRUE;
         }
         return iconsScrolling;
     case 3:
         iconsScrolling = UpdateBoxMonIconScroll();
-        UpdateWallpaperGfx(sStorage->scrollToBoxId, 0);
-		
-		BeginNormalPaletteFade(1 << 1, 0, 16, 0, RGB_WHITEALPHA);
+        UpdatePaletteFade();
 		
         sStorage->scrollState++;
         return TRUE;
     case 4:
         iconsScrolling = UpdateBoxMonIconScroll();
-		
 		UpdatePaletteFade();
 		
         if (!WaitForWallpaperGfxLoad())
