@@ -10759,9 +10759,21 @@ static void UpdatePartyMonPokeballSprite(u8 oldSlotId, u8 newSlotId)
     }
 }
 
-void Test_UpdatePartySelectionSingleLayout(void)
+#if TESTING
+s8 Test_UpdatePartySelectionSingleLayout(s8 slotId, s8 movementDir, bool8 chooseHalf, u8 lastSelectedSlot)
 {
-    //heh
+    struct PartyMenuInternal internal = {0};
+    struct PartyMenuInternal *savedInternal = sPartyMenuInternal;
+
+    internal.chooseHalf = chooseHalf;
+    internal.lastSelectedSlot = lastSelectedSlot;
+    sPartyMenuInternal = &internal;
+
+    UpdatePartySelectionSingleLayout(&slotId, movementDir);
+
+    sPartyMenuInternal = savedInternal;
+    return slotId;
 }
+#endif // TESTING
 
 #endif // SWSH_PARTY_MENU

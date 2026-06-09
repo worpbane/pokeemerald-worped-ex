@@ -71,6 +71,7 @@ static const u16 sMarkings_Pal[]              = INCGFX_U16("graphics/pokemon_sto
 static const u32 sMarkingsMenu_Gfx[]          = INCGFX_U32("graphics/pokemon_storage/swsh/markings_menu.png", ".4bpp.smol");
 static const u32 sMessageWindow_Gfx[]         = INCGFX_U32("graphics/pokemon_storage/swsh/message_window.png", ".4bpp.smol");
 static const u32 sShinyIcon_Gfx[]             = INCGFX_U32("graphics/pokemon_storage/swsh/shiny_icon.png", ".4bpp.smol");
+static const u32 sPokerusIcon_Gfx[]           = INCGFX_U32("graphics/pokemon_storage/swsh/pokerus_icon.png", ".4bpp.smol");
 static const u32 sStatLabels_Gfx[]            = INCGFX_U32("graphics/pokemon_storage/swsh/stat_labels.png", ".4bpp.smol");
 static const ALIGNED(4) u8 sTypeIcons_Gfx[]   = INCGFX_U8("graphics/pokemon_storage/swsh/type_icons.png", ".4bpp");
 static const u16 sTypeIcons_Pal[]             = INCGFX_U16("graphics/pokemon_storage/swsh/type_icons.png", ".gbapal");
@@ -928,6 +929,45 @@ static const struct SpriteTemplate sSpriteTemplate_ShinyIcon =
     .tileTag = GFXTAG_SHINY_ICON,
     .paletteTag = PALTAG_MISC_2,
     .oam = &sOamData_ShinyIcon,
+};
+
+// ============================================================================
+// Pokerus Icon Sprites
+// ============================================================================
+
+static const struct OamData sOamData_PokerusIcon =
+{
+    .y = 0,
+    .affineMode = ST_OAM_AFFINE_OFF,
+    .objMode = ST_OAM_OBJ_NORMAL,
+    .mosaic = FALSE,
+    .bpp = ST_OAM_4BPP,
+    .shape = SPRITE_SHAPE(32x8),
+    .x = 0,
+    .matrixNum = 0,
+    .size = SPRITE_SIZE(32x8),
+    .tileNum = 0,
+    .priority = 0,
+    .paletteNum = 0,
+    .affineParam = 0,
+};
+
+static const struct CompressedSpriteSheet sSpriteSheet_PokerusIcon =
+{
+    .data = sPokerusIcon_Gfx,
+    .size = (32 * 8) / 2,
+    .tag = GFXTAG_PKRS_ICON
+};
+
+static const struct SpriteTemplate sSpriteTemplate_PokerusIcon =
+{
+    .tileTag = GFXTAG_PKRS_ICON,
+    .paletteTag = PALTAG_MISC_1,
+    .oam = &sOamData_PokerusIcon,
+	.anims = gDummySpriteAnimTable,
+    .images = NULL,
+    .affineAnims = gDummySpriteAffineAnimTable,
+    .callback = SpriteCallbackDummy,
 };
 
 // ============================================================================

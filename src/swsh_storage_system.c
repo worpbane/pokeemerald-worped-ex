@@ -263,6 +263,7 @@ enum {
     GFXTAG_MARKING_COMBO,
     GFXTAG_17, // Unused
     GFXTAG_MON_ICON,
+	GFXTAG_PKRS_ICON,
 };
 
 // The maximum number of Pokémon icons that can appear on-screen.
@@ -412,6 +413,7 @@ struct DisplayMonInfo
     u8 speciesNameText[36];
     u8 genderLvlText[36];
     u8 itemNameText[36];
+	bool32 hasPokerus;
 };
 
 struct MarkingsMenuSwSh
@@ -539,6 +541,7 @@ struct PokemonStorageSystemData
     struct Sprite *genderIconSprite;
     struct Sprite *typeIconSprites[2];
     struct Sprite *shinyIconSprite;
+    struct Sprite *pokerusIconSprite;
     struct Sprite *statLabelSprites[2];
     u16 *typeIconTilesPtr[2];
     u8 ALIGNED(4) tileBuffer[MON_PIC_SIZE * MAX_MON_PIC_FRAMES];
@@ -835,6 +838,7 @@ static void SpriteCB_TypeIcon(struct Sprite *);
 static void UpdateTypeIconsSprite(void);
 static void UpdateStatLabelsSprites(void);
 static void UpdateShinyIconSprite(void);
+static void UpdatePokerusIconSprite(void);
 static void HideInfoPanelSprites(void);
 static void ClearMonInfoPanel(void);
 static u16 GetTargetBg0Y(void);
@@ -3534,10 +3538,14 @@ static bool8 InitPalettesAndSprites(void)
         sStorage->graphicsLoadState++;
         break;
     case 9:
+        LoadCompressedSpriteSheet(&sSpriteSheet_PokerusIcon);
+        sStorage->graphicsLoadState++;
+        break;
+	case 10:
         LoadCompressedSpriteSheet(&sSpriteSheet_BoxTitleFrame);
         sStorage->graphicsLoadState++;
         break;
-    case 10:
+    case 11:
         LoadCompressedSpriteSheet(&sSpriteSheet_BoxTitleArrow);
         sStorage->graphicsLoadState = 0;
         return TRUE;
@@ -3565,6 +3573,8 @@ static void HideInfoPanelSprites(void)
         sStorage->typeIconSprites[1]->invisible = TRUE;
     if (sStorage->shinyIconSprite != NULL)
         sStorage->shinyIconSprite->invisible = TRUE;
+	if (sStorage->pokerusIconSprite != NULL)
+        sStorage->pokerusIconSprite->invisible = TRUE;
     if (sStorage->statLabelSprites[0] != NULL)
         sStorage->statLabelSprites[0]->invisible = TRUE;
     if (sStorage->statLabelSprites[1] != NULL)
@@ -3674,6 +3684,39 @@ static void UpdateShinyIconSprite(void)
     else if (sStorage->shinyIconSprite != NULL)
     {
         sStorage->shinyIconSprite->invisible = TRUE;
+    }
+}
+
+static void UpdatePokerusIconSprite(void)
+{
+    if (!sStorage->showMonInfo
+        || sStorage->displayMon.species == SPECIES_NONE
+        || (GetSpeciesAtCursorPosition() == SPECIES_NONE && !sIsMonBeingMoved))
+    {
+        if (sStorage->pokerusIconSprite != NULL)
+            sStorage->pokerusIconSprite->invisible = TRUE;
+        return;
+    }
+
+    if (sStorage->displayMon.hasPokerus && !sStorage->displayMon.isEgg)
+    {
+		u8 spriteX = 86 + (136 * sStorage->monInfoTilemapId);
+        u8 spriteY = 150;
+
+        if (sStorage->pokerusIconSprite == NULL)
+        {
+            sStorage->pokerusIconSprite = &gSprites[CreateSprite(&sSpriteTemplate_PokerusIcon, spriteX, spriteY, 0)];
+        }
+        else
+        {
+            sStorage->pokerusIconSprite->x = spriteX;
+            sStorage->pokerusIconSprite->y = spriteY;
+            sStorage->pokerusIconSprite->invisible = FALSE;
+        }
+    }
+    else if (sStorage->pokerusIconSprite != NULL)
+    {
+        sStorage->pokerusIconSprite->invisible = TRUE;
     }
 }
 
@@ -4094,6 +4137,7 @@ static bool8 PrintDisplayMonInfo(void)
             break;
         case 2:
             UpdateShinyIconSprite();
+			UpdatePokerusIconSprite();
             sStorage->displayMonInfoLoadState++;
             break;
         case 3:
@@ -4131,6 +4175,7 @@ static bool8 PrintDisplayMonInfo(void)
         UpdateTypeIconsSprite();
         UpdateStatLabelsSprites();
         UpdateShinyIconSprite();
+		UpdatePokerusIconSprite();
         UpdateMarkingComboSprite();
         sStorage->displayMonInfoLoadState = 0;
         return TRUE;
@@ -4233,6 +4278,7 @@ static void UpdateMonInfoTilemap(void)
         UpdateTypeIconsSprite();
         UpdateStatLabelsSprites();
         UpdateShinyIconSprite();
+		UpdatePokerusIconSprite();
         UpdateMarkingComboSprite();
     }
 }
@@ -4315,6 +4361,9 @@ static void ClearBottomWindow(void)
 {
     DestroyMessageWindowSprite();
     ClearStdWindowAndFrameToTransparent(WIN_MESSAGE, FALSE);
+	//Reintialize Info Panel gfx
+	DecompressAndLoadBgGfxUsingHeap(0, sMonInfo_Gfx, 0, 0, 0);
+    DecompressDataWithHeaderWram(sMonInfo_Tilemap, sStorage->infoTilemapBuffer);
     UpdateMonInfoTilemap();
     ScheduleBgCopyTilemapToVram(0);
 }
@@ -5326,8 +5375,15 @@ static bool8 ScrollToBox(void)
     switch (sStorage->scrollState)
     {
     case 0:
+		BeginNormalPaletteFade(1 << 1, 0, 0, 16, RGB_WHITEALPHA);
         sStorage->scrollState++;
+		return TRUE;
     case 1:
+		UpdatePaletteFade();
+		
+		if (gPaletteFade.active)
+            return TRUE;
+		
         if (!WaitForWallpaperGfxLoad())
             return TRUE;
 
@@ -5353,10 +5409,16 @@ static bool8 ScrollToBox(void)
     case 3:
         iconsScrolling = UpdateBoxMonIconScroll();
         UpdateWallpaperGfx(sStorage->scrollToBoxId, 0);
+		
+		BeginNormalPaletteFade(1 << 1, 0, 16, 0, RGB_WHITEALPHA);
+		
         sStorage->scrollState++;
         return TRUE;
     case 4:
         iconsScrolling = UpdateBoxMonIconScroll();
+		
+		UpdatePaletteFade();
+		
         if (!WaitForWallpaperGfxLoad())
             return TRUE;
 
@@ -5367,6 +5429,9 @@ static bool8 ScrollToBox(void)
         }
 
         if (iconsScrolling)
+            return TRUE;
+		
+		if (gPaletteFade.active)
             return TRUE;
 
         UpdateBoxTitle(sStorage->scrollToBoxId);
@@ -6749,6 +6814,7 @@ static void SetDisplayMonData(void *pokemon, u8 mode)
         sStorage->displayMon.species = GetMonData(mon, MON_DATA_SPECIES);
         if (sStorage->displayMon.species != SPECIES_NONE)
         {
+			u8 pokerusDays = GetMonData(mon, MON_DATA_POKERUS_DAYS_LEFT);
             sanityIsBadEgg = GetMonData(mon, MON_DATA_SANITY_IS_BAD_EGG);
             if (sanityIsBadEgg)
                 sStorage->displayMon.isEgg = TRUE;
@@ -6762,6 +6828,7 @@ static void SetDisplayMonData(void *pokemon, u8 mode)
             sStorage->displayMon.personality = GetMonData(mon, MON_DATA_PERSONALITY);
             sStorage->displayMon.palette = GetMonFrontSpritePal(mon);
             sStorage->displayMon.isShiny = GetMonData(mon, MON_DATA_IS_SHINY);
+			sStorage->displayMon.hasPokerus = (pokerusDays > 0);
             gender = GetMonGender(mon);
             sStorage->displayMon.gender = gender;
             sStorage->displayMon.heldItem = GetMonData(mon, MON_DATA_HELD_ITEM);
@@ -6788,6 +6855,8 @@ static void SetDisplayMonData(void *pokemon, u8 mode)
         if (sStorage->displayMon.species != SPECIES_NONE)
         {
             bool32 isShiny = GetBoxMonData(boxMon, MON_DATA_IS_SHINY);
+			u8 pokerusDays = GetBoxMonData(boxMon, MON_DATA_POKERUS_DAYS_LEFT);
+			bool32 hasActivePokerus = (pokerusDays > 0);
             sanityIsBadEgg = GetBoxMonData(boxMon, MON_DATA_SANITY_IS_BAD_EGG);
             if (sanityIsBadEgg)
                 sStorage->displayMon.isEgg = TRUE;
@@ -6804,6 +6873,7 @@ static void SetDisplayMonData(void *pokemon, u8 mode)
             sStorage->displayMon.palette = GetMonSpritePalFromSpeciesAndPersonalityIsEgg(sStorage->displayMon.species, isShiny, sStorage->displayMon.personality,
             sStorage->displayMon.isEgg);
             sStorage->displayMon.isShiny = isShiny;
+			sStorage->displayMon.hasPokerus = hasActivePokerus;
             gender = GetGenderFromSpeciesAndPersonality(sStorage->displayMon.species, sStorage->displayMon.personality);
             sStorage->displayMon.gender = gender;
             sStorage->displayMon.heldItem = GetBoxMonData(boxMon, MON_DATA_HELD_ITEM);
