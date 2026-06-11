@@ -2817,6 +2817,7 @@ const struct SpeciesInfo gSpeciesInfoGen1[] =
         .eggMoveLearnset = sPichuEggMoveLearnset,
         .formSpeciesIdTable = sPichuFormSpeciesIdTable,
         .evolutions = EVOLUTION({EVO_LEVEL, 0, SPECIES_PIKACHU, CONDITIONS({IF_MIN_FRIENDSHIP, FRIENDSHIP_EVO_THRESHOLD})}),
+		.overworldEncounterBehavior = OWE_APPROACH_PLAYER_NORMAL,
     },
 
     [SPECIES_PICHU_SPIKY_EARED] =
@@ -2989,6 +2990,7 @@ const struct SpeciesInfo gSpeciesInfoGen1[] =
                                 ,{EVO_ITEM, ITEM_THUNDER_STONE, SPECIES_RAICHU_ALOLA, CONDITIONS({IF_REGION, REGION_ALOLA})}
                             #endif
                             ),
+		.overworldEncounterBehavior = OWE_APPROACH_PLAYER_NORMAL,
     },
 
 #if P_COSPLAY_PIKACHU_FORMS
@@ -7950,6 +7952,7 @@ const struct SpeciesInfo gSpeciesInfoGen1[] =
         .eggMoveLearnset = sGrowlitheEggMoveLearnset,
         .formSpeciesIdTable = sGrowlitheFormSpeciesIdTable,
         .evolutions = EVOLUTION({EVO_ITEM, ITEM_FIRE_STONE, SPECIES_ARCANINE}),
+		.overworldEncounterBehavior = OWE_APPROACH_PLAYER_NORMAL,
     },
 
     [SPECIES_ARCANINE] =
@@ -18082,6 +18085,7 @@ const struct SpeciesInfo gSpeciesInfoGen1[] =
                                 {EVO_ITEM, ITEM_ICE_STONE, SPECIES_GLACEON}
                             #endif
                             ),
+		.overworldEncounterBehavior = OWE_APPROACH_PLAYER_NORMAL,
     },
 
 #if P_GIGANTAMAX_FORMS

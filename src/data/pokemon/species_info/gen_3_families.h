@@ -73,6 +73,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .teachableLearnset = sTreeckoTeachableLearnset,
         .eggMoveLearnset = sTreeckoEggMoveLearnset,
         .evolutions = EVOLUTION({EVO_LEVEL, 16, SPECIES_GROVYLE}),
+		.overworldEncounterBehavior = OWE_WATCH_PLAYER_NORMAL,
     },
 
     [SPECIES_GROVYLE] =
@@ -378,6 +379,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .teachableLearnset = sTorchicTeachableLearnset,
         .eggMoveLearnset = sTorchicEggMoveLearnset,
         .evolutions = EVOLUTION({EVO_LEVEL, 16, SPECIES_COMBUSKEN}),
+		.overworldEncounterBehavior = OWE_WATCH_PLAYER_NORMAL,
     },
 
     [SPECIES_COMBUSKEN] =
@@ -697,6 +699,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .teachableLearnset = sMudkipTeachableLearnset,
         .eggMoveLearnset = sMudkipEggMoveLearnset,
         .evolutions = EVOLUTION({EVO_LEVEL, 16, SPECIES_MARSHTOMP}),
+		.overworldEncounterBehavior = OWE_WATCH_PLAYER_NORMAL,
     },
 
     [SPECIES_MARSHTOMP] =
@@ -1003,6 +1006,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .teachableLearnset = sPoochyenaTeachableLearnset,
         .eggMoveLearnset = sPoochyenaEggMoveLearnset,
         .evolutions = EVOLUTION({EVO_LEVEL, 18, SPECIES_MIGHTYENA}),
+		.overworldEncounterBehavior = OWE_CHASE_PLAYER_NORMAL,
     },
 
     [SPECIES_MIGHTYENA] =
@@ -1076,6 +1080,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         )
         .levelUpLearnset = sMightyenaLevelUpLearnset,
         .teachableLearnset = sMightyenaTeachableLearnset,
+		.overworldEncounterBehavior = OWE_CHASE_PLAYER_NORMAL,
     },
 #endif //P_FAMILY_POOCHYENA
 
@@ -1162,6 +1167,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .eggMoveLearnset = sZigzagoonEggMoveLearnset,
         .formSpeciesIdTable = sZigzagoonFormSpeciesIdTable,
         .evolutions = EVOLUTION({EVO_LEVEL, 20, SPECIES_LINOONE}),
+		.overworldEncounterBehavior = OWE_CHASE_PLAYER_SLOW,
     },
 
     [SPECIES_LINOONE] =
@@ -1238,6 +1244,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .levelUpLearnset = sLinooneLevelUpLearnset,
         .teachableLearnset = sLinooneTeachableLearnset,
         .formSpeciesIdTable = sLinooneFormSpeciesIdTable,
+		.overworldEncounterBehavior = OWE_CHASE_PLAYER_NORMAL,
     },
 
 #if P_GALARIAN_FORMS
@@ -2434,6 +2441,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .teachableLearnset = sTaillowTeachableLearnset,
         .eggMoveLearnset = sTaillowEggMoveLearnset,
         .evolutions = EVOLUTION({EVO_LEVEL, 22, SPECIES_SWELLOW}),
+		.overworldEncounterBehavior = OWE_WATCH_PLAYER_NORMAL,
     },
 
     [SPECIES_SWELLOW] =
@@ -2584,6 +2592,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .teachableLearnset = sWingullTeachableLearnset,
         .eggMoveLearnset = sWingullEggMoveLearnset,
         .evolutions = EVOLUTION({EVO_LEVEL, 25, SPECIES_PELIPPER}),
+		.overworldEncounterBehavior = OWE_CHASE_PLAYER_SLOW,
     },
 
     [SPECIES_PELIPPER] =
@@ -2669,6 +2678,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         )
         .levelUpLearnset = sPelipperLevelUpLearnset,
         .teachableLearnset = sPelipperTeachableLearnset,
+		.overworldEncounterBehavior = OWE_CHASE_PLAYER_NORMAL,
     },
 #endif //P_FAMILY_WINGULL
 
@@ -2748,6 +2758,7 @@ const struct SpeciesInfo gSpeciesInfoGen3[] =
         .teachableLearnset = sRaltsTeachableLearnset,
         .eggMoveLearnset = sRaltsEggMoveLearnset,
         .evolutions = EVOLUTION({EVO_LEVEL, 20, SPECIES_KIRLIA}),
+		.overworldEncounterBehavior = OWE_APPROACH_PLAYER_SLOW,
     },
 
     [SPECIES_KIRLIA] =

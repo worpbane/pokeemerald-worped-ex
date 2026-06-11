@@ -26,9 +26,9 @@
 #define WE_OWE_RESTRICT_METATILE                TRUE    // If TRUE, OWEs will stay within tiles with the same encounter metatile behavior as the one it is currently on, if any.
 #define WE_OWE_RESTRICT_MAP                     TRUE    // If TRUE, OWEs will stay within their current map bounds.
 #define WE_OWE_UNRESTRICT_SIGHT                 FALSE   // If TRUE, OWEs with movement behaviors that respond to the player, will ignore all movement restrictions when they can see the player.
-#define WE_OWE_SPAWN_REPLACEMENT                FALSE   // If TRUE, the oldest OWE objects will despawn after a short time and be replaced with a new spawn if possible.
+#define WE_OWE_SPAWN_REPLACEMENT                TRUE   // If TRUE, the oldest OWE objects will despawn after a short time and be replaced with a new spawn if possible.
 #define WE_OWE_FLEE_DESPAWN                     TRUE    // If TRUE, a fleeing OWE will despawn if it is unable to take a step for a short time.
-#define WE_OWE_SHINY_SPARKLE                    FALSE   // If TRUE, shiny OWEs will spawn with a sparkle animation and play the shiny sound effect.
+#define WE_OWE_SHINY_SPARKLE                    TRUE   // If TRUE, shiny OWEs will spawn with a sparkle animation and play the shiny sound effect.
 #define WE_OWE_FEEBAS_SPOTS                     FALSE   // If TRUE, any spot that could result in a Feebas fishing encounter can spawn a Feebas OWE.
 #define WE_OWE_DESPAWN_SOUND                    FALSE   // If TRUE, plays SE_FLEE when an OWE despawns.
 #define WE_OWE_APPROACH_FOR_BATTLE              TRUE    // If TRUE, OWEs will take steps to be right next to the player before the battle starts.
