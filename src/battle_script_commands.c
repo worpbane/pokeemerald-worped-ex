@@ -9853,7 +9853,9 @@ static void ComputeBallData(u32 wildMonBattler, u32 playerBattler, struct BallDa
         }
         break;
     case BALL_DREAM:
-		ball->multiplier = 400;
+        if (B_DREAM_BALL_MODIFIER >= GEN_8 && (battleMon->status1 & STATUS1_SLEEP || (GetBattlerAbilityIgnoreMoldBreaker(wildMonBattler) == ABILITY_COMATOSE)))
+            ball->multiplier = 400;
+        break;
     case BALL_SAFARI:
         ball->multiplier = 150;
         break;

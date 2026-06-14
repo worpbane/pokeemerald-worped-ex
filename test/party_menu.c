@@ -25,7 +25,7 @@ TEST("Full multi partner party menu stops down navigation at partner party count
     SetTestPartySize(B_TRAINER_PARTNER, 2);
     gPartyMenu.layout = PARTY_LAYOUT_MULTI_FULL_PARTNER;
 
-    EXPECT_EQ(Test_UpdatePartySelectionSingleLayout(1, TEST_MENU_DIR_DOWN, FALSE, 0), PARTY_SIZE + 1);
+    EXPECT_EQ(Test_UpdatePartySelectionSingleLayout(1, TEST_MENU_DIR_DOWN, FALSE, 0), 0); //Edited to work with Mont's Party Menu
 }
 
 TEST("Full multi partner party menu allows down navigation through partner party count")
