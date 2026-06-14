@@ -15,7 +15,7 @@
 #define SWSH_SUMMARY_AUTO_FORMAT_MOVE_DESCRIPTIONS    TRUE      // automatically formats move descriptions to fit the new box size. disable if you want to format them manually
 #define SWSH_SUMMARY_NATURE_COLORS                    TRUE      // color stats increased or reduced by nature, red = boosted, blue = reduced
 #define SWSH_SUMMARY_CATEGORY_ICONS                   TRUE      // determines whether category (split) icons are shown or not
-#define SWSH_SUMMARY_SHOW_IV_EV                       TRUE      // determines how to show IVs and EVs
+#define SWSH_SUMMARY_SHOW_IV_EV                       FALSE      // determines how to show IVs and EVs
 #define SWSH_SUMMARY_SHOW_FRIENDSHIP                  TRUE      // show a heart that fills up to indicate friendship value
 #define SWSH_SUMMARY_SWSH_STATUS_ICONS                TRUE      // use Gen 8 style status icons instead of default ones.
 #define SWSH_SUMMARY_SWSH_TYPE_ICONS                  TRUE      // use Gen 8 style type icons instead of the default ones
@@ -26,9 +26,9 @@
 #define SWSH_SUMMARY_MON_IDLE_ANIMS                   TRUE      // loops the mon animations regularly as an "idle" anim
 #define SWSH_SUMMARY_MON_SHADOWS                      TRUE      // displays a shadow for the mon sprite
 #define SWSH_SUMMARY_SHOW_CONTEST_PAGES               TRUE      // enables conditions and contest moves pages
-#define SWSH_SUMMARY_SHOW_DYNAMAX_LEVEL               FALSE     // show dynamax level
-#define SWSH_SUMMARY_SHOW_GIGANTAMAX                  FALSE     // show gigantamax icon
-#define SWSH_SUMMARY_SHOW_TERA_TYPE                   FALSE     // show tera type icons
+#define SWSH_SUMMARY_SHOW_DYNAMAX_LEVEL               TRUE     // show dynamax level
+#define SWSH_SUMMARY_SHOW_GIGANTAMAX                  TRUE     // show gigantamax icon
+#define SWSH_SUMMARY_SHOW_TERA_TYPE                   TRUE     // show tera type icons
 
 // Looking for configs for renaming mons and relearning moves? Those use the standard expansion configs
 // P_SUMMARY_SCREEN_RENAME and P_SUMMARY_SCREEN_MOVE_RELEARNER in include/config/pokemon.h
