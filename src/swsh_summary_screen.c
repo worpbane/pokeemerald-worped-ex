@@ -6807,7 +6807,14 @@ static void UpdatePagePrompts(void)
             break;
         case PSS_PAGE_BATTLE_MOVES:
         case PSS_PAGE_CONTEST_MOVES:
-            if (sMonSummaryScreen->promptMode == PROMPT_MODE_REPLACE)
+			if (sMonSummaryScreen->lockMovesFlag)
+			{
+				if (sMonSummaryScreen->promptMode == PROMPT_MODE_REPLACE || sMonSummaryScreen->promptMode == PROMPT_MODE_SWITCH)
+					PrintRightAlignedPrompt(PSS_LABEL_WINDOW_PROMPT_GENERAL, BUTTON_A, sText_Cancel, 56, 1);
+				else
+					PrintRightAlignedPrompt(PSS_LABEL_WINDOW_PROMPT_GENERAL, BUTTON_A, sText_Info, 56, 1);
+			}
+            else if (sMonSummaryScreen->promptMode == PROMPT_MODE_REPLACE)
                 PrintRightAlignedPrompt(PSS_LABEL_WINDOW_PROMPT_GENERAL, BUTTON_A, sText_Replace, 56, 1);
             else if (sMonSummaryScreen->promptMode == PROMPT_MODE_SWITCH)
                 PrintRightAlignedPrompt(PSS_LABEL_WINDOW_PROMPT_GENERAL, BUTTON_A, sText_Switch, 56, 1);
