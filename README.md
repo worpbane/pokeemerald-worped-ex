@@ -23,9 +23,10 @@ I'll try to call out from where a feature was inspired/pulled from. Major featur
 * **QoL HMs:** HM moves don't need to be taught, as long as you have the HM, the Badge, and a mon who can use it, you can perform the field move. *(Custom Code)*
 * **Gen IV Poison:** Pokémon will survivie poison with 1 hp outside of battles. *(Expansion Setting)*
 ### UI & Visuals:
-* **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic PokéBall next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works. I also added a small tab that pokes out from under the PokéBall to indicate when a Pokémon is aflicted with Pokérus.
-* **Modified Montblanc's [SwSh Storage System](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_storage_system):** Another great feature that I liked the utility of. I've modified it quite a bit, visually matching it to my own FRLG inspired UI, adding an indicator for current cursor mode, and backporting the Platinum wallpapers. Due to how the Info Panel was coded, I wasn't able to modify that too much, but I also feel like the information it provides is really useful, so I did spice it up a little, even adding a Pokérus indicator to it so you can tell at a glance which Pokémon in your box are aflicted!!
-* **Text Decapitalization:** Working on making text accross the game decapped. *(WIP)*
+* **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic PokéBall next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works. I also added a small tab that pokes out from under the PokéBall to indicate when a Pokémon is aflicted with Pokérus.  
+* **Modified Montblanc's [SwSh Storage System](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_storage_system):** Another great feature that I liked the utility of. I've modified it quite a bit, visually matching it to my own FRLG inspired UI, adding an indicator for current cursor mode, and backporting the Platinum wallpapers. Due to how the Info Panel was coded, I wasn't able to modify that too much, but I also feel like the information it provides is really useful, so I did spice it up a little, even adding a Pokérus indicator to it so you can tell at a glance which Pokémon in your box are aflicted!!  
+* **Modified Montblanc's [SwSh Summary Screen](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_summary_screen):** Modified Mont's Modification of Rave's Summary Screen.My original **Modern Emerald - Worped** project utilized a modified version of Rave's feature, so it's only fitting I stick with something similar to it. This one is MUCH BETTER than my old one! I'm really happy with how this came out, it has support for Dynamaxed pokemon and mint natures. I did slim it down from Mont's default, removing the Memo page and folding that information into the Info and Skills pages. It really completes the look though!  
+* **Text Decapitalization:** Working on making text accross the game decapped. *(Ongoing)*
 ### Other QoL:
 * **PokéBall Swapping:** You can use Pokéballs in the bag to rehome your Pokémon. (Lunos)
 
@@ -108,6 +109,8 @@ This project would be impossible without the massive foundations provided by the
 * **`pokeemerald-expansion` (v1.16.0)** - Developed and maintained by the **ROM Hacking Hideout (RHH)** group.
 * **Modern Emerald (v3.3.1)** - Developed by **Resetes12**.
 * **Feature Branches & Coding References:** Very grateful to **ghoulslash**, **flashlucky**, **TheXaman**, **RavePossum**, **Team Aqua's Hideout**, and more for their public code repositories and documentation templates for features I've pulled in.
+
+* I don't mind people pulling features I've modified (Mont's SwSh stuff) but please do credit myself(worpbane/Brendan) for the layout and Mont for the base features(and Rave for the Summary Screen).  
 
 ---
 
