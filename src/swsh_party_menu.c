@@ -248,8 +248,9 @@ enum {
     BUTTON_PROMPT_CONFIRM,
     BUTTON_PROMPT_SWITCH,
     BUTTON_PROMPT_BOXES,
-    BUTTON_PROMPT_VIEW_PARTNER,
-    BUTTON_PROMPT_VIEW_PLAYER,
+    BUTTON_PROMPT_GIVE,
+    BUTTON_PROMPT_USE,
+    BUTTON_PROMPT_CANCEL,
 };
 
 // EWRAM vars
@@ -396,8 +397,7 @@ static void TryGiveItemOrMailToSelectedMon(u8);
 static void SwitchSelectedMons(u8);
 static void TryEnterMonForMinigame(u8, u8);
 static void Task_TryCreateSelectionWindow(u8);
-static inline u8 GetButtonPromptType(void);
-static void ShowButtonPrompt(u8 type);
+static void UpdatePartyMenuPrompts(void);
 static void PrintButtonIcon(u8 windowId, u8 buttonType, u32 x, u32 y);
 static void PrintTextOnWindowWithFont(u8 windowId, const u8 *string, u8 x, u8 y, u8 lineSpacing, u8 colorId, u32 fontId);
 static void FinishTwoMonAction(u8);
@@ -869,6 +869,7 @@ static bool8 ShowPartyMenu(void)
         break;
     case 14:
         {
+			/*
             u8 promptType = GetButtonPromptType();
             if (promptType != BUTTON_PROMPT_NONE
                 && sPartyMenuInternal != NULL
@@ -878,6 +879,8 @@ static bool8 ShowPartyMenu(void)
                 PutWindowTilemap(sPartyMenuInternal->promptWindowId);
                 ScheduleBgCopyTilemapToVram(1);
             }
+			*/
+			UpdatePartyMenuPrompts();
         }
         gMain.state++;
         break;
@@ -1022,6 +1025,7 @@ static bool8 ReloadPartyMenu(void)
         break;
     case 12:
         {
+			/*
             u8 promptType = GetButtonPromptType();
             if (promptType != BUTTON_PROMPT_NONE
                 && sPartyMenuInternal != NULL
@@ -1031,6 +1035,8 @@ static bool8 ReloadPartyMenu(void)
                 PutWindowTilemap(sPartyMenuInternal->promptWindowId);
                 ScheduleBgCopyTilemapToVram(1);
             }
+			*/
+			UpdatePartyMenuPrompts();
         }
         gMain.state++;
         break;
@@ -1521,7 +1527,7 @@ static void DisplayPartyPokemonAbility(u8 windowId, u8 slot)
 
     u8 abilityNum;
     u16 species;
-    enum Ability ability;
+    enum Ability ability = ABILITY_NONE;
     const u8 *name;
     int x;
     int y = 16;
@@ -1529,12 +1535,25 @@ static void DisplayPartyPokemonAbility(u8 windowId, u8 slot)
     BlitBitmapToPartyWindow(windowId, sAbilityTilemap_SwSh, 13, 0, 2, 13, 2);
 
     {
-        struct Pokemon *mon = GetPartyMonFromPartyMenuId(slot);
-        if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE && !GetMonData(mon, MON_DATA_IS_EGG))
-        {
-            abilityNum = GetMonData(mon, MON_DATA_ABILITY_NUM);
-            species = GetMonData(mon, MON_DATA_SPECIES);
-            ability = GetAbilityBySpecies(species, abilityNum);
+        for (enum BattlerId idx = B_BATTLER_0; idx < MAX_BATTLERS_COUNT; idx++)
+		{
+			if (GetBattlerTrainer(idx) == B_TRAINER_PLAYER && gBattlerPartyIndexes[idx] == slot)
+			{
+				ability = GetBattlerAbility(idx);
+				break;
+			}
+		}
+		if (ability == ABILITY_NONE)
+		{
+			struct Pokemon *mon = GetPartyMonFromPartyMenuId(slot);
+			if (GetMonData(mon, MON_DATA_SPECIES) != SPECIES_NONE && !GetMonData(mon, MON_DATA_IS_EGG))
+			{
+				abilityNum = GetMonData(mon, MON_DATA_ABILITY_NUM);
+				species = GetMonData(mon, MON_DATA_SPECIES);
+				ability = GetAbilityBySpecies(species, abilityNum);
+			}
+		}
+		if (ability != ABILITY_NONE) {
             name = gAbilitiesInfo[ability].name;
             x = GetStringCenterAlignXOffset(FONT_SMALL, name, 104);
             AddTextPrinterParameterized3(windowId, FONT_SMALL, x, y, sFontColorTable[11], 0, name);
@@ -1956,6 +1975,12 @@ void Task_HandleChooseMonInput(u8 taskId)
             break;
         case L_BUTTON: // Switch mon
         {
+			if (gPartyMenu.action != PARTY_ACTION_CHOOSE_MON && gPartyMenu.action != PARTY_ACTION_SWITCH)
+			{
+				PlaySE(SE_FAILURE); 
+				break;
+			}
+			
             struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartyMenu.slotId];
             u8 actionsType = GetPartyMenuActionsType(mon);
 
@@ -2546,6 +2571,7 @@ static void Task_ReturnToChooseMonAfterText(u8 taskId)
         DestroyMessageWindowSprite();
         ScheduleBgCopyTilemapToVram(0);
         {
+			/*
             u8 promptType = GetButtonPromptType();
             if (promptType != BUTTON_PROMPT_NONE
                 && sPartyMenuInternal != NULL
@@ -2555,6 +2581,8 @@ static void Task_ReturnToChooseMonAfterText(u8 taskId)
                 PutWindowTilemap(sPartyMenuInternal->promptWindowId);
                 ScheduleBgCopyTilemapToVram(1);
             }
+			*/
+			UpdatePartyMenuPrompts();
         }
         if (MenuHelpers_IsLinkActive() == TRUE)
         {
@@ -2924,26 +2952,40 @@ static void AllocBattleInfoWindows(void)
 
 static void PrintButtonIcon(u8 windowId, u8 buttonType, u32 x, u32 y)
 {
-    static const struct {
+    static const struct
+	{
         u8 width;
         u8 height;
-    } sButtonDimensions[] = {
+    }
+	sButtonDimensions[] =
+	{
         [BUTTON_START]  = {32, 8},
         [BUTTON_SELECT] = {16, 8},
         [BUTTON_L]      = {16, 8},
         [BUTTON_R]      = {16, 8},
+        [BUTTON_A]      = {8, 8},
+        [BUTTON_B]      = {8, 8},
     };
 
     const u8 *button = NULL;
     u8 width = 0;
     u8 height = 0;
 
-    if (buttonType <= BUTTON_R)
-    {
-        button = sButtons_Gfx[buttonType];
-        width = sButtonDimensions[buttonType].width;
-        height = sButtonDimensions[buttonType].height;
-    }
+	switch (buttonType)
+	{
+		case BUTTON_START:
+		case BUTTON_SELECT:
+		case BUTTON_A:
+		case BUTTON_B:
+		case BUTTON_R:
+		case BUTTON_L:
+			button = sButtons_Gfx[buttonType];
+			width = sButtonDimensions[buttonType].width;
+			height = sButtonDimensions[buttonType].height;
+			break;
+		default:
+			return;
+	}
 
     if (button == NULL || width == 0 || height == 0)
         return;
@@ -2956,144 +2998,94 @@ static void PrintTextOnWindowWithFont(u8 windowId, const u8 *string, u8 x, u8 y,
     AddTextPrinterParameterized4(windowId, fontId, x, y, 0, lineSpacing, sFontColorTable[colorId], 0, string);
 }
 
-static inline u8 GetButtonPromptType(void)
+static const struct
 {
-    if (sPartyMenuInternal != NULL && sPartyMenuInternal->chooseHalf == TRUE)
-        return BUTTON_PROMPT_CONFIRM;
-
-    if (gPartyMenu.action == PARTY_ACTION_CHOOSE_MON
-        && gPartyMenu.layout == PARTY_LAYOUT_SINGLE
-        && (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD
-            || gPartyMenu.menuType == PARTY_MENU_TYPE_DAYCARE))
-        return BUTTON_PROMPT_BOXES;
-
-    if (gPartyMenu.layout == PARTY_LAYOUT_MULTI_FULL)
-        return BUTTON_PROMPT_VIEW_PARTNER;
-
-    if (gPartyMenu.layout == PARTY_LAYOUT_MULTI_FULL_PARTNER)
-        return BUTTON_PROMPT_VIEW_PLAYER;
-
-    return BUTTON_PROMPT_NONE;
-}
-
-static const struct {
     u8 iconType;
     u8 iconOffset;
     const u8 *text;
     u8 totalWidth;
-} sPromptButtonInfo[] = {
-    [BUTTON_PROMPT_NONE]         = {BUTTON_NONE,    0,                    NULL,  0},
-    [BUTTON_PROMPT_CONFIRM]      = {BUTTON_START,  25,       sMenuText_Confirm, 60},
-    [BUTTON_PROMPT_SWITCH]       = {BUTTON_L,      15,        sMenuText_Switch, 45},
-    //[BUTTON_PROMPT_BOXES]        = {BUTTON_R,      15,         sMenuText_Boxes, 41},
-    [BUTTON_PROMPT_BOXES]        = {BUTTON_NONE,	0,					  NULL,  0}, //So if I remove this, the button promps at the bottom never appear. I don't get it.
-    [BUTTON_PROMPT_VIEW_PARTNER] = {BUTTON_R,      15,                    NULL,  0},
-    [BUTTON_PROMPT_VIEW_PLAYER]  = {BUTTON_R,      15,                    NULL,  0},
+}
+sPromptButtonInfo[] =
+{
+    [BUTTON_PROMPT_NONE]         = {BUTTON_NONE,    0,		   sMenuText_Blank, 	 0},
+    [BUTTON_PROMPT_CONFIRM]      = {BUTTON_START,  25,       sMenuText_Confirm,		60},
+    [BUTTON_PROMPT_SWITCH]       = {BUTTON_L,      15,        sMenuText_Switch, 	45},
+    [BUTTON_PROMPT_BOXES]        = {BUTTON_R,      15,         sMenuText_Boxes, 	41},
+    [BUTTON_PROMPT_GIVE]		 = {BUTTON_A,      10,		   sMenuText_Give, 	 	41},
+    [BUTTON_PROMPT_USE]	  		 = {BUTTON_A,      10,		   sMenuText_Use,  	 	41},
+    [BUTTON_PROMPT_CANCEL]		 = {BUTTON_B,      10,		   sMenuText_Cancel,	41},
 };
 
-static void ShowButtonPrompt(u8 type)
+static bool8 CheckCanSwitch(void)
 {
-    if (type == BUTTON_PROMPT_NONE
-        || sPartyMenuInternal == NULL
-        || sPartyMenuInternal->promptWindowId == WINDOW_NONE)
-        return;
-    u8 promptWindowId = sPartyMenuInternal->promptWindowId;
-
-    if (type == BUTTON_PROMPT_VIEW_PARTNER || type == BUTTON_PROMPT_VIEW_PLAYER)
-    {
-        const u8 *text;
-        if (type == BUTTON_PROMPT_VIEW_PARTNER)
-        {
-            StringCopy(gStringVar1, GetTrainerPartnerName());
-            StringExpandPlaceholders(gStringVar4, sMenuText_ViewPartnerParty);
-            text = gStringVar4;
-        }
-        else
-        {
-            text = sMenuText_ViewPlayerParty;
-        }
-        int stringXPos = GetStringRightAlignXOffset(FONT_SMALL, text, 104);
-        int iconXPos = stringXPos - 15;
-        if (iconXPos < 0)
-            iconXPos = 0;
-        PrintButtonIcon(promptWindowId, BUTTON_R, iconXPos, 4);
-        PrintTextOnWindowWithFont(promptWindowId, text, stringXPos, 0, 0, 5, FONT_SMALL);
-        CopyWindowToVram(promptWindowId, COPYWIN_GFX);
-        return;
-    }
-
-    // Determine availability of SWITCH and BOXES prompts
-    struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartyMenu.slotId];
-    bool8 canShowSwitch = FALSE;
-    bool8 canShowBoxes = FALSE;
+	struct Pokemon *mon = &gParties[B_TRAINER_PLAYER][gPartyMenu.slotId];
     u8 actionsType = GetPartyMenuActionsType(mon);
-    if (actionsType == ACTIONS_SWITCH)
-    {
-        canShowSwitch = TRUE;
-    }
-    else if (actionsType == ACTIONS_NONE
-             && !InBattlePike()
-             && GetMonData(&gParties[B_TRAINER_PLAYER][1], MON_DATA_SPECIES) != SPECIES_NONE)
-    {
-        canShowSwitch = TRUE;
-    }
+	
+	if (actionsType == ACTIONS_SWITCH)
+		return TRUE;
+	else if (actionsType == ACTIONS_NONE && !InBattlePike() && GetMonData(&gParties[B_TRAINER_PLAYER][1], MON_DATA_SPECIES) != SPECIES_NONE)
+		return TRUE;
+	
+	return FALSE;
+}
 
-    if (SWSH_PARTY_MENU_PC_ACCESS
-        && gPartyMenu.action == PARTY_ACTION_CHOOSE_MON
-        && gPartyMenu.layout == PARTY_LAYOUT_SINGLE
-        && (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD
-            || gPartyMenu.menuType == PARTY_MENU_TYPE_DAYCARE))
+static bool8 CheckUseBox(void)
+{
+#if SWSH_PARTY_MENU_PC_ACCESS
+	if (gPartyMenu.action == PARTY_ACTION_CHOOSE_MON && gPartyMenu.layout == PARTY_LAYOUT_SINGLE && (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD || gPartyMenu.menuType == PARTY_MENU_TYPE_DAYCARE))
+		return TRUE;
+#endif
+	return FALSE;
+}
+
+static void DrawButtonPrompt(u8 windowId, u8 promptType, u8 x)
+{
+    const u8 *text = sPromptButtonInfo[promptType].text;
+    u8 iconType = sPromptButtonInfo[promptType].iconType;
+    u8 offset = sPromptButtonInfo[promptType].iconOffset;
+
+    PrintButtonIcon(windowId, iconType, x - offset, 4);
+    PrintTextOnWindowWithFont(windowId, text, x, 0, 0, 5, FONT_SMALL);
+}
+
+static void UpdatePartyMenuPrompts(void)
+{
+    u8 windowId = sPartyMenuInternal->promptWindowId;
+    
+    FillWindowPixelRect(windowId, PIXEL_FILL(0), 0, 0, 112, 16);
+
+    if (sPartyMenuInternal->chooseHalf == TRUE) //If choosing a mon for doubles battles, you can't switch mon out(unsure if you can access box still, I'll have to do some testing with that).
+		DrawButtonPrompt(windowId, BUTTON_PROMPT_CONFIRM, 75);
+	else if (gPartyMenu.action == PARTY_ACTION_GIVE_ITEM)
+	{
+		DrawButtonPrompt(windowId, BUTTON_PROMPT_GIVE, 90);
+		DrawButtonPrompt(windowId, BUTTON_PROMPT_CANCEL, 20);
+	}
+	else if (gPartyMenu.action == PARTY_ACTION_USE_ITEM)
+	{
+		DrawButtonPrompt(windowId, BUTTON_PROMPT_USE, 94);
+		DrawButtonPrompt(windowId, BUTTON_PROMPT_CANCEL, 20);
+	}
+    else
     {
-        canShowBoxes = TRUE;
-    }
+		bool8 canShowSwitch = CheckCanSwitch();
+		bool8 canShowBoxes = CheckUseBox();
 
-    // Build ordered draw list (Switch first when present)
-    u8 drawList[2];
-    u8 drawCount = 0;
-    if (canShowSwitch)
-        drawList[drawCount++] = BUTTON_PROMPT_SWITCH;
-    if (canShowBoxes)
-        drawList[drawCount++] = BUTTON_PROMPT_BOXES;
-
-    if (drawCount > 0)
-    {
-        // Draw the prompts in order using totalWidth and a 4px gap
-        int i;
-        int gap = (drawCount > 1) ? 6 : 0;
-        int combinedWidth = 0;
-        for (i = 0; i < drawCount; ++i)
-            combinedWidth += sPromptButtonInfo[drawList[i]].totalWidth;
-        combinedWidth += gap * (drawCount - 1);
-
-        int curLeft = 104 - combinedWidth;
-        for (i = 0; i < drawCount; ++i)
+        if (canShowSwitch && canShowBoxes) //If you enable the ability to access the box from anywhere like SwSh, the boxes button should be on the right, Switch on the left.
         {
-            u8 idx = drawList[i];
-            const u8 *text = sPromptButtonInfo[idx].text;
-            int stringXPos = GetStringRightAlignXOffset(FONT_SMALL, text, sPromptButtonInfo[idx].totalWidth) + curLeft;
-            int iconXPos = stringXPos - sPromptButtonInfo[idx].iconOffset;
-            if (iconXPos < 0)
-                iconXPos = 0;
-            PrintButtonIcon(promptWindowId, sPromptButtonInfo[idx].iconType, iconXPos, 4);
-            PrintTextOnWindowWithFont(promptWindowId, text, stringXPos, 0, 0, 5, FONT_SMALL);
-            curLeft += sPromptButtonInfo[idx].totalWidth + gap;
+            DrawButtonPrompt(windowId, BUTTON_PROMPT_BOXES, 85);
+            DrawButtonPrompt(windowId, BUTTON_PROMPT_SWITCH, 26);
         }
-        CopyWindowToVram(promptWindowId, COPYWIN_GFX);
-        return;
+        else if (canShowBoxes)
+			DrawButtonPrompt(windowId, BUTTON_PROMPT_BOXES, 85);
+		else if (canShowSwitch)
+			DrawButtonPrompt(windowId, BUTTON_PROMPT_SWITCH, 80);
+		else
+			DrawButtonPrompt(windowId, BUTTON_PROMPT_NONE, 56);
     }
 
-    const u8 *text = sPromptButtonInfo[type].text;
-    if (text == NULL)
-        return;
-
-    int stringXPos = GetStringRightAlignXOffset(FONT_SMALL, text, 104);
-    const u8 iconType = sPromptButtonInfo[type].iconType;
-    int iconXPos = stringXPos - sPromptButtonInfo[type].iconOffset;
-    if (iconXPos < 0)
-        iconXPos = 0;
-    PrintButtonIcon(promptWindowId, iconType, iconXPos, 4);
-    PrintTextOnWindowWithFont(promptWindowId, text, stringXPos, 0, 0, 5, FONT_SMALL);
-    CopyWindowToVram(promptWindowId, COPYWIN_GFX);
+    PutWindowTilemap(windowId);
+    ScheduleBgCopyTilemapToVram(1);
 }
 
 static u16 *GetPartyMenuPalBufferPtr(u8 paletteId)

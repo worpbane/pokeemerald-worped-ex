@@ -8,14 +8,18 @@ enum {
     BUTTON_SELECT,
     BUTTON_L,
     BUTTON_R,
+    BUTTON_A,
+    BUTTON_B,
     BUTTON_NONE = 0xFF,
 };
 
-static const u8 sButtons_Gfx[][4 * TILE_SIZE_4BPP] = {
+static const u8 sButtons_Gfx[][4 * TILE_SIZE_4BPP] = { //WorpTODO: See about putting all the button sprites into a single directory, would need to change their palettes.
     [BUTTON_START]  = INCGFX_U8("graphics/party_menu/swsh/button_start.png", ".4bpp"),
     [BUTTON_SELECT] = INCGFX_U8("graphics/party_menu/swsh/button_select.png", ".4bpp"),
     [BUTTON_L]      = INCGFX_U8("graphics/party_menu/swsh/button_l.png", ".4bpp"),
     [BUTTON_R]      = INCGFX_U8("graphics/party_menu/swsh/button_r.png", ".4bpp"),
+    [BUTTON_A]      = INCGFX_U8("graphics/party_menu/swsh/button_a.png", ".4bpp"),
+    [BUTTON_B]      = INCGFX_U8("graphics/party_menu/swsh/button_b.png", ".4bpp"),
 };
 
 static const struct OamData sOamData_Button = {
@@ -38,11 +42,15 @@ static const u16 sMonShadowPalette[]      = INCGFX_U16("graphics/party_menu/swsh
 static const u32 sMoveTypes_Gfx[]         = INCGFX_U32("graphics/party_menu/swsh/move_types.png", ".4bpp.smol");
 
 static const u8 sText_EggNickname[POKEMON_NAME_LENGTH + 1]  = _("Egg");
+static const u8 sMenuText_Blank[]                           = _("");
 static const u8 sMenuText_Confirm[]                         = _("Confirm");
 static const u8 sMenuText_Switch[]                          = _("Switch");
 static const u8 sMenuText_Boxes[]                           = _("Boxes");
-static const u8 sMenuText_ViewPartnerParty[]                = _("{STR_VAR_1}'s party");
-static const u8 sMenuText_ViewPlayerParty[]                 = _("Your party");
+static const u8 sMenuText_Give[]                            = _("Give");
+static const u8 sMenuText_Use[]                             = _("Use");
+static const u8 sMenuText_Cancel[]                          = _("Cancel");
+static const u8 sMenuText_ViewPartnerParty[]                = _("{STR_VAR_1}'s party"); //Unused
+static const u8 sMenuText_ViewPlayerParty[]                 = _("Your party"); //Unused
 static const u8 sText_SendThisMonToPC[]                     = _("Send {STR_VAR_1} to the PC?");
 
 static const struct BgTemplate sPartyMenuBgTemplates[] =
