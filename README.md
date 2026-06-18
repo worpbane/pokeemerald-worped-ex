@@ -26,7 +26,7 @@ I'll try to call out from where a feature was inspired/pulled from. Major featur
 * **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic PokéBall next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works. I also added a small tab that pokes out from under the PokéBall to indicate when a Pokémon is aflicted with Pokérus.  
 * **Modified Montblanc's [SwSh Storage System](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_storage_system):** Another great feature that I liked the utility of. I've modified it quite a bit, visually matching it to my own FRLG inspired UI, adding an indicator for current cursor mode, and backporting the Platinum wallpapers. Due to how the Info Panel was coded, I wasn't able to modify that too much, but I also feel like the information it provides is really useful, so I did spice it up a little, even adding a Pokérus indicator to it so you can tell at a glance which Pokémon in your box are aflicted!!  
 * **Modified Montblanc's [SwSh Summary Screen](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_summary_screen):** Modified Mont's Modification of Rave's Summary Screen.My original **Modern Emerald - Worped** project utilized a modified version of Rave's feature, so it's only fitting I stick with something similar to it. This one is MUCH BETTER than my old one! I'm really happy with how this came out, it has support for Dynamaxed pokemon and mint natures. I did slim it down from Mont's default, removing the Memo page and folding that information into the Info and Skills pages. It really completes the look though!  
-* **Text Decapitalization:** Working on making text accross the game decapped. *(Ongoing)*
+* **Text Decapitalization:** Working on making text accross the game decapped. *(Ongoing WIP)*
 ### Other QoL:
 * **PokéBall Swapping:** You can use Pokéballs in the bag to rehome your Pokémon. (Lunos)
 
@@ -49,14 +49,14 @@ This is a neatened up version of my awful Google Doccy that was just one big lis
 * **Delta-ish Episode:** I WANT TO GO TO SPACE AND FIGHT THAT BITCH ASS ALIEN. This will be a very LIGHT telling of the Delta Episode.
 
 ### Features I like from **Modern Emerald**:
-* **QoL Movement & Atmosphere:** Run everywhere options toggle, faster Nurse Joy text cycles(semi implemented), skippable Walley Catch Tutorial, dynamic ambient lighting (windows/lamps).
+* **QoL Movement & Atmosphere:** Sskippable Walley Catch Tutorial, dynamic ambient lighting (windows/lamps).
+* **Nature Mints:** Already implemented in Expansion, need to make these purchasable at the Pretty Petal Flower Shop.
 * **Unique Surf Animations:** Custom overworld sprites and unique animations while surfing across Hoenn's waterways.
-* **Dynamic Pokéballs:** Ability to swap a caught Pokémon's Pokéball directly from the bag interface.
 * **Choosable Shiny Odds:** Initial options menu selection to lock in custom shiny rates (1/512(Fun), 1/1024, 1/2048, 1/4096(Modern), 1/8192(GenIII))
 * **Level Cap & Difficulty:** Opt-in progression caps & difficulty to keep encounters engaging (Expansion has hooks for this, just need to learn how to use em)
 * **Enhanced Rewards:** Rock Smash drops updated to regularly yield Shards and Heart Scales.
-* **Unified Bike System:** Merging the Mach and Acro bikes into a single, seamless key item experience.
-* **World Events:** Custom map changes and event overhauls for the Regis, Hoenn Starters, Rival naming, and buffed legendary encounters.
+* **Unified Bike System:** Merging the Mach and Acro bikes into a single, seamless key item experience. (There is a Lunos tutorial for this!)
+* **World Events:** Custom map changes and event overhauls for the Regis, Hoenn Starters, Rival naming, and the new extra legendary encounters.
 ---
 
 ## 📍 Pokémon & Items

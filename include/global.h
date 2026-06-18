@@ -603,6 +603,18 @@ struct SaveBlock2
              u16 regionMapZoom:1; // whether the map is zoomed in
              //u16 padding1:4;
              //u16 padding2;
+             // ========================
+             // WorpedEx Custom Options
+             // ========================
+             bool8 w_opAutoRun;         //Autorun: TRUE=On, FALSE=Off
+             u16 w_opDifficulty:2;      //0=Easy, 1=Normal, 2=Hard - Difficulty Mode
+             u16 w_opBoxMode:1;         //0=Classic, 1=SwSh Style - BoxM ode
+             u16 w_opBallPrompt:1;      //0=Disabled, 1=Enabled - Last Used Ball
+             u16 w_opCatchMode:1;       //0=Disabled, 1=Enabled - Catch Mode
+             u16 w_opFontType:1;        //0=RSE, 1=FRLG
+             u8  padding_align;
+             u8 w_rivalName[PLAYER_NAME_LENGTH + 1]; //Name set at start
+             // ========================
     /*0x18*/ struct Pokedex pokedex;
     /*0x90*/ u8 filler_90[0x8];
     /*0x98*/ struct Time localTimeOffset;
@@ -1201,6 +1213,14 @@ struct SaveBlock1
     /*0x3???*/ struct TrainerHillSave trainerHill;
 #endif //FREE_TRAINER_HILL
     /*0x3???*/ struct WaldaPhrase waldaPhrase;
+    //=================================
+    //WorpedEx Custom New Game Options
+    //=================================
+                u8 wx_LevelCap;    //Level Cap: 0=Off, 1=On
+                u8 wx_ExpMulti;    //Experience: 0=1x, 1=1.5x, 2=2x
+                u8 wx_ShinyChance; //Shiny Rate: Gen3(8192), Gen6(4096), 2048, 1024, Go(512)
+                u8 wx_CatchRate;   //Catch Rate: Harder(0.5x), Normal(1x), Easier(2x), Much Easier(3x)
+    //=================================
 #if FREE_TRAINER_TOWER == FALSE && IS_FRLG
     u32 towerChallengeId;
     struct TrainerTower trainerTower[NUM_TOWER_CHALLENGE_TYPES];
