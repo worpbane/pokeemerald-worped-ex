@@ -17,6 +17,7 @@
 #include "pokemon.h"
 #include "international_string_util.h"
 #include "item.h"
+#include "item_use.h"
 #include "util.h"
 #include "battle_scripts.h"
 #include "random.h"
@@ -59,6 +60,7 @@ static bool32 TryRemoveScreens(enum BattlerId battler);
 static bool32 IsUnnerveAbilityOnOpposingSide(enum BattlerId battler);
 static u32 GetFlingPowerFromItemId(enum Item itemId);
 static bool32 IsNonVolatileStatusBlocked(enum BattlerId battlerDef, enum Ability abilityDef, bool32 abilityAffected, const u8 *battleScript, enum ResultOption option);
+static void TryApplyCatchModeDamageClamp(u8 attacker, u8 target, s16 *damage);
 static bool32 CanSleepDueToSleepClause(enum BattlerId battlerAtk, enum BattlerId battlerDef, enum ResultOption option);
 static bool32 IsOpposingSideEmpty(enum BattlerId battler);
 static void ResetParadoxWeatherStat(enum BattlerId battler);
@@ -239,6 +241,46 @@ u32 GetCurrentBattleWeather(void)
     }
 
     return currBattleWeather;
+}
+
+bool32 IsCatchModeAvailableInBattle(void)
+{
+    if (gBattleTypeFlags & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_RECORDED_LINK))
+        return FALSE;
+    if (!CanThrowBall())
+        return FALSE;
+    if (!CheckBagHasItem(gBallToDisplay, 1))
+        return FALSE;
+    if (gSaveBlock2Ptr->w_opCatchMode == 0)
+        return FALSE;
+    return TRUE;
+}
+
+static void TryApplyCatchModeDamageClamp(u8 attacker, u8 target, s16 *damage)
+{
+    s32 clampedDamage;
+
+    if (!IsCatchModeAvailableInBattle())
+        return;
+    if (!gBattleStruct->catchModeEnabled)
+        return;
+    if (!IsOnPlayerSide(attacker))
+        return;
+    if (target != GetCatchingBattler())
+        return;
+    if (*damage <= 0)
+        return;
+
+    clampedDamage = *damage;
+    if (gBattleMons[target].hp <= 1)
+    {
+        clampedDamage = 0;
+    }
+    else if (clampedDamage >= gBattleMons[target].hp)
+    {
+        clampedDamage = gBattleMons[target].hp - 1;
+    }
+    *damage = clampedDamage;
 }
 
 bool32 EndOrContinueWeather(void)
@@ -7953,10 +7995,12 @@ static bool32 IsCriticalHit(struct DamageContext *ctx)
 
 s32 GetAdjustedDamage(struct DamageContext *ctx, s32 damage)
 {
-    if (DoesSubstituteBlockMove(ctx->battlerAtk, ctx->battlerDef, ctx->move)
-     || DoesDisguiseBlockMove(ctx->battlerDef, ctx->move)
-     || DoesIceFaceBlockMove(ctx->battlerDef, ctx->move))
-        return damage; // No damage will be dealt
+    if (DoesSubstituteBlockMove(ctx->battlerAtk, ctx->battlerDef, ctx->move) || DoesDisguiseBlockMove(ctx->battlerDef, ctx->move) || DoesIceFaceBlockMove(ctx->battlerDef, ctx->move))
+    return damage; // No damage will be dealt
+    
+    s16 clampedDamage = (s16)damage;
+    TryApplyCatchModeDamageClamp(ctx->battlerAtk, ctx->battlerDef, &clampedDamage);
+    damage = clampedDamage;
 
     if (gBattleMons[ctx->battlerDef].hp > damage)
         return damage;

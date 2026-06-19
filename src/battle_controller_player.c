@@ -7,6 +7,7 @@
 #include "battle_interface.h"
 #include "battle_message.h"
 #include "battle_setup.h"
+#include "battle_util.h"
 #include "battle_tv.h"
 #include "battle_z_move.h"
 #include "battle_gimmick.h"
@@ -812,6 +813,15 @@ void HandleInputChooseMove(enum BattlerId battler)
             HideGimmickTriggerSprite();
             BtlController_Complete(battler);
             TryToHideMoveInfoWindow();
+        }
+    }
+    else if (JOY_NEW(CATCH_MODE_TOGGLE_BUTTON) && !gBattleStruct->descriptionSubmenu)
+    {
+        if (IsCatchModeAvailableInBattle())
+        {
+            gBattleStruct->catchModeEnabled ^= 1;
+            TryUpdateCatchModeWindow();
+            PlaySE(SE_SELECT);
         }
     }
     else if (JOY_NEW(DPAD_LEFT) && !gBattleStruct->zmove.viewing)

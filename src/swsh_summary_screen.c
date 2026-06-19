@@ -734,16 +734,6 @@ static const struct WindowTemplate sPageMovesTemplate[] =
         .baseBlock = 350,
     },
 };
-static const u8 sTextColors[][3] =
-{
-    {0, 1, 2},
-    {0, 3, 4},
-    {0, 5, 6},
-    {0, 7, 8},
-    {0, 9, 10},
-    {0, 11, 12},
-    {0, 13, 14},
-};
 static const u8 wTextColors[][3] = //(BG, Primary, Shadow)
 {
     {0, 1, 2}, //0 - Normal Black Text
@@ -4543,10 +4533,10 @@ static void PrintStats(void)
 		u8 statConst = sStatIndexMap[i];
 
         ConvertIntToDecimalStringN(strBuf, ivs[i], STR_CONV_MODE_RIGHT_ALIGN, 3);
-        AddTextPrinterParameterized4(windowId, PSS_DEFAULT_FONT, sStatLayout[i].xIV - GetStringWidth(PSS_DEFAULT_FONT, strBuf, 0), sStatLayout[i].y, 0, 0, sTextColors[0], TEXT_SKIP_DRAW, strBuf);
+        AddTextPrinterParameterized4(windowId, PSS_DEFAULT_FONT, sStatLayout[i].xIV - GetStringWidth(PSS_DEFAULT_FONT, strBuf, 0), sStatLayout[i].y, 0, 0, wTextColors[0], TEXT_SKIP_DRAW, strBuf);
 
         ConvertIntToDecimalStringN(strBuf, evs[i], STR_CONV_MODE_RIGHT_ALIGN, 3);
-        AddTextPrinterParameterized4(windowId, PSS_DEFAULT_FONT, sStatLayout[i].xEV - GetStringWidth(PSS_DEFAULT_FONT, strBuf, 0), sStatLayout[i].y, 0, 0, sTextColors[0], TEXT_SKIP_DRAW, strBuf);
+        AddTextPrinterParameterized4(windowId, PSS_DEFAULT_FONT, sStatLayout[i].xEV - GetStringWidth(PSS_DEFAULT_FONT, strBuf, 0), sStatLayout[i].y, 0, 0, wTextColors[0], TEXT_SKIP_DRAW, strBuf);
         
         const u8 *col = sColNeutral;
         if (natureUp != natureDown) {
@@ -4571,7 +4561,7 @@ static void PrintStats(void)
         StringCopy(finalPrint, col);
         StringAppend(finalPrint, strBuf);
         
-        AddTextPrinterParameterized4(windowId, PSS_DEFAULT_FONT, sStatLayout[i].xStat - GetStringWidth(PSS_DEFAULT_FONT, strBuf, 0), sStatLayout[i].y, 0, 0, sTextColors[0], TEXT_SKIP_DRAW, finalPrint);
+        AddTextPrinterParameterized4(windowId, PSS_DEFAULT_FONT, sStatLayout[i].xStat - GetStringWidth(PSS_DEFAULT_FONT, strBuf, 0), sStatLayout[i].y, 0, 0, wTextColors[0], TEXT_SKIP_DRAW, finalPrint);
     }
 
     CopyWindowToVram(windowId, COPYWIN_FULL);

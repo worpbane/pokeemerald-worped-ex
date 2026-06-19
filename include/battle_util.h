@@ -157,6 +157,7 @@ enum SubCheck
 };
 
 void HandleAction_ThrowBall(void);
+bool32 IsCatchModeAvailableInBattle(void);
 u32 GetCurrentBattleWeather(void);
 bool32 EndOrContinueWeather(void);
 enum DamageCategory GetReflectDamageMoveDamageCategory(enum BattlerId battler, enum Move move);

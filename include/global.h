@@ -603,18 +603,19 @@ struct SaveBlock2
              u16 regionMapZoom:1; // whether the map is zoomed in
              //u16 padding1:4;
              //u16 padding2;
-             // ========================
-             // WorpedEx Custom Options
-             // ========================
-             bool8 w_opAutoRun;         //Autorun: TRUE=On, FALSE=Off
+    // ========================
+    // WorpedEx Custom Options
+    // ========================
+             u16 w_opAutoRun:1;         //0=Disabled, 1=Enabled - Auto Run
              u16 w_opDifficulty:2;      //0=Easy, 1=Normal, 2=Hard - Difficulty Mode
-             u16 w_opBoxMode:1;         //0=Classic, 1=SwSh Style - BoxM ode
+             u16 w_opMatchCall:1;       //0=Disabled, 1=Enabled - Match Call
+             u16 w_opBoxMode:1;         //0=Classic, 1=SwSh Style - Box Mode
              u16 w_opBallPrompt:1;      //0=Disabled, 1=Enabled - Last Used Ball
              u16 w_opCatchMode:1;       //0=Disabled, 1=Enabled - Catch Mode
              u16 w_opFontType:1;        //0=RSE, 1=FRLG
              u8  padding_align;
              u8 w_rivalName[PLAYER_NAME_LENGTH + 1]; //Name set at start
-             // ========================
+    // ========================
     /*0x18*/ struct Pokedex pokedex;
     /*0x90*/ u8 filler_90[0x8];
     /*0x98*/ struct Time localTimeOffset;

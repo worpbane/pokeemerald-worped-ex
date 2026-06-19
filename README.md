@@ -9,7 +9,7 @@ This is a personal fork of **`pokeemerald-expansion` 1.16.0**, a decompilation o
 ## 🧬 Overview
 This is a successor to my first foray into ROM hacking, **Modern Emerald - Worped**, a project I built on top of Resete12's **Modern Emerald**. I found the old vanilla `pokeemerald` codebase to be too limiting, and have decided to move it all over to `pokeemerald-expansion`.
 
-My project goal isn't to make some kind of difficulty hack or definitive version of Emerald, it's to have fun messing around with a game I adore. I played Sapphire & Emerald as a kid and still have my GBA cartridges. Hoenn is and always will be my favorite region. Honestly up until this year I had never even played Gen IV-VII(I played Sw&Sh briefly). But working on my hack really has brought back my love for Pokémon and I've recently started playing Platinum. If this project goes well, I even have plans to use what I do here as a base to make a Sinnoh demake and maybe evena custom game like ``Unbound``(which is amazing and everyone should play it).
+My project goal isn't to make some kind of difficulty hack or definitive version of Emerald, it's to have fun messing around with a game I adore. I played Sapphire & Emerald as a kid and still have my GBA cartridges. Hoenn is and always will be my favorite region. Honestly up until this year I had never even played Gen IV-VII(I played Sw&Sh briefly). But working on my hack really has brought back my love for Pokémon and I've recently started playing Platinum. If this project goes well, I even have plans to use what I do here as a base to make a Sinnoh demake and maybe even a custom game like ``Unbound``(which is amazing and everyone should play it).
 
 Much like with **Modern Emerald - Worped**, this repository is mainly for me to track my changes, but I also hope it's able to help other people getting into ROM hacking.
 
@@ -20,15 +20,17 @@ Much like with **Modern Emerald - Worped**, this repository is mainly for me to 
 I'll try to call out from where a feature was inspired/pulled from. Major feature branches will be linked. Everything will be properly contributed!
 
 ### Gameplay Mechanics:
-* **QoL HMs:** HM moves don't need to be taught, as long as you have the HM, the Badge, and a mon who can use it, you can perform the field move. *(Custom Code)*
-* **Gen IV Poison:** Pokémon will survivie poison with 1 hp outside of battles. *(Expansion Setting)*
+* **Flash1Lucky's [Catch Mode](https://github.com/Flash1Lucky/pokeemerald-expansion/tree/catch-mode-toggle):** It's a Catch Mode, for catching Pokémon easier, you can turn it off in the Options menu.  
+* **QoL HMs:** HM moves don't need to be taught, as long as you have the HM, the Badge, and a mon who can use it, you can perform the field move. (Custom Code)
+* **Gen IV Poison:** Pokémon will survive poison with 1 hp outside of battles. (Expansion Setting)  
 ### UI & Visuals:
-* **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic PokéBall next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works. I also added a small tab that pokes out from under the PokéBall to indicate when a Pokémon is aflicted with Pokérus.  
-* **Modified Montblanc's [SwSh Storage System](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_storage_system):** Another great feature that I liked the utility of. I've modified it quite a bit, visually matching it to my own FRLG inspired UI, adding an indicator for current cursor mode, and backporting the Platinum wallpapers. Due to how the Info Panel was coded, I wasn't able to modify that too much, but I also feel like the information it provides is really useful, so I did spice it up a little, even adding a Pokérus indicator to it so you can tell at a glance which Pokémon in your box are aflicted!!  
-* **Modified Montblanc's [SwSh Summary Screen](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_summary_screen):** Modified Mont's Modification of Rave's Summary Screen.My original **Modern Emerald - Worped** project utilized a modified version of Rave's feature, so it's only fitting I stick with something similar to it. This one is MUCH BETTER than my old one! I'm really happy with how this came out, it has support for Dynamaxed pokemon and mint natures. I did slim it down from Mont's default, removing the Memo page and folding that information into the Info and Skills pages. It really completes the look though!  
-* **Text Decapitalization:** Working on making text accross the game decapped. *(Ongoing WIP)*
+* **Modified Montblanc's [SwSh Party Menu](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_party_menu):** I really like how SMOOTH Mont's SwSh stuff is, so I gave his SwSh Party Menu a makeover to fit more with the Gen3/Gen4 look I go for. Also added a Dynamic PokéBall next to each Pokémon, displaying the correct ball they are in. I'm in love with how this looks and works. I also added a small tab that pokes out from under the PokéBall to indicate when a Pokémon is infected with Pokérus.  
+* **Modified Montblanc's [SwSh Storage System](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_storage_system):** Another great feature that I liked the utility of. I've modified it quite a bit, visually matching it to my own FRLG-inspired UI, adding an indicator for current cursor mode, and backporting the Platinum wallpapers. Due to how the Info Panel was coded, I wasn't able to modify that too much, but I also feel like the information it provides is really useful, so I did spice it up a little, even adding a Pokérus indicator to it so you can tell at a glance which Pokémon in your box are infected!!  
+* **Modified Montblanc's [SwSh Summary Screen](https://github.com/montmoguri/pokeemerald-expansion/tree/swsh_summary_screen):** My original **Modern Emerald - Worped** project utilized a modified version of Rave's Summary Screen, and I really liked Mont's updates to that. This one is MUCH BETTER than my old one! I'm really happy with how this came out, it has support for Dynamaxed pokemon and mint natures. I did slim it down from Mont's default, removing the Memo page and folding that information into the Info and Skills pages. It really completes the look though!  
+* **Modified [Options Plus Menu](https://github.com/pret/pokeemerald/wiki/New-Options-Plus-%E2%80%90-Multipage-Options-Menu-with-Faster-Text,-HP%E2%80%90EXP-Bar-Speeds-and-Metric):** To facilitate some of my desired features, I ported the Options Plus menu over to Expansion, thanks to Miri from Pokémon Hearth for pointing me towards that repo since I kept getting compile errors. I used Archie and Mudskip's version as my base, and modified the menu options and tileset to match my other stuff.(Currently Difficulty, Match Call, and Auto Run don't do anything.)  
+* **Text Decapitalization:** Working on making text across the game decapped. (Ongoing WIP)  
 ### Other QoL:
-* **PokéBall Swapping:** You can use Pokéballs in the bag to rehome your Pokémon. (Lunos)
+* **PokéBall Swapping:** You can use Pokéballs in the bag to rehome your Pokémon. (Lunos Tutorial)  
 
 ---
 
@@ -40,16 +42,16 @@ This is a neatened up version of my awful Google Doccy that was just one big lis
 * **Purple Battle HUD:** I'm going to make the battle hud purple again guys.
 * **Advanced Battle Info Pane:** Real-time type effectiveness indicators, target types, and STAB tracking.
 * **Main Menu UI:** Archie & Mudskip's awesome main menu that shows your party.
-* **Custom UI Screens:** Porting over my custom FRLG-inspired Summary Screen and PokéDex layouts.
+* **Custom UI Screens:** Porting over my custom FRLG-inspired PokéDex layout.
 * **Expanded Starter Selection:** Archie & Mudskip's beautiful feature branch with some custom code to use the chosen shiny odds and make gender 50/50.
-* **Catch Mode & DexNav:** Custom DexNav logic, Modern Emerald Worped focused on hunting shinies, but I do want to change this to also include finding good abilities. (FlashLucky & ghoulslash) (Also wondering if I can hook DexNav into the overworld Pokémon spawns so that if you're 'hunting' a specific mon, ONLY that mon will spawn...)
+* **Custom DexNav:** Custom DexNav logic, Modern Emerald Worped focused on hunting shiny Pokémon, but I do want to change this to also include finding good abilities. (ghoulslash) (Also wondering if I can hook DexNav into the overworld Pokémon spawns so that if you're 'hunting' a specific mon, ONLY that mon will spawn...)
 * **Item Pickup Headers:** Pop-up header notifications when items are found or received. (Expansion has hooks for this)
-* **Map Changes:** Learning Porymap to add little enviromental changes to Hoenn.
+* **Map Changes:** Learning Porymap to add little environmental changes to Hoenn.
 * **Mega Evolutions:** Integration of Mega Evolution mechanics.
 * **Delta-ish Episode:** I WANT TO GO TO SPACE AND FIGHT THAT BITCH ASS ALIEN. This will be a very LIGHT telling of the Delta Episode.
 
 ### Features I like from **Modern Emerald**:
-* **QoL Movement & Atmosphere:** Sskippable Walley Catch Tutorial, dynamic ambient lighting (windows/lamps).
+* **QoL Movement & Atmosphere:** Skippable Walley Catch Tutorial, dynamic ambient lighting (windows/lamps).
 * **Nature Mints:** Already implemented in Expansion, need to make these purchasable at the Pretty Petal Flower Shop.
 * **Unique Surf Animations:** Custom overworld sprites and unique animations while surfing across Hoenn's waterways.
 * **Choosable Shiny Odds:** Initial options menu selection to lock in custom shiny rates (1/512(Fun), 1/1024, 1/2048, 1/4096(Modern), 1/8192(GenIII))
@@ -60,7 +62,7 @@ This is a neatened up version of my awful Google Doccy that was just one big lis
 ---
 
 ## 📍 Pokémon & Items
-This section details my plans for Pokémon additions, pulling from how I had things in `pokeemerald-worped` and how **Modern Emerald** does things. I'll have to make a big document with detailed lists for each route eventaully...
+This section details my plans for Pokémon additions, pulling from how I had things in `pokeemerald-worped` and how **Modern Emerald** does things. I'll have to make a big document with detailed lists for each route eventually...
 
 ### **Modern Emerald** Wild Encounters:
 **Modern Emerald** added really cool Modern encounters that sprinkled Gen I & II Pokémon around Hoenn. I really liked that and plan on bringing that over eventually when I start working on maps properly.
@@ -80,7 +82,7 @@ This first table contains Pokémon I had manually added to `pokeemerald-worped`.
 | **Lechonk** | Routes 101 & 102 | |
 | **Paldean Wooper** | Route 113 | Custom Description |
 
-This second table contains Pokémon I wanted to add, but it got to be a pain in the ass and instead I decided to move my project over to `pokeemerald-expansion` because that was so much easier... I really like how even when a Pokémon is disabled in `expansion`, the PokéDexnumber is still taken, so there won't be any wonky numbers like in `pokeemerald-worped`!
+This second table contains Pokémon I wanted to add, but it got to be a pain in the ass and instead I decided to move my project over to `pokeemerald-expansion` because that was so much easier... I really like how even when a Pokémon is disabled in `expansion`, the PokéDex number is still taken, so there won't be any wonky numbers like in `pokeemerald-worped`!
 
 | Pokémon Family | Planned Location (Base Form) | Notes |
 | :--- | :--- | :--- |
@@ -106,9 +108,10 @@ The Safari Zone and Shoal Cave are going to be completely redone so they can act
 
 This project would be impossible without the massive foundations provided by the decompilation community:
 
-* **`pokeemerald-expansion` (v1.16.0)** - Developed and maintained by the **ROM Hacking Hideout (RHH)** group.
+* **`pokeemerald-expansion` (v1.16.1)** - Developed and maintained by the **ROM Hacking Hideout (RHH)** group.
 * **Modern Emerald (v3.3.1)** - Developed by **Resetes12**.
-* **Feature Branches & Coding References:** Very grateful to **ghoulslash**, **flashlucky**, **TheXaman**, **RavePossum**, **Team Aqua's Hideout**, and more for their public code repositories and documentation templates for features I've pulled in.
+* **Feature Branches & Coding References:** Very grateful to **ghoulslash**, **Flash1Lucky**, **TheXaman**, **RavePossum**, **Team Aqua's Hideout**, and **many more** for their public code repositories and documentation templates for features I've pulled in.
+* **RHH Discord:** The Discord for RHH is full of incredibly helpful people and working together on stuff has been really fun!
 
 * I don't mind people pulling features I've modified (Mont's SwSh stuff) but please do credit myself(worpbane/Brendan) for the layout and Mont for the base features(and Rave for the Summary Screen).  
 

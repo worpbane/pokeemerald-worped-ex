@@ -266,7 +266,7 @@
                                           // This var should never remain non-zero long enough for the player to save.
                                           // For better wild AI handling, edit GetWildAiFlags() in src/battle_ai_main.c
 
-#define B_VAR_DIFFICULTY            0     // If not 0, you can use this var to control which difficulty version of a Trainer is loaded. This should be manually set by the developer using Script_SetDifficulty AFTER NewGameInitData has run.
+#define B_VAR_DIFFICULTY            0     // If not 0, you can use this var to control which difficulty version of a Trainer is loaded. This should be manually set by the developer using Script_SetDifficulty AFTER NewGameInitData has run. //WorpTODO
 
 // No bag settings
 #define NO_BAG_RESTRICTION       0
@@ -331,6 +331,20 @@
 #define B_ANIMATE_MON_AFTER_FAILED_POKEBALL TRUE  // If set to TRUE, if a Pokémon on the opposite side breaks out of a thrown Poké Ball, the wild Pokémon will display its animation.
 #define B_SHOW_DYNAMAX_MESSAGE              FALSE // If set to TRUE, an additional battle message is shown after completing Dynamaxing/Gigantamaxing.
 #define B_HPBAR_COLOR_THRESHOLD             GEN_LATEST // In Gen 5+, HP bar color thresholds were changed to be based on the actual HP values instead of the pixel length of the HP bar, leading to more accurate HP bar colors.
+
+// Catch Mode settings
+// Catch Mode can be toggled in move selection to prevent the player's direct move damage from KOing a catchable wild target.
+#define CATCH_MODE_TOGGLE_BUTTON            R_BUTTON // Allowed values: L_BUTTON or R_BUTTON.
+#define CATCH_MODE_USE_FLAG                 0        // If 1, Catch Mode is available only if CATCH_MODE_FLAG is set.
+#define CATCH_MODE_FLAG                     0        // Progression flag for Catch Mode when CATCH_MODE_USE_FLAG == 1.
+
+#if CATCH_MODE_TOGGLE_BUTTON != L_BUTTON && CATCH_MODE_TOGGLE_BUTTON != R_BUTTON
+#error CATCH_MODE_TOGGLE_BUTTON must be L_BUTTON or R_BUTTON.
+#endif
+
+#if CATCH_MODE_USE_FLAG != 0 && CATCH_MODE_USE_FLAG != 1
+#error CATCH_MODE_USE_FLAG must be 0 or 1.
+#endif
 
 // Catching settings
 #define B_SEMI_INVULNERABLE_CATCH       GEN_LATEST // In Gen4+, you cannot throw a ball against a Pokemon that is in a semi-invulnerable state (dig/fly/etc)

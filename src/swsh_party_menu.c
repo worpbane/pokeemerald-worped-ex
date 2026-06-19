@@ -283,7 +283,6 @@ static EWRAM_DATA struct MoveSlot sMoveSlots[MAX_MON_MOVES];
 static EWRAM_DATA u8 sAbilityWindowId;
 static EWRAM_DATA u8 sMonShadowSpriteId = 0;
 static EWRAM_DATA u16 sMonAnimTimer = 0;
-#if SWSH_PARTY_MENU_PC_ACCESS
 // Saved party menu state for reopening after opening the PC Move Pokémon UI
 static EWRAM_DATA u8 sSavedPartyMenuType = 0;
 static EWRAM_DATA u8 sSavedPartyLayout = 0;
@@ -292,7 +291,6 @@ static EWRAM_DATA u8 sSavedPartyMessageId = 0;
 static EWRAM_DATA TaskFunc sSavedPartyTask = NULL;
 static EWRAM_DATA MainCallback sSavedPartyExitCallback = NULL;
 static EWRAM_DATA u8 sSavedPartySlotId = 0;
-#endif
 
 
 // IWRAM common
@@ -586,10 +584,8 @@ static void Task_HandleWhichMoveInput(u8 taskId);
 static u8 IsFusionMon(u16 species);
 static void Task_HideFollowerNPCForTeleport(u8);
 static void FieldCallback_RockClimb(void);
-#if SWSH_PARTY_MENU_PC_ACCESS
 static void SavePartyMenuStateForPC(void);
 void CB2_ReopenPartyMenuFromPC(void);
-#endif
 //Dynamic Poke Ball + Pokerus (I didn't want to make another function lmao)
 static void CreatePartyMonPokeballSprite(struct Pokemon *mon, struct PartyMenuBox *menuBox, u8 slotId);
 static void UpdatePartyMonPokeballSprite(u8 oldSlotId, u8 newSlotId);
@@ -1916,31 +1912,35 @@ static void Task_ClosePartyMenuAndSetCB2(u8 taskId)
 }
 
 // Save states to recreate the party menu when exiting PC storage
-#if SWSH_PARTY_MENU_PC_ACCESS
 static void SavePartyMenuStateForPC(void)
 {
-    sSavedPartyMenuType = gPartyMenu.menuType;
-    sSavedPartyLayout = gPartyMenu.layout;
-    sSavedPartyAction = gPartyMenu.action;
-    sSavedPartySlotId = 0;
-    sSavedPartyMessageId = PARTY_MSG_NONE;
-    sSavedPartyTask = Task_HandleChooseMonInput;
-    sSavedPartyExitCallback = gPartyMenu.exitCallback;
+    if(gSaveBlock2Ptr->w_opBoxMode == 1)
+    {
+        sSavedPartyMenuType = gPartyMenu.menuType;
+        sSavedPartyLayout = gPartyMenu.layout;
+        sSavedPartyAction = gPartyMenu.action;
+        sSavedPartySlotId = 0;
+        sSavedPartyMessageId = PARTY_MSG_NONE;
+        sSavedPartyTask = Task_HandleChooseMonInput;
+        sSavedPartyExitCallback = gPartyMenu.exitCallback;
+    }
 }
 
 void CB2_ReopenPartyMenuFromPC(void)
 {
-    if (sSavedPartyTask == NULL)
-        sSavedPartyTask = Task_HandleChooseMonInput;
-    if (sSavedPartyExitCallback == NULL)
-        sSavedPartyExitCallback = CB2_ReturnToField;
-    if (sSavedPartySlotId > PARTY_SIZE)
-        sSavedPartySlotId = 0;
-    gPartyMenu.slotId = sSavedPartySlotId;
+    if(gSaveBlock2Ptr->w_opBoxMode == 1)
+    {
+        if (sSavedPartyTask == NULL)
+            sSavedPartyTask = Task_HandleChooseMonInput;
+        if (sSavedPartyExitCallback == NULL)
+            sSavedPartyExitCallback = CB2_ReturnToField;
+        if (sSavedPartySlotId > PARTY_SIZE)
+            sSavedPartySlotId = 0;
+        gPartyMenu.slotId = sSavedPartySlotId;
 
-    InitPartyMenu(sSavedPartyMenuType, sSavedPartyLayout, sSavedPartyAction, TRUE, sSavedPartyMessageId, sSavedPartyTask, sSavedPartyExitCallback);
+        InitPartyMenu(sSavedPartyMenuType, sSavedPartyLayout, sSavedPartyAction, TRUE, sSavedPartyMessageId, sSavedPartyTask, sSavedPartyExitCallback);
+    }
 }
-#endif
 
 u8 GetCursorSelectionMonId(void)
 {
@@ -2022,8 +2022,8 @@ void Task_HandleChooseMonInput(u8 taskId)
                 gTasks[taskId].data[2] = 0;
                 gTasks[taskId].func = Task_SlideMultiBattlePartyView;
             }
-#if SWSH_PARTY_MENU_PC_ACCESS
-            else if (gPartyMenu.action == PARTY_ACTION_CHOOSE_MON
+            else if (gSaveBlock2Ptr->w_opBoxMode
+                    && gPartyMenu.action == PARTY_ACTION_CHOOSE_MON
                     && gPartyMenu.layout == PARTY_LAYOUT_SINGLE
                     && (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD
                         || gPartyMenu.menuType == PARTY_MENU_TYPE_DAYCARE))
@@ -2035,7 +2035,6 @@ void Task_HandleChooseMonInput(u8 taskId)
                 PartyMenuRemoveWindow(&sPartyMenuInternal->windowId[1]);
                 Task_ClosePartyMenu(taskId);
             }
-#endif
             break;
         }
     }
@@ -3031,10 +3030,10 @@ static bool8 CheckCanSwitch(void)
 
 static bool8 CheckUseBox(void)
 {
-#if SWSH_PARTY_MENU_PC_ACCESS
+    if(gSaveBlock2Ptr->w_opBoxMode == 0)
+        return FALSE;
 	if (gPartyMenu.action == PARTY_ACTION_CHOOSE_MON && gPartyMenu.layout == PARTY_LAYOUT_SINGLE && (gPartyMenu.menuType == PARTY_MENU_TYPE_FIELD || gPartyMenu.menuType == PARTY_MENU_TYPE_DAYCARE))
 		return TRUE;
-#endif
 	return FALSE;
 }
 
