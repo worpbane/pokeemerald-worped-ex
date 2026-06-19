@@ -355,29 +355,29 @@ static bool8 CheckConditions(int selection)
 static const u8 sText_Empty[]                   = _("");
 static const u8 sText_Desc_Save[]               = _("Save your settings.");
 //Gameplay Menu Descriptions
-static const u8 sText_Desc_DiffEasy[]          = _("Easier than original Pokémon Emerald.");
-static const u8 sText_Desc_DiffNormal[]        = _("Close to a classic Emerald experience.");
-static const u8 sText_Desc_DiffHard[]          = _("For those seeking a challenge.");
-static const u8 sText_Desc_BattleStyle_Shift[] = _("Switch Pokémon after fainting an foe.");
-static const u8 sText_Desc_BattleStyle_Set[]   = _("No free switches after fainting a foe.");
-static const u8 sText_Desc_MatchCallOn[]       = _("Receive calls for rematches and news.");
-static const u8 sText_Desc_MatchCallOff[]      = _("Disable trainer calls and rematches.");
-static const u8 sText_Desc_CatchModeOn[]       = _("Catchable Pokémon won't\ndrop below 1 HP.");
-static const u8 sText_Desc_CatchModeOff[]      = _("Catchable Pokémon behave\nas expected.");
-static const u8 sText_Desc_BallPromptOn[]      = _("Prompt for the last used Pokéball\nwill appear when able to use.");
-static const u8 sText_Desc_BallPromptOff[]     = _("You will have to open your Bag\nto use a Pokéball.");
+static const u8 sText_Desc_DiffEasy[]          = _("A balanced experience perfect\nfor {COLOR 6}casual playthroughs.");
+static const u8 sText_Desc_DiffNormal[]        = _("Close to a classic\n{COLOR 12}Emerald experience.");
+static const u8 sText_Desc_DiffHard[]          = _("Demanding battles for those\nwho crave a {COLOR 8}true challenge.");
+static const u8 sText_Desc_BattleStyle_Shift[] = _("Switch your Pokémon freely\nafter defeating an enemy.");
+static const u8 sText_Desc_BattleStyle_Set[]   = _("Strategic combat with no free\nswitches after a knockout.");
+static const u8 sText_Desc_MatchCallOn[]       = _("Trainers will be able to call you,\noffering rematches and info.");
+static const u8 sText_Desc_MatchCallOff[]      = _("You will not receive calls.\nSpecial events will still occur.");
+static const u8 sText_Desc_CatchModeOn[]       = _("{COLOR 10}{SHADOW 11}Enable{COLOR 2}{SHADOW 4} the Catch Mode prompt.");
+static const u8 sText_Desc_CatchModeOff[]      = _("{COLOR 8}{SHADOW 7}Disable{COLOR 2}{SHADOW 4} the Catch Mode prompt.");
+static const u8 sText_Desc_BallPromptOn[]      = _("{COLOR 10}{SHADOW 11}Enable{COLOR 2}{SHADOW 4} the Last Used Ball prompt.");
+static const u8 sText_Desc_BallPromptOff[]     = _("{COLOR 8}{SHADOW 7}Disable{COLOR 2}{SHADOW 4} the Last Used Ball prompt.");
 static const u8 sText_Desc_AutoRun[]           = _("Toggle automatic running.");
-static const u8 sText_Desc_BoxModeClassic[]    = _("Access boxes only at PC terminals.");
-static const u8 sText_Desc_BoxModeModern[]     = _("Access boxes anywhere from the menu.");
+static const u8 sText_Desc_BoxModeClassic[]    = _("Only able to access your\nPokémon boxes at PC terminals.");
+static const u8 sText_Desc_BoxModeModern[]     = _("Access Pokémon boxes from\nanywhere in the Party Menu.");
 
 static const u8 *const sOptionMenuItemDescriptionsMain[MENUITEM_MAIN_COUNT][3] =
 {
     // [ITEM] = {Option 1 Desc, Option 2 Desc, Option 3 Desc}
     [MENUITEM_MAIN_DIFFICULTY]  = {sText_Desc_DiffEasy,             sText_Desc_DiffNormal,      sText_Desc_DiffHard},
     [MENUITEM_MAIN_BATTLESTYLE] = {sText_Desc_BattleStyle_Shift,    sText_Desc_BattleStyle_Set, sText_Empty},
-    [MENUITEM_MAIN_MATCHCALL]   = {sText_Desc_MatchCallOn,          sText_Desc_MatchCallOff,    sText_Empty},
-    [MENUITEM_MAIN_CATCHMODE]   = {sText_Desc_CatchModeOn,          sText_Desc_CatchModeOff,    sText_Empty},
-    [MENUITEM_MAIN_BALLPROMPT]  = {sText_Desc_BallPromptOn,         sText_Desc_BallPromptOff,   sText_Empty},
+    [MENUITEM_MAIN_MATCHCALL]   = {sText_Desc_MatchCallOff,         sText_Desc_MatchCallOn,     sText_Empty},
+    [MENUITEM_MAIN_CATCHMODE]   = {sText_Desc_CatchModeOff,         sText_Desc_CatchModeOn,     sText_Empty},
+    [MENUITEM_MAIN_BALLPROMPT]  = {sText_Desc_BallPromptOff,        sText_Desc_BallPromptOn,    sText_Empty},
     [MENUITEM_MAIN_AUTORUN]     = {sText_Desc_AutoRun,              sText_Empty,                sText_Empty},
     [MENUITEM_MAIN_BOXMODE]     = {sText_Desc_BoxModeClassic,       sText_Desc_BoxModeModern,   sText_Empty},
     [MENUITEM_MAIN_CANCEL]      = {sText_Desc_Save,                 sText_Empty,                sText_Empty},
@@ -385,15 +385,15 @@ static const u8 *const sOptionMenuItemDescriptionsMain[MENUITEM_MAIN_COUNT][3] =
 
 //System Menu Descriptions
 static const u8 sText_Desc_TextSpeed[]      = _("Sets how fast text is displayed.");
-static const u8 sText_Desc_BattleScene_On[] = _("Show battle animations.");
-static const u8 sText_Desc_BattleScene_Off[]= _("Skip battle animations for speed.");
-static const u8 sText_Desc_SoundMono[]      = _("Standard audio output.");
-static const u8 sText_Desc_SoundStereo[]    = _("Enhanced stereo audio output.");
+static const u8 sText_Desc_BattleScene_On[] = _("Show Pokémon battle animations.");
+static const u8 sText_Desc_BattleScene_Off[]= _("Skip Pokémon battle animations.");
+static const u8 sText_Desc_SoundMono[]      = _("Sound is the same in all speakers.\n{COLOR 8}{SHADOW 7}Recommended for original hardware.");
+static const u8 sText_Desc_SoundStereo[]    = _("Play the left and right audio channel\nseperatly. {COLOR 10}{SHADOW 11}Great with headphones.");
 static const u8 sText_Desc_ButtonMode[]     = _("Standard button configuration.");
-static const u8 sText_Desc_ButtonMode_LR[]  = _("L/R buttons act as page turners.");
-static const u8 sText_Desc_ButtonMode_LA[]  = _("L button functions as A button.");
-static const u8 sText_Desc_FontRSE[]        = _("Use the Ruby/Sapphire/Emerald\nfont style.");
-static const u8 sText_Desc_FontFRLG[]       = _("Use the FireRed/LeafGreen\nfont style.");
+static const u8 sText_Desc_ButtonMode_LR[]  = _("On some screens the L and R buttons\nact as left and right.");
+static const u8 sText_Desc_ButtonMode_LA[]  = _("The L button acts as another A\nbutton for one-handed play.");
+static const u8 sText_Desc_FontRSE[]        = _("Use the {COLOR 8}{SHADOW 7}Ruby{COLOR 2}{SHADOW 4}/{COLOR 6}{SHADOW 5}Sapphire{COLOR 2}{SHADOW 4}/{COLOR 12}{SHADOW 11}Emerald\n{COLOR 2}{SHADOW 4}font.");
+static const u8 sText_Desc_FontFRLG[]       = _("Use the {COLOR 14}{SHADOW 13}FireRed{COLOR 2}{SHADOW 4}/{COLOR 10}{SHADOW 9}LeafGreen{COLOR 2}{SHADOW 4} font.");
 static const u8 sText_Desc_FrameType[]      = _("Select a window border style.");
 static const u8 sText_Desc_SaveAndExit[]    = _("Save your settings.");
 
