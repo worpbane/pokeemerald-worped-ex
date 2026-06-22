@@ -40,6 +40,7 @@
 #include "title_screen.h"
 #include "window.h"
 #include "mystery_gift_menu.h"
+#include "new_game_gameplay_options.h"
 
 /*
  * Main menu state machine
@@ -1406,7 +1407,7 @@ static void Task_NewGameBirchSpeechSub_InitPokeBall(u8 taskId)
     gSprites[spriteId].invisible = FALSE;
     gSprites[spriteId].data[0] = 0;
 
-    CreatePokeballSpriteToReleaseMon(spriteId, gSprites[spriteId].oam.paletteNum, 112, 58, 0, 0, 32, PALETTES_BG, SPECIES_LOTAD);
+    CreatePokeballSpriteToReleaseMon(spriteId, gSprites[spriteId].oam.paletteNum, 112, 58, 0, 0, 32, PALETTES_BG, SPECIES_MINCCINO);
     gTasks[taskId].func = Task_NewGameBirchSpeechSub_WaitForLotad;
     gTasks[sBirchSpeechMainTaskId].tTimer = 0;
 }
@@ -1628,7 +1629,7 @@ static void Task_NewGameBirchSpeech_WaitPressBeforeNameChoice(u8 taskId)
     }
 }
 
-static void Task_NewGameBirchSpeech_StartNamingScreen(u8 taskId)
+static void Task_NewGameBirchSpeech_StartNamingScreen(u8 taskId) //WorpTODO: Look at this to rename Rivel
 {
     if (!gPaletteFade.active)
     {
@@ -1636,7 +1637,8 @@ static void Task_NewGameBirchSpeech_StartNamingScreen(u8 taskId)
         FreeAndDestroyMonPicSprite(gTasks[taskId].tLotadSpriteId);
         NewGameBirchSpeech_SetDefaultPlayerName(Random() % NUM_PRESET_NAMES);
         DestroyTask(taskId);
-        DoNamingScreen(NAMING_SCREEN_PLAYER, gSaveBlock2Ptr->playerName, gSaveBlock2Ptr->playerGender, 0, 0, CB2_NewGameBirchSpeech_ReturnFromNamingScreen);
+        gMain.savedCallback = CB2_NewGameBirchSpeech_ReturnFromNamingScreen;
+        DoNamingScreen(NAMING_SCREEN_PLAYER, gSaveBlock2Ptr->playerName, gSaveBlock2Ptr->playerGender, 0, 0, CB2_InitNGOptionPlusMenu); //WORPTodo: Add NG Options here, like RIGHT AFTER the player naming screen.
     }
 }
 

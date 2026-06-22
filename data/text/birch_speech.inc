@@ -49,6 +49,12 @@ gText_Birch_YourePlayer::
 	.string "I get it now!\p"
 	.string "$"
 
+gText_Birch_SetOptions::
+	.string "One last thing before you go!\p"
+	.string "Let's set some expectations\n"
+	.string "for what's to come.\p"
+	.string "$"
+
 gText_Birch_AreYouReady::
 	.string "All right, are you ready?\p"
 	.string "Your very own adventure is about\n"

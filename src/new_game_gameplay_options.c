@@ -23,36 +23,36 @@
 
 enum
 {
-    MENU_MAIN,
-    MENU_SYSTEM,
+    MENU_MODE,
+    MENU_GAMEPLAY,
     MENU_COUNT,
 };
 
-//Menu 1 Gameplay
+//Menu 1 Gamemode Settings (Cannot change later)
 enum
 {
-    MENUITEM_MAIN_DIFFICULTY,
-    MENUITEM_MAIN_BATTLESTYLE,
-    MENUITEM_MAIN_MATCHCALL,
-    MENUITEM_MAIN_CATCHMODE,
-    MENUITEM_MAIN_BALLPROMPT,
-    MENUITEM_MAIN_AUTORUN,
-    MENUITEM_MAIN_BOXMODE,
-    MENUITEM_MAIN_CANCEL,
-    MENUITEM_MAIN_COUNT,
+    MENUITEM_MODE_SHINYCHANCE,
+    MENUITEM_MODE_LEVELCAP,
+    MENUITEM_MODE_EXPMULT,
+    MENUITEM_MODE_CATCHRATE,
+    MENUITEM_MODE_TRAINERSUSEITEMS,
+    MENUITEM_MODE_PLAYERUSEITEMS,
+    MENUITEM_MODE_UNLIMITEDWT,
+    MENUITEM_MODE_NEXT,
+    MENUITEM_MODE_COUNT,
 };
 
-//Menu 2 System
+//Menu 2 Gameplay Settings (Can change later)
 enum
 {
-    MENUITEM_SYSTEM_TEXTSPEED,
-    MENUITEM_SYSTEM_BATTLESCENE,
-    MENUITEM_SYSTEM_SOUND,
-    MENUITEM_SYSTEM_FONT,
-    MENUITEM_SYSTEM_BUTTONMODE,
-    MENUITEM_SYSTEM_FRAMETYPE,
-    MENUITEM_SYSTEM_CANCEL,
-    MENUITEM_SYSTEM_COUNT,
+    MENUITEM_GAMEPLAY_DIFFICULTY,
+    MENUITEM_GAMEPLAY_BATTLESTYLE,
+    MENUITEM_GAMEPLAY_MATCHCALL,
+    MENUITEM_GAMEPLAY_CATCHMODE,
+    MENUITEM_GAMEPLAY_BALLPROMPT,
+    MENUITEM_GAMEPLAY_BOXMODE,
+    MENUITEM_GAMEPLAY_SAVE,
+    MENUITEM_GAMEPLAY_COUNT,
 };
 
 // Window Ids
@@ -134,8 +134,8 @@ static const struct BgTemplate sOptionMenuBgTemplates[] =
 struct OptionMenu
 {
     u8 submenu;
-    u8 sel[MENUITEM_MAIN_COUNT];
-    u8 sel_custom[MENUITEM_SYSTEM_COUNT];
+    u8 sel_mode[MENUITEM_MODE_COUNT];
+    u8 sel_gameplay[MENUITEM_GAMEPLAY_COUNT];
     int menuCursor[MENU_COUNT];
     int visibleCursor[MENU_COUNT];
     u8 arrowTaskId;
@@ -157,7 +157,7 @@ static void DrawChoices(u32 id, int y); //right side draw function
 static void HighlightOptionMenuItem(void);
 static void Task_OptionMenuFadeIn(u8 taskId);
 static void Task_OptionMenuProcessInput(u8 taskId);
-static void Task_OptionMenuSave(u8 taskId);
+static void Task_NGOptionMenuSave(u8 taskId);
 static void Task_OptionMenuFadeOut(u8 taskId);
 static void ScrollMenu(int direction);
 static void ScrollAll(int direction); // to bottom or top
@@ -165,30 +165,29 @@ static int GetMiddleX(const u8 *txt1, const u8 *txt2, const u8 *txt3);
 static int XOptions_ProcessInput(int x, int selection);
 static int ProcessInput_Options_Two(int selection);
 static int ProcessInput_Options_Three(int selection);
-static int ProcessInput_Options_Four(int selection);
-static int ProcessInput_Sound(int selection);
-static int ProcessInput_FrameType(int selection);
+static int ProcessInput_Options_Five(int selection);
 static const u8 *const OptionTextDescription(void);
 static const u8 *const OptionTextRight(u8 menuItem);
 static u8 MenuItemCount(void);
-static u8 MenuItemCancel(void);
 static void DrawDescriptionText(void);
 static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style, bool8 active);
-static void DrawChoices_Options_Four(const u8 *const *const strings, int selection, int y, bool8 active);
+static void DrawChoices_Options_Five(const u8 *const *const strings, int selection, int y, bool8 active);
 static void ReDrawAll(void);
+
+static void DrawChoices_ShinyChance(int selection, int y);
+static void DrawChoices_LevelCap(int selection, int y);
+static void DrawChoices_ExpMult(int selection, int y);
+static void DrawChoices_CatchRate(int selection, int y);
+static void DrawChoices_TrainerUseItems(int selection, int y);
+static void DrawChoices_PlayerUseItems(int selection, int y);
+static void DrawChoices_UnlimitedWT(int selection, int y);
 static void DrawChoices_Difficulty(int selection, int y);
 static void DrawChoices_BattleStyle(int selection, int y);
 static void DrawChoices_MatchCall(int selection, int y);
 static void DrawChoices_CatchMode(int selection, int y);
 static void DrawChoices_BallPrompt(int selection, int y);
-static void DrawChoices_AutoRun(int selection, int y);
 static void DrawChoices_BoxMode(int selection, int y);
-static void DrawChoices_TextSpeed(int selection, int y);
-static void DrawChoices_BattleScene(int selection, int y);
-static void DrawChoices_Sound(int selection, int y);
-static void DrawChoices_ButtonMode(int selection, int y);
-static void DrawChoices_Font(int selection, int y);
-static void DrawChoices_FrameType(int selection, int y);
+
 static void DrawBgWindowFrames(void);
 
 // EWRAM vars
@@ -207,92 +206,94 @@ static const u32 sOptionsPlusBGTilemap[]= INCGFX_U32("graphics/ui_options_plus/o
 
 static const u8 wTextColors[][3] = //(BG, Primary, Shadow)
 {
-    {0, 2, 4}, //0 - Normal Black Text
-    {0, 1, 2}, //1 - Normal White Text
-    {0, 5, 6}, //2 - Option Selected
-    {0, 7, 8}, //3 - Option Disabled
+    {0, 2, 4},      //0 - Normal Black Text
+    {0, 1, 2},      //1 - Normal White Text
+    {0, 6, 5},      //2 - Option Selected
+    {0, 13, 14},    //3 - Option Disabled Left
+    {0, 14, 13},    //4 - Option Disabled Right
 };
 
 // Menu draw and input functions
+struct // MENU_MODE
+{
+    void (*drawChoices)(int selection, int y);
+    int (*processInput)(int selection);
+} static const sItemFunctionsMain[MENUITEM_MODE_COUNT] =
+{
+    [MENUITEM_MODE_SHINYCHANCE]         = {DrawChoices_ShinyChance,         ProcessInput_Options_Five}, 
+    [MENUITEM_MODE_LEVELCAP]            = {DrawChoices_LevelCap,            ProcessInput_Options_Two},
+    [MENUITEM_MODE_EXPMULT]             = {DrawChoices_ExpMult,             ProcessInput_Options_Three},
+    [MENUITEM_MODE_CATCHRATE]           = {DrawChoices_CatchRate,           ProcessInput_Options_Three},
+    [MENUITEM_MODE_TRAINERSUSEITEMS]    = {DrawChoices_TrainerUseItems,     ProcessInput_Options_Two},
+    [MENUITEM_MODE_PLAYERUSEITEMS]      = {DrawChoices_PlayerUseItems,      ProcessInput_Options_Two},
+    [MENUITEM_MODE_UNLIMITEDWT]         = {DrawChoices_UnlimitedWT,         ProcessInput_Options_Two},
+    [MENUITEM_MODE_NEXT]                = {NULL,                            NULL},
+};
+
 struct // MENU_MAIN
 {
     void (*drawChoices)(int selection, int y);
     int (*processInput)(int selection);
-} static const sItemFunctionsMain[MENUITEM_MAIN_COUNT] =
+} static const sItemFunctionsCustom[MENUITEM_GAMEPLAY_COUNT] =
 {
-    [MENUITEM_MAIN_DIFFICULTY]      = {DrawChoices_Difficulty,      ProcessInput_Options_Three},
-    [MENUITEM_MAIN_BATTLESTYLE]     = {DrawChoices_BattleStyle,     ProcessInput_Options_Two},
-    [MENUITEM_MAIN_MATCHCALL]       = {DrawChoices_MatchCall,       ProcessInput_Options_Two},
-    [MENUITEM_MAIN_CATCHMODE]       = {DrawChoices_CatchMode,       ProcessInput_Options_Two},
-    [MENUITEM_MAIN_BALLPROMPT]      = {DrawChoices_BallPrompt,      ProcessInput_Options_Two},
-    [MENUITEM_MAIN_AUTORUN]         = {DrawChoices_AutoRun,         ProcessInput_Options_Two},
-    [MENUITEM_MAIN_BOXMODE]         = {DrawChoices_BoxMode,         ProcessInput_Options_Two},
-    [MENUITEM_MAIN_CANCEL]          = {NULL,                        NULL},
-};
-
-struct // MENU_SYSTEM
-{
-    void (*drawChoices)(int selection, int y);
-    int (*processInput)(int selection);
-} static const sItemFunctionsCustom[MENUITEM_SYSTEM_COUNT] =
-{
-    [MENUITEM_SYSTEM_TEXTSPEED]       = {DrawChoices_TextSpeed,       ProcessInput_Options_Four}, 
-    [MENUITEM_SYSTEM_BATTLESCENE]     = {DrawChoices_BattleScene,     ProcessInput_Options_Two},
-    [MENUITEM_SYSTEM_SOUND]           = {DrawChoices_Sound,           ProcessInput_Sound},
-    [MENUITEM_SYSTEM_BUTTONMODE]      = {DrawChoices_ButtonMode,      ProcessInput_Options_Three},
-    [MENUITEM_SYSTEM_FONT]            = {DrawChoices_Font,            ProcessInput_Options_Two},
-    [MENUITEM_SYSTEM_FRAMETYPE]       = {DrawChoices_FrameType,       ProcessInput_FrameType},
-    [MENUITEM_SYSTEM_CANCEL]          = {NULL,                        NULL},
+    [MENUITEM_GAMEPLAY_DIFFICULTY]      = {DrawChoices_Difficulty,      ProcessInput_Options_Three},
+    [MENUITEM_GAMEPLAY_BATTLESTYLE]     = {DrawChoices_BattleStyle,     ProcessInput_Options_Two},
+    [MENUITEM_GAMEPLAY_MATCHCALL]       = {DrawChoices_MatchCall,       ProcessInput_Options_Two},
+    [MENUITEM_GAMEPLAY_CATCHMODE]       = {DrawChoices_CatchMode,       ProcessInput_Options_Two},
+    [MENUITEM_GAMEPLAY_BALLPROMPT]      = {DrawChoices_BallPrompt,      ProcessInput_Options_Two},
+    [MENUITEM_GAMEPLAY_BOXMODE]         = {DrawChoices_BoxMode,         ProcessInput_Options_Two},
+    [MENUITEM_GAMEPLAY_SAVE]            = {NULL,                        NULL},
 };
 
 //Strings
-//Gameplay  Options
-static const u8 sText_Difficulty[]              = _("Difficulty");
-static const u8 sText_BattleStyle[]             = _("Battle Style");
-static const u8 sText_MatchCall[]               = _("Match Calls");
-static const u8 sText_CatchMode[]               = _("Catch Mode");
-static const u8 sText_BallPrompt[]              = _("Ball Prompt");
-static const u8 sText_AutoRun[]                 = _("AutoRun");
-static const u8 sText_BoxMode[]                 = _("Box Mode");
 //System Options
-static const u8 sText_TextSpeed[]               = _("Text Speed");
-static const u8 sText_BattleScene[]             = _("Battle Scene");
-static const u8 sText_Sound[]                   = _("Sound");
-static const u8 sText_ButtonMode[]              = _("Button Mode");
-static const u8 sText_Font[]                    = _("Font");
-static const u8 sText_Frame[]                   = _("Frame");
+static const u8 sText_ShinyChance[]         = _("Shiny Chance");
+static const u8 sText_LevelCap[]            = _("Level Cap");
+static const u8 sText_ExpMult[]             = _("Exp Mult");
+static const u8 sText_CatchRate[]           = _("Catch Rate");
+static const u8 sText_TrainerItems[]        = _("Trainer Items");
+static const u8 sText_PlayerItems[]         = _("Player Items");
+static const u8 sText_UnlimitedWT[]         = _("WT Limit");
+//Gameplay  Options
+static const u8 sText_Difficulty[]          = _("Difficulty");
+static const u8 sText_BattleStyle[]         = _("Battle Style");
+static const u8 sText_MatchCall[]           = _("Match Calls");
+static const u8 sText_CatchMode[]           = _("Catch Mode");
+static const u8 sText_BallPrompt[]          = _("Ball Prompt");
+static const u8 sText_BoxMode[]             = _("Box Mode");
 
-static const u8 gText_OptionMenuSave[]          = _("Save");
+static const u8 gText_OptionMenuNext[]      = _("Next");
+static const u8 gText_OptionMenuSave[]      = _("Save");
 
 // Menu left side option names text
-static const u8 *const sOptionMenuItemsNamesMain[MENUITEM_MAIN_COUNT] =
+static const u8 *const sOptionMenuItemsNamesMain[MENUITEM_MODE_COUNT] =
 {
-    [MENUITEM_MAIN_DIFFICULTY]      = sText_Difficulty,
-    [MENUITEM_MAIN_BATTLESTYLE]     = sText_BattleStyle,
-    [MENUITEM_MAIN_MATCHCALL]       = sText_MatchCall,
-    [MENUITEM_MAIN_CATCHMODE]       = sText_CatchMode,
-    [MENUITEM_MAIN_BALLPROMPT]      = sText_BallPrompt,
-    [MENUITEM_MAIN_AUTORUN]         = sText_AutoRun,
-    [MENUITEM_MAIN_BOXMODE]         = sText_BoxMode,
-    [MENUITEM_MAIN_CANCEL]          = gText_OptionMenuSave,
+    [MENUITEM_MODE_SHINYCHANCE]         = sText_ShinyChance, 
+    [MENUITEM_MODE_LEVELCAP]            = sText_LevelCap,
+    [MENUITEM_MODE_EXPMULT]             = sText_ExpMult,
+    [MENUITEM_MODE_CATCHRATE]           = sText_CatchRate,
+    [MENUITEM_MODE_TRAINERSUSEITEMS]    = sText_TrainerItems,
+    [MENUITEM_MODE_PLAYERUSEITEMS]      = sText_PlayerItems,
+    [MENUITEM_MODE_UNLIMITEDWT]         = sText_UnlimitedWT,
+    [MENUITEM_MODE_NEXT]                = gText_OptionMenuNext,
 };
 
-static const u8 *const sOptionMenuItemsNamesCustom[MENUITEM_SYSTEM_COUNT] =
+static const u8 *const sOptionMenuItemsNamesCustom[MENUITEM_GAMEPLAY_COUNT] =
 {
-    [MENUITEM_SYSTEM_TEXTSPEED]       = sText_TextSpeed, 
-    [MENUITEM_SYSTEM_BATTLESCENE]     = sText_BattleScene,
-    [MENUITEM_SYSTEM_SOUND]           = sText_Sound,
-    [MENUITEM_SYSTEM_BUTTONMODE]      = sText_ButtonMode,
-    [MENUITEM_SYSTEM_FONT]            = sText_Font,
-    [MENUITEM_SYSTEM_FRAMETYPE]       = sText_Frame,
-    [MENUITEM_SYSTEM_CANCEL]          = gText_OptionMenuSave,
+    [MENUITEM_GAMEPLAY_DIFFICULTY]      = sText_Difficulty,
+    [MENUITEM_GAMEPLAY_BATTLESTYLE]     = sText_BattleStyle,
+    [MENUITEM_GAMEPLAY_MATCHCALL]       = sText_MatchCall,
+    [MENUITEM_GAMEPLAY_CATCHMODE]       = sText_CatchMode,
+    [MENUITEM_GAMEPLAY_BALLPROMPT]      = sText_BallPrompt,
+    [MENUITEM_GAMEPLAY_BOXMODE]         = sText_BoxMode,
+    [MENUITEM_GAMEPLAY_SAVE]            = gText_OptionMenuSave,
 };
 
 static const u8 *const OptionTextRight(u8 menuItem)
 {
     switch (sOptions->submenu)
     {
-        case MENU_SYSTEM:
+        case MENU_GAMEPLAY:
             return sOptionMenuItemsNamesCustom[menuItem];
         default:
             return sOptionMenuItemsNamesMain[menuItem];
@@ -304,46 +305,46 @@ static bool8 CheckConditions(int selection)
 {
     switch (sOptions->submenu)
     {
-    case MENU_SYSTEM:
+    case MENU_GAMEPLAY:
         switch(selection)
         {
-            case MENUITEM_SYSTEM_TEXTSPEED:
+            case MENUITEM_GAMEPLAY_DIFFICULTY:
                 return TRUE;
-            case MENUITEM_SYSTEM_BATTLESCENE:
+            case MENUITEM_GAMEPLAY_BATTLESTYLE:
                 return TRUE;
-            case MENUITEM_SYSTEM_SOUND:
+            case MENUITEM_GAMEPLAY_MATCHCALL:
                 return TRUE;
-            case MENUITEM_SYSTEM_BUTTONMODE:
+            case MENUITEM_GAMEPLAY_CATCHMODE:
                 return TRUE;
-            case MENUITEM_SYSTEM_FONT:
+            case MENUITEM_GAMEPLAY_BALLPROMPT:
                 return TRUE;
-            case MENUITEM_SYSTEM_FRAMETYPE:
+            case MENUITEM_GAMEPLAY_BOXMODE:
                 return TRUE;
-            case MENUITEM_SYSTEM_CANCEL:
+            case MENUITEM_GAMEPLAY_SAVE:
                 return TRUE;
-            case MENUITEM_SYSTEM_COUNT:
+            case MENUITEM_GAMEPLAY_COUNT:
                 return TRUE;
         }
     default:
         switch(selection)
         {
-        case MENUITEM_MAIN_DIFFICULTY:
+        case MENUITEM_MODE_SHINYCHANCE:
             return TRUE;
-        case MENUITEM_MAIN_BATTLESTYLE:
+        case MENUITEM_MODE_LEVELCAP:
             return TRUE;
-        case MENUITEM_MAIN_MATCHCALL:
+        case MENUITEM_MODE_EXPMULT:
             return TRUE;
-        case MENUITEM_MAIN_CATCHMODE:
+        case MENUITEM_MODE_CATCHRATE:
             return TRUE;
-        case MENUITEM_MAIN_BALLPROMPT:
+        case MENUITEM_MODE_TRAINERSUSEITEMS:
+            return FALSE;
+        case MENUITEM_MODE_PLAYERUSEITEMS:
+            return FALSE;
+        case MENUITEM_MODE_UNLIMITEDWT:
             return TRUE;
-        case MENUITEM_MAIN_AUTORUN:
+        case MENUITEM_MODE_NEXT:
             return TRUE;
-        case MENUITEM_MAIN_BOXMODE:
-            return TRUE;
-        case MENUITEM_MAIN_CANCEL:
-            return TRUE;
-        case MENUITEM_MAIN_COUNT:
+        case MENUITEM_MODE_COUNT:
             return TRUE;
         default:
             return TRUE;
@@ -353,7 +354,42 @@ static bool8 CheckConditions(int selection)
 
 //General Strings
 static const u8 sText_Empty[]                   = _("");
-static const u8 sText_Desc_Save[]               = _("Save your settings.");
+static const u8 sText_Desc_Next[]               = _("Continue to Game Options.\n{COLOR 8}{SHADOW 7}(Game Rules CAN NOT be changed later)");
+static const u8 sText_Desc_Save[]               = _("Save your settings and continue.\n{COLOR 12}{SHADOW 11}(Game Options CAN be changed later)");
+
+//System Menu Descriptions
+static const u8 sText_Desc_Shiny8192[]          = _("Classic rates ({COLOR 8}{SHADOW 7}1/8192{COLOR 2}{SHADOW 4}).\nThe original challenge.");
+static const u8 sText_Desc_Shiny4096[]          = _("Modern rates ({COLOR 12}{SHADOW 11}1/4096{COLOR 2}{SHADOW 4}).\nThe standard since GenVI.");
+static const u8 sText_Desc_Shiny2048[]          = _("Increased rates ({COLOR 12}{SHADOW 11}1/2048{COLOR 2}{SHADOW 4}).\nA casual hunt.");
+static const u8 sText_Desc_Shiny1024[]          = _("Boosted rates ({COLOR 6}{SHADOW 5}1/1024{COLOR 2}{SHADOW 4}).\nEasier encounters.");
+static const u8 sText_Desc_Shiny512[]           = _("High odds ({COLOR 6}{SHADOW 5}1/512{COLOR 2}{SHADOW 4}).\nSimilar to PokémonGO.");
+static const u8 sText_Desc_LevelCap_None[]      = _("No level limits. Power level your\nteam without restriction.");
+static const u8 sText_Desc_LevelCap_Normal[]    = _("Player team is capped to the next\n{COLOR 6}{SHADOW 5}Gym Leader's{COLOR 2}{SHADOW 4} entry level.");
+static const u8 sText_Desc_ExpMult_1_0[]        = _("Standard growth.\nA more authentic experience.");
+static const u8 sText_Desc_ExpMult_1_5[]        = _("Fast growth.\nReduce the need for grinding by 50%.");
+static const u8 sText_Desc_ExpMult_2_0[]        = _("Accelerated growth.\nDouble xp for rapid team building.");
+static const u8 sText_Desc_CatchRate_1x[]       = _("Classic catch rate.\nEvery catch remains a test of luck!");
+static const u8 sText_Desc_CatchRate_2x[]       = _("Double catch rate. Higher chances to\ncapture your favorite Pokémon!");
+static const u8 sText_Desc_CatchRate_3x[]       = _("Triple catch rate. Focus on your\njourney with less stress.");
+static const u8 sText_Desc_TrainerUseItemsOn[]  = _("Enemy trainers {COLOR 12}{SHADOW 11}can{COLOR 2}{SHADOW 4} use items in battle.");
+static const u8 sText_Desc_TrainerUseItemsOff[] = _("Enemy trainers can {COLOR 8}{SHADOW 7}NOT{COLOR 2}{SHADOW 4} use items\nin battle.");
+static const u8 sText_Desc_PlayerUseItemsOn[]   = _("The player {COLOR 12}{SHADOW 11}can{COLOR 2}{SHADOW 4} use items in battle.");
+static const u8 sText_Desc_PlayerUseItemsOff[]  = _("The player {COLOR 8}{SHADOW 7}can NOT{COLOR 2}{SHADOW 4} use items\nin battle.");
+static const u8 sText_Desc_WonderTrade_Limit[]  = _("Enables a daily limit of 3 WonderTrades.\n({COLOR 12}{SHADOW 11}Recommended{COLOR 2}{SHADOW 4})");
+static const u8 sText_Desc_WonderTrade_Unlimited[]  = _("WonderTrades have no daily limit.");
+
+static const u8 *const sOptionMenuItemDescriptionsMain[MENUITEM_MODE_COUNT][5] =
+{
+    [MENUITEM_MODE_SHINYCHANCE]         = {sText_Desc_Shiny8192,            sText_Desc_Shiny4096,               sText_Desc_Shiny2048,       sText_Desc_Shiny1024,       sText_Desc_Shiny512},
+    [MENUITEM_MODE_LEVELCAP]            = {sText_Desc_LevelCap_None,        sText_Desc_LevelCap_Normal,         sText_Empty,                sText_Empty,                sText_Empty},
+    [MENUITEM_MODE_EXPMULT]             = {sText_Desc_ExpMult_1_0,          sText_Desc_ExpMult_1_5,             sText_Desc_ExpMult_2_0,     sText_Empty,                sText_Empty},
+    [MENUITEM_MODE_CATCHRATE]           = {sText_Desc_CatchRate_1x,         sText_Desc_CatchRate_2x,            sText_Desc_CatchRate_3x,    sText_Empty,                sText_Empty},
+    [MENUITEM_MODE_TRAINERSUSEITEMS]    = {sText_Desc_TrainerUseItemsOn,    sText_Desc_TrainerUseItemsOff,      sText_Empty,                sText_Empty,                sText_Empty},
+    [MENUITEM_MODE_PLAYERUSEITEMS]      = {sText_Desc_PlayerUseItemsOn,     sText_Desc_PlayerUseItemsOff,       sText_Empty,                sText_Empty,                sText_Empty},
+    [MENUITEM_MODE_UNLIMITEDWT]         = {sText_Desc_WonderTrade_Limit,    sText_Desc_WonderTrade_Unlimited,   sText_Empty,                sText_Empty,                sText_Empty},
+    [MENUITEM_MODE_NEXT]                = {sText_Desc_Next,                 sText_Empty,                        sText_Empty,                sText_Empty,                sText_Empty},
+};
+
 //Gameplay Menu Descriptions
 static const u8 sText_Desc_DiffEasy[]          = _("A balanced experience perfect\nfor {COLOR 6}casual playthroughs.");
 static const u8 sText_Desc_DiffNormal[]        = _("Close to a classic\n{COLOR 12}Emerald experience.");
@@ -366,71 +402,44 @@ static const u8 sText_Desc_CatchModeOn[]       = _("{COLOR 10}{SHADOW 11}Enable{
 static const u8 sText_Desc_CatchModeOff[]      = _("{COLOR 8}{SHADOW 7}Disable{COLOR 2}{SHADOW 4} the Catch Mode prompt.");
 static const u8 sText_Desc_BallPromptOn[]      = _("{COLOR 10}{SHADOW 11}Enable{COLOR 2}{SHADOW 4} the Last Used Ball prompt.");
 static const u8 sText_Desc_BallPromptOff[]     = _("{COLOR 8}{SHADOW 7}Disable{COLOR 2}{SHADOW 4} the Last Used Ball prompt.");
-static const u8 sText_Desc_AutoRun[]           = _("Toggle automatic running.");
 static const u8 sText_Desc_BoxModeClassic[]    = _("Use PC terminals to manage your team.\nClassic storage style. (GenIII / {COLOR 8}{SHADOW 7}R{COLOR 2}{SHADOW 4}{COLOR 6}{SHADOW 5}S{COLOR 2}{SHADOW 4}{COLOR 12}{SHADOW 11}E{COLOR 2}{SHADOW 4})");
 static const u8 sText_Desc_BoxModeModern[]     = _("Can access your boxes via Party menu.\nModern convenience. (GenIX / {COLOR 6}{SHADOW 5}Sw{COLOR 8}{SHADOW 7}Sh{COLOR 2}{SHADOW 4})");
 
-static const u8 *const sOptionMenuItemDescriptionsMain[MENUITEM_MAIN_COUNT][3] =
+static const u8 *const sOptionMenuItemDescriptionsCustom[MENUITEM_GAMEPLAY_COUNT][3] =
 {
     // [ITEM] = {Option 1 Desc, Option 2 Desc, Option 3 Desc}
-    [MENUITEM_MAIN_DIFFICULTY]  = {sText_Desc_DiffEasy,             sText_Desc_DiffNormal,      sText_Desc_DiffHard},
-    [MENUITEM_MAIN_BATTLESTYLE] = {sText_Desc_BattleStyle_Shift,    sText_Desc_BattleStyle_Set, sText_Empty},
-    [MENUITEM_MAIN_MATCHCALL]   = {sText_Desc_MatchCallOff,         sText_Desc_MatchCallOn,     sText_Empty},
-    [MENUITEM_MAIN_CATCHMODE]   = {sText_Desc_CatchModeOff,         sText_Desc_CatchModeOn,     sText_Empty},
-    [MENUITEM_MAIN_BALLPROMPT]  = {sText_Desc_BallPromptOff,        sText_Desc_BallPromptOn,    sText_Empty},
-    [MENUITEM_MAIN_AUTORUN]     = {sText_Desc_AutoRun,              sText_Empty,                sText_Empty},
-    [MENUITEM_MAIN_BOXMODE]     = {sText_Desc_BoxModeClassic,       sText_Desc_BoxModeModern,   sText_Empty},
-    [MENUITEM_MAIN_CANCEL]      = {sText_Desc_Save,                 sText_Empty,                sText_Empty},
+    [MENUITEM_GAMEPLAY_DIFFICULTY]      = {sText_Desc_DiffEasy,             sText_Desc_DiffNormal,      sText_Desc_DiffHard},
+    [MENUITEM_GAMEPLAY_BATTLESTYLE]     = {sText_Desc_BattleStyle_Shift,    sText_Desc_BattleStyle_Set, sText_Empty},
+    [MENUITEM_GAMEPLAY_MATCHCALL]       = {sText_Desc_MatchCallOff,         sText_Desc_MatchCallOn,     sText_Empty},
+    [MENUITEM_GAMEPLAY_CATCHMODE]       = {sText_Desc_CatchModeOff,         sText_Desc_CatchModeOn,     sText_Empty},
+    [MENUITEM_GAMEPLAY_BALLPROMPT]      = {sText_Desc_BallPromptOff,        sText_Desc_BallPromptOn,    sText_Empty},
+    [MENUITEM_GAMEPLAY_BOXMODE]         = {sText_Desc_BoxModeClassic,       sText_Desc_BoxModeModern,   sText_Empty},
+    [MENUITEM_GAMEPLAY_SAVE]            = {sText_Desc_Save,                 sText_Empty,                sText_Empty},
 };
 
-//System Menu Descriptions
-static const u8 sText_Desc_TextSpeed[]      = _("Sets how fast text is displayed.");
-static const u8 sText_Desc_BattleScene_On[] = _("Show Pokémon battle animations.");
-static const u8 sText_Desc_BattleScene_Off[]= _("Skip Pokémon battle animations.");
-static const u8 sText_Desc_SoundMono[]      = _("Sound is the same in all speakers.\n{COLOR 8}{SHADOW 7}Recommended for original hardware.");
-static const u8 sText_Desc_SoundStereo[]    = _("Play the left and right audio channel\nseperatly. {COLOR 10}{SHADOW 11}Great with headphones.");
-static const u8 sText_Desc_ButtonMode[]     = _("Standard button configuration.");
-static const u8 sText_Desc_ButtonMode_LR[]  = _("On some screens the L and R buttons\nact as left and right.");
-static const u8 sText_Desc_ButtonMode_LA[]  = _("The L button acts as another A\nbutton for one-handed play.");
-static const u8 sText_Desc_FontRSE[]        = _("Use the {COLOR 8}{SHADOW 7}Ruby{COLOR 2}{SHADOW 4}/{COLOR 6}{SHADOW 5}Sapphire{COLOR 2}{SHADOW 4}/{COLOR 12}{SHADOW 11}Emerald\n{COLOR 2}{SHADOW 4}font.");
-static const u8 sText_Desc_FontFRLG[]       = _("Use the {COLOR 14}{SHADOW 13}FireRed{COLOR 2}{SHADOW 4}/{COLOR 10}{SHADOW 9}LeafGreen{COLOR 2}{SHADOW 4} font.");
-static const u8 sText_Desc_FrameType[]      = _("Select a window border style.");
-static const u8 sText_Desc_SaveAndExit[]    = _("Save your settings.");
-
-static const u8 *const sOptionMenuItemDescriptionsCustom[MENUITEM_SYSTEM_COUNT][3] =
-{
-    [MENUITEM_SYSTEM_TEXTSPEED]   = {sText_Desc_TextSpeed,            sText_Empty,                sText_Empty},
-    [MENUITEM_SYSTEM_BATTLESCENE] = {sText_Desc_BattleScene_On,       sText_Desc_BattleScene_Off, sText_Empty},
-    [MENUITEM_SYSTEM_SOUND]       = {sText_Desc_SoundMono,            sText_Desc_SoundStereo,     sText_Empty},
-    [MENUITEM_SYSTEM_BUTTONMODE]  = {sText_Desc_ButtonMode,           sText_Desc_ButtonMode_LR,   sText_Desc_ButtonMode_LA},
-    [MENUITEM_SYSTEM_FONT]        = {sText_Desc_FontRSE,              sText_Desc_FontFRLG,        sText_Empty},
-    [MENUITEM_SYSTEM_FRAMETYPE]   = {sText_Desc_FrameType,            sText_Empty,                sText_Empty},
-    [MENUITEM_SYSTEM_CANCEL]      = {sText_Desc_Save,                 sText_Empty,                sText_Empty},
-};
-
-// Disabled Descriptions
-static const u8 *const sOptionMenuItemDescriptionsDisabledMain[MENUITEM_MAIN_COUNT] =
-{
-    [MENUITEM_MAIN_DIFFICULTY]  = sText_Empty,
-    [MENUITEM_MAIN_BATTLESTYLE] = sText_Empty,
-    [MENUITEM_MAIN_MATCHCALL]   = sText_Empty,
-    [MENUITEM_MAIN_CATCHMODE]   = sText_Empty,
-    [MENUITEM_MAIN_BALLPROMPT]  = sText_Empty,
-    [MENUITEM_MAIN_AUTORUN]     = sText_Empty,
-    [MENUITEM_MAIN_BOXMODE]     = sText_Empty,
-    [MENUITEM_MAIN_CANCEL]      = sText_Empty,
-};
-
+static const u8 sText_Desc_NotImplemented[]               = _("Not Implemented.");
 // Disabled Custom
-static const u8 *const sOptionMenuItemDescriptionsDisabledCustom[MENUITEM_SYSTEM_COUNT] =
+static const u8 *const sOptionMenuItemDescriptionsDisabledMain[MENUITEM_MODE_COUNT] =
 {
-    [MENUITEM_SYSTEM_TEXTSPEED]   = sText_Empty,
-    [MENUITEM_SYSTEM_BATTLESCENE] = sText_Empty,
-    [MENUITEM_SYSTEM_SOUND]       = sText_Empty,
-    [MENUITEM_SYSTEM_BUTTONMODE]  = sText_Empty,
-    [MENUITEM_SYSTEM_FONT]        = sText_Empty,
-    [MENUITEM_SYSTEM_FRAMETYPE]   = sText_Empty,
-    [MENUITEM_SYSTEM_CANCEL]      = sText_Empty,
+    [MENUITEM_MODE_SHINYCHANCE]         = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_LEVELCAP]            = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_EXPMULT]             = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_CATCHRATE]           = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_TRAINERSUSEITEMS]    = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_PLAYERUSEITEMS]      = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_UNLIMITEDWT]         = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_NEXT]                = sText_Empty,
+};
+// Disabled Descriptions
+static const u8 *const sOptionMenuItemDescriptionsDisabledCustom[MENUITEM_GAMEPLAY_COUNT] =
+{
+    [MENUITEM_GAMEPLAY_DIFFICULTY]  = sText_Desc_NotImplemented,
+    [MENUITEM_GAMEPLAY_BATTLESTYLE] = sText_Desc_NotImplemented,
+    [MENUITEM_GAMEPLAY_MATCHCALL]   = sText_Desc_NotImplemented,
+    [MENUITEM_GAMEPLAY_CATCHMODE]   = sText_Desc_NotImplemented,
+    [MENUITEM_GAMEPLAY_BALLPROMPT]  = sText_Desc_NotImplemented,
+    [MENUITEM_GAMEPLAY_BOXMODE]     = sText_Desc_NotImplemented,
+    [MENUITEM_GAMEPLAY_SAVE]        = sText_Empty,
 };
 
 static const u8 *const OptionTextDescription(void)
@@ -440,19 +449,15 @@ static const u8 *const OptionTextDescription(void)
 
     switch (sOptions->submenu)
     {
-        case MENU_SYSTEM:
+        case MENU_GAMEPLAY:
             if (!CheckConditions(menuItem))
                 return sOptionMenuItemDescriptionsDisabledCustom[menuItem];
-            selection = sOptions->sel_custom[menuItem];
-            if (menuItem == MENUITEM_SYSTEM_TEXTSPEED || menuItem == MENUITEM_SYSTEM_FRAMETYPE)
-                selection = 0;
+            selection = sOptions->sel_gameplay[menuItem];
             return sOptionMenuItemDescriptionsCustom[menuItem][selection];
         default:
             if (!CheckConditions(menuItem))
                 return sOptionMenuItemDescriptionsDisabledMain[menuItem];
-            selection = sOptions->sel[menuItem];
-            if (menuItem == MENUITEM_MAIN_AUTORUN)
-                selection = 0;
+            selection = sOptions->sel_mode[menuItem];
             return sOptionMenuItemDescriptionsMain[menuItem][selection];
     }
 }
@@ -461,21 +466,10 @@ static u8 MenuItemCount(void)
 {
     switch (sOptions->submenu)
     {
-        case MENU_SYSTEM:
-            return MENUITEM_SYSTEM_COUNT;
+        case MENU_GAMEPLAY:
+            return MENUITEM_GAMEPLAY_COUNT;
         default:
-            return MENUITEM_MAIN_COUNT;
-    }
-}
-
-static u8 MenuItemCancel(void)
-{
-    switch (sOptions->submenu)
-    {
-        case MENU_SYSTEM:
-            return MENUITEM_SYSTEM_CANCEL;
-        default:
-            return MENUITEM_MAIN_CANCEL;
+            return MENUITEM_MODE_COUNT;
     }
 }
 
@@ -504,20 +498,20 @@ static void DrawCenteredText(u8 windowId, const u8 *text, int y, const u8 *color
     AddTextPrinterParameterized3(windowId, FONT_SHORT, x, y, color, 0, text);
 }
 
-static const u8 sText_TopBar_Main[]         = _("Game Options");
-static const u8 sText_TopBar_Main_Right[]   = _("{R_BUTTON} System");
-static const u8 sText_TopBar_Custom[]       = _("System Config");
-static const u8 sText_TopBar_Custom_Left[]  = _("{L_BUTTON} Options");
+static const u8 sText_TopBar_Main[]         = _("Game Rules");
+static const u8 sText_TopBar_Main_Right[]   = _("{R_BUTTON} Options");
+static const u8 sText_TopBar_Custom[]       = _("Game Options");
+static const u8 sText_TopBar_Custom_Left[]  = _("{L_BUTTON} Rules");
 static void DrawTopBarText(void)
 {
     FillWindowPixelBuffer(WIN_TOPBAR, PIXEL_FILL(0));
     switch (sOptions->submenu)
     {
-        case MENU_MAIN:
+        case MENU_MODE:
             DrawCenteredText(WIN_TOPBAR, sText_TopBar_Main, 1, wTextColors[1], 240);
-            AddTextPrinterParameterized3(WIN_TOPBAR, FONT_SMALL, 188, 1, wTextColors[1], 0, sText_TopBar_Main_Right);
+            AddTextPrinterParameterized3(WIN_TOPBAR, FONT_SMALL, 185, 1, wTextColors[1], 0, sText_TopBar_Main_Right);
             break;
-        case MENU_SYSTEM:
+        case MENU_GAMEPLAY:
             DrawCenteredText(WIN_TOPBAR, sText_TopBar_Custom, 1, wTextColors[1], 240);
             AddTextPrinterParameterized3(WIN_TOPBAR, FONT_SMALL, 3, 1, wTextColors[1], 0, sText_TopBar_Custom_Left);
             break;
@@ -565,7 +559,7 @@ static void DrawRightSideChoiceText(const u8 *text, int x, int y, bool8 choosen,
     }
     else
     {
-        colorPtr = wTextColors[1];
+        colorPtr = wTextColors[4];
     }
     AddTextPrinterParameterized4(WIN_OPTIONS, FONT_NORMAL, x, y, 0, 0, colorPtr, TEXT_SKIP_DRAW, text);
 }
@@ -574,13 +568,13 @@ static void DrawChoices(u32 id, int y) //right side draw function
 {
     switch (sOptions->submenu)
     {
-        case MENU_MAIN:
+        case MENU_MODE:
             if (sItemFunctionsMain[id].drawChoices != NULL)
-                sItemFunctionsMain[id].drawChoices(sOptions->sel[id], y);
+                sItemFunctionsMain[id].drawChoices(sOptions->sel_mode[id], y);
             break;
-        case MENU_SYSTEM:
+        case MENU_GAMEPLAY:
             if (sItemFunctionsCustom[id].drawChoices != NULL)
-                sItemFunctionsCustom[id].drawChoices(sOptions->sel_custom[id], y);
+                sItemFunctionsCustom[id].drawChoices(sOptions->sel_gameplay[id], y);
             break;
     }
 }
@@ -631,7 +625,7 @@ static bool8 OptionsMenu_LoadGraphics(void) // Load all the tilesets, tilemaps, 
     return FALSE;
 }
 
-void CB2_InitOptionPlusMenu(void)
+void CB2_InitNGOptionPlusMenu(void)
 {
     u32 i;
     switch (gMain.state)
@@ -699,27 +693,35 @@ void CB2_InitOptionPlusMenu(void)
             gMain.state++;
             break;
         case 5:
-            //LoadPalette(sOptionMenuText_Pal, 16, sizeof(sOptionMenuText_Pal)); //Added palette to the tiles.png
+            //Don't need the palette that was here
             gMain.state++;
             break;
         case 6:
-            
-            sOptions->sel[MENUITEM_MAIN_DIFFICULTY]         = gSaveBlock2Ptr->w_opDifficulty;
-            sOptions->sel[MENUITEM_MAIN_BATTLESTYLE]        = gSaveBlock2Ptr->optionsBattleStyle;
-            sOptions->sel[MENUITEM_MAIN_MATCHCALL]          = gSaveBlock2Ptr->w_opMatchCall;
-            sOptions->sel[MENUITEM_MAIN_CATCHMODE]          = gSaveBlock2Ptr->w_opCatchMode;
-            sOptions->sel[MENUITEM_MAIN_BALLPROMPT]         = gSaveBlock2Ptr->w_opBallPrompt;
-            sOptions->sel[MENUITEM_MAIN_AUTORUN]            = gSaveBlock2Ptr->w_opAutoRun;
-            sOptions->sel[MENUITEM_MAIN_BOXMODE]            = gSaveBlock2Ptr->w_opBoxMode;
-            
-            sOptions->sel_custom[MENUITEM_SYSTEM_TEXTSPEED]     = gSaveBlock2Ptr->optionsTextSpeed;
-            sOptions->sel_custom[MENUITEM_SYSTEM_BATTLESCENE]   = gSaveBlock2Ptr->optionsBattleSceneOff;
-            sOptions->sel_custom[MENUITEM_SYSTEM_SOUND]         = gSaveBlock2Ptr->optionsSound;
-            sOptions->sel_custom[MENUITEM_SYSTEM_BUTTONMODE]    = gSaveBlock2Ptr->optionsButtonMode;
-            sOptions->sel_custom[MENUITEM_SYSTEM_FONT]          = gSaveBlock2Ptr->w_opFontType;
-            sOptions->sel_custom[MENUITEM_SYSTEM_FRAMETYPE]     = gSaveBlock2Ptr->optionsWindowFrameType;
+            gSaveBlock1Ptr->wx_ShinyChance              =       1;
+            gSaveBlock1Ptr->wx_LevelCap                 =       0;
+            gSaveBlock1Ptr->wx_ExpMulti                 =       0;
+            gSaveBlock1Ptr->wx_CatchRate                =       0;
+            gSaveBlock1Ptr->wx_TrainerItemUse           =       0;
+            gSaveBlock1Ptr->wx_PlayerItemUse            =       0;
+            gSaveBlock1Ptr->wx_UnlimitedWT              =       0;
 
-            sOptions->submenu = MENU_MAIN;
+            sOptions->sel_mode[MENUITEM_MODE_SHINYCHANCE]               = gSaveBlock1Ptr->wx_ShinyChance;
+            sOptions->sel_mode[MENUITEM_MODE_LEVELCAP]                  = gSaveBlock1Ptr->wx_LevelCap;
+            sOptions->sel_mode[MENUITEM_MODE_EXPMULT]                   = gSaveBlock1Ptr->wx_ExpMulti;
+            sOptions->sel_mode[MENUITEM_MODE_CATCHRATE]                 = gSaveBlock1Ptr->wx_CatchRate;
+            sOptions->sel_mode[MENUITEM_MODE_TRAINERSUSEITEMS]          = gSaveBlock1Ptr->wx_TrainerItemUse;
+            sOptions->sel_mode[MENUITEM_MODE_PLAYERUSEITEMS]            = gSaveBlock1Ptr->wx_PlayerItemUse;
+            sOptions->sel_mode[MENUITEM_MODE_UNLIMITEDWT]               = gSaveBlock1Ptr->wx_UnlimitedWT;
+
+
+            sOptions->sel_gameplay[MENUITEM_GAMEPLAY_DIFFICULTY]         = gSaveBlock2Ptr->w_opDifficulty;
+            sOptions->sel_gameplay[MENUITEM_GAMEPLAY_BATTLESTYLE]        = gSaveBlock2Ptr->optionsBattleStyle;
+            sOptions->sel_gameplay[MENUITEM_GAMEPLAY_MATCHCALL]          = gSaveBlock2Ptr->w_opMatchCall;
+            sOptions->sel_gameplay[MENUITEM_GAMEPLAY_CATCHMODE]          = gSaveBlock2Ptr->w_opCatchMode;
+            sOptions->sel_gameplay[MENUITEM_GAMEPLAY_BALLPROMPT]         = gSaveBlock2Ptr->w_opBallPrompt;
+            sOptions->sel_gameplay[MENUITEM_GAMEPLAY_BOXMODE]            = gSaveBlock2Ptr->w_opBoxMode;
+
+            sOptions->submenu = MENU_MODE;
 
             gMain.state++;
             break;
@@ -741,7 +743,7 @@ void CB2_InitOptionPlusMenu(void)
         case 10:
             CreateTask(Task_OptionMenuFadeIn, 0);
             
-            sOptions->arrowTaskId = AddScrollIndicatorArrowPairParameterized(SCROLL_ARROW_UP, 240 / 2, 20, 110, MENUITEM_MAIN_COUNT - 1, 110, 110, 0);
+            sOptions->arrowTaskId = AddScrollIndicatorArrowPairParameterized(SCROLL_ARROW_UP, 240 / 2, 20, 110, MENUITEM_MODE_COUNT - 1, 110, 110, 0);
             
 
             for (i = 0; i < min(OPTIONS_ON_SCREEN, MenuItemCount()); i++)
@@ -795,16 +797,23 @@ static void Task_OptionMenuProcessInput(u8 taskId)
     u8 optionsToDraw = min(OPTIONS_ON_SCREEN , MenuItemCount());
     if (JOY_NEW(A_BUTTON))
     {
-        if (sOptions->menuCursor[sOptions->submenu] == MenuItemCancel())
+        if (sOptions->submenu == MENU_MODE && sOptions->menuCursor[sOptions->submenu] == MENUITEM_MODE_NEXT)
+        {
+            PlaySE(SE_SELECT);
+            sOptions->submenu = MENU_GAMEPLAY;
+            sOptions->menuCursor[sOptions->submenu] = 0;
+            sOptions->visibleCursor[sOptions->submenu] = 0;
+            
+            DrawTopBarText();
+            ReDrawAll();
+            HighlightOptionMenuItem();
+            DrawDescriptionText();
+        }
+        else if (sOptions->submenu == MENU_GAMEPLAY && sOptions->menuCursor[sOptions->submenu] == MENUITEM_GAMEPLAY_SAVE)
         {
             PlaySE(SE_PC_ON);
-            gTasks[taskId].func = Task_OptionMenuSave;
+            gTasks[taskId].func = Task_NGOptionMenuSave;
         }
-    }
-    else if (JOY_NEW(B_BUTTON))
-    {
-        PlaySE(SE_PC_ON);
-        gTasks[taskId].func = Task_OptionMenuSave;
     }
     else if (JOY_NEW(DPAD_UP))
     {
@@ -862,47 +871,50 @@ static void Task_OptionMenuProcessInput(u8 taskId)
     }
     else if (JOY_NEW(DPAD_LEFT | DPAD_RIGHT))
     {
-        PlaySE(SE_CLICK);
-        if (sOptions->submenu == MENU_MAIN)
+        if (sOptions->submenu == MENU_MODE)
         {
             int cursor = sOptions->menuCursor[sOptions->submenu];
-            u8 previousOption = sOptions->sel[cursor];
+            u8 previousOption = sOptions->sel_mode[cursor];
             if (CheckConditions(cursor))
             {
                 if (sItemFunctionsMain[cursor].processInput != NULL)
                 {
-                    sOptions->sel[cursor] = sItemFunctionsMain[cursor].processInput(previousOption);
+                    PlaySE(SE_CLICK);
+                    sOptions->sel_mode[cursor] = sItemFunctionsMain[cursor].processInput(previousOption);
                     ReDrawAll();
                     DrawDescriptionText();
                 }
 
-                if (previousOption != sOptions->sel[cursor])
+                if (previousOption != sOptions->sel_mode[cursor])
                     DrawChoices(cursor, sOptions->visibleCursor[sOptions->submenu] * Y_DIFF);
             }
         }
-        else if (sOptions->submenu == MENU_SYSTEM)
+        else if (sOptions->submenu == MENU_GAMEPLAY)
         {
             int cursor = sOptions->menuCursor[sOptions->submenu];
-            u8 previousOption = sOptions->sel_custom[cursor];
+            u8 previousOption = sOptions->sel_gameplay[cursor];
             if (CheckConditions(cursor))
             {
                 if (sItemFunctionsCustom[cursor].processInput != NULL)
                 {
-                    sOptions->sel_custom[cursor] = sItemFunctionsCustom[cursor].processInput(previousOption);
+                    PlaySE(SE_CLICK);
+                    sOptions->sel_gameplay[cursor] = sItemFunctionsCustom[cursor].processInput(previousOption);
                     ReDrawAll();
                     DrawDescriptionText();
                 }
 
-                if (previousOption != sOptions->sel_custom[cursor])
+                if (previousOption != sOptions->sel_gameplay[cursor])
                     DrawChoices(cursor, sOptions->visibleCursor[sOptions->submenu] * Y_DIFF);
             }
         }
     }
     else if (JOY_NEW(R_BUTTON))
     {
-        PlaySE(SE_SELECT);
-        if (sOptions->submenu != MENU_SYSTEM)
+        if (sOptions->submenu != MENU_GAMEPLAY)
+        {
+            PlaySE(SE_SELECT);
             sOptions->submenu++;
+        }
 
         DrawTopBarText();
         ReDrawAll();
@@ -913,7 +925,10 @@ static void Task_OptionMenuProcessInput(u8 taskId)
     {
         PlaySE(SE_SELECT);
         if (sOptions->submenu != 0)
+        {
+            PlaySE(SE_SELECT);
             sOptions->submenu--;
+        }
         
         DrawTopBarText();
         ReDrawAll();
@@ -922,22 +937,22 @@ static void Task_OptionMenuProcessInput(u8 taskId)
     }
 }
 
-static void Task_OptionMenuSave(u8 taskId)
+static void Task_NGOptionMenuSave(u8 taskId)
 {
-    gSaveBlock2Ptr->w_opDifficulty      = sOptions->sel[MENUITEM_MAIN_DIFFICULTY];
-    gSaveBlock2Ptr->optionsBattleStyle  = sOptions->sel[MENUITEM_MAIN_BATTLESTYLE];
-    gSaveBlock2Ptr->w_opMatchCall       = sOptions->sel[MENUITEM_MAIN_MATCHCALL];
-    gSaveBlock2Ptr->w_opCatchMode       = sOptions->sel[MENUITEM_MAIN_CATCHMODE];
-    gSaveBlock2Ptr->w_opBallPrompt      = sOptions->sel[MENUITEM_MAIN_BALLPROMPT];
-    gSaveBlock2Ptr->w_opAutoRun         = sOptions->sel[MENUITEM_MAIN_AUTORUN];
-    gSaveBlock2Ptr->w_opBoxMode         = sOptions->sel[MENUITEM_MAIN_BOXMODE];
+    gSaveBlock2Ptr->w_opDifficulty      = sOptions->sel_gameplay[MENUITEM_GAMEPLAY_DIFFICULTY];
+    gSaveBlock2Ptr->optionsBattleStyle  = sOptions->sel_gameplay[MENUITEM_GAMEPLAY_BATTLESTYLE];
+    gSaveBlock2Ptr->w_opMatchCall       = sOptions->sel_gameplay[MENUITEM_GAMEPLAY_MATCHCALL];
+    gSaveBlock2Ptr->w_opCatchMode       = sOptions->sel_gameplay[MENUITEM_GAMEPLAY_CATCHMODE];
+    gSaveBlock2Ptr->w_opBallPrompt      = sOptions->sel_gameplay[MENUITEM_GAMEPLAY_BALLPROMPT];
+    gSaveBlock2Ptr->w_opBoxMode         = sOptions->sel_gameplay[MENUITEM_GAMEPLAY_BOXMODE];
 
-    gSaveBlock2Ptr->optionsTextSpeed            = sOptions->sel_custom[MENUITEM_SYSTEM_TEXTSPEED];
-    gSaveBlock2Ptr->optionsBattleSceneOff       = sOptions->sel_custom[MENUITEM_SYSTEM_BATTLESCENE];
-    gSaveBlock2Ptr->optionsSound                = sOptions->sel_custom[MENUITEM_SYSTEM_SOUND];
-    gSaveBlock2Ptr->optionsButtonMode           = sOptions->sel_custom[MENUITEM_SYSTEM_BUTTONMODE];
-    gSaveBlock2Ptr->w_opFontType                = sOptions->sel_custom[MENUITEM_SYSTEM_FONT];
-    gSaveBlock2Ptr->optionsWindowFrameType      = sOptions->sel_custom[MENUITEM_SYSTEM_FRAMETYPE];
+    gSaveBlock1Ptr->wx_ShinyChance      = sOptions->sel_mode[MENUITEM_MODE_SHINYCHANCE];
+    gSaveBlock1Ptr->wx_LevelCap         = sOptions->sel_mode[MENUITEM_MODE_LEVELCAP];
+    gSaveBlock1Ptr->wx_ExpMulti         = sOptions->sel_mode[MENUITEM_MODE_EXPMULT];
+    gSaveBlock1Ptr->wx_CatchRate        = sOptions->sel_mode[MENUITEM_MODE_CATCHRATE];
+    gSaveBlock1Ptr->wx_TrainerItemUse   = sOptions->sel_mode[MENUITEM_MODE_TRAINERSUSEITEMS];
+    gSaveBlock1Ptr->wx_PlayerItemUse    = sOptions->sel_mode[MENUITEM_MODE_PLAYERUSEITEMS];
+    gSaveBlock1Ptr->wx_UnlimitedWT      = sOptions->sel_mode[MENUITEM_MODE_UNLIMITEDWT];
 
     BeginNormalPaletteFade(PALETTES_ALL, 0, 0, 0x10, RGB_BLACK);
     gTasks[taskId].func = Task_OptionMenuFadeOut;
@@ -1070,46 +1085,9 @@ static int ProcessInput_Options_Three(int selection)
     return XOptions_ProcessInput(3, selection);
 }
 
-static int ProcessInput_Options_Four(int selection)
+static int ProcessInput_Options_Five(int selection)
 {
-    return XOptions_ProcessInput(4, selection);
-}
-
-// Process Input functions ****SPECIFIC****
-static int ProcessInput_Sound(int selection)
-{
-    if (JOY_NEW(DPAD_LEFT | DPAD_RIGHT))
-    {
-        selection ^= 1;
-        SetPokemonCryStereo(selection);
-    }
-
-    return selection;
-}
-
-static int ProcessInput_FrameType(int selection)
-{
-    if (JOY_NEW(DPAD_RIGHT))
-    {
-        if (selection < WINDOW_FRAMES_COUNT - 1)
-            selection++;
-        else
-            selection = 0;
-
-        LoadBgTiles(1, GetWindowFrameTilesPal(selection)->tiles, 0x120, 0x1A2);
-        LoadPalette(GetWindowFrameTilesPal(selection)->pal, 0x70, 0x20);
-    }
-    if (JOY_NEW(DPAD_LEFT))
-    {
-        if (selection != 0)
-            selection--;
-        else
-            selection = WINDOW_FRAMES_COUNT - 1;
-
-        LoadBgTiles(1, GetWindowFrameTilesPal(selection)->tiles, 0x120, 0x1A2);
-        LoadPalette(GetWindowFrameTilesPal(selection)->pal, 0x70, 0x20);
-    }
-    return selection;
+    return XOptions_ProcessInput(5, selection);
 }
 
 // Draw Choices functions ****GENERIC****
@@ -1122,19 +1100,19 @@ static void DrawOptionMenuChoice(const u8 *text, u8 x, u8 y, u8 style, bool8 act
     DrawRightSideChoiceText(text, x, y+1, choosen, active);
 }
 
-static void DrawChoices_Options_Four(const u8 *const *const strings, int selection, int y, bool8 active)
+static void DrawChoices_Options_Five(const u8 *const *const strings, int selection, int y, bool8 active)
 {
     static const u8 choiceOrders[][3] =
     {
         {0, 1, 2},
         {0, 1, 2},
         {1, 2, 3},
-        {1, 2, 3},
+        {2, 3, 4},
+        {2, 3, 4},
     };
-    u8 styles[4] = {0};
+    u8 styles[5] = {0};
     int xMid;
     const u8 *order = choiceOrders[selection];
-
     styles[selection] = 1;
     xMid = GetMiddleX(strings[order[0]], strings[order[1]], strings[order[2]]);
 
@@ -1172,13 +1150,100 @@ static void ReDrawAll(void)
     }
     CopyWindowToVram(WIN_OPTIONS, COPYWIN_GFX);
 }
+
+//Gamemode Draw Choices
+static const u8 sText_ShinyChance_8192[]   = _("8192");
+static const u8 sText_ShinyChance_4096[]   = _("4096");
+static const u8 sText_ShinyChance_2048[]   = _("2048");
+static const u8 sText_ShinyChance_1024[]   = _("1024");
+static const u8 sTexts_ShinyChance_512[]    = _("512");
+static const u8 *const sText_ShinyChance_Strings[] = {sText_ShinyChance_8192,  sText_ShinyChance_4096,  sText_ShinyChance_2048,  sText_ShinyChance_1024,  sTexts_ShinyChance_512};
+static void DrawChoices_ShinyChance(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_SHINYCHANCE);
+    DrawChoices_Options_Five(sText_ShinyChance_Strings, selection, y, active);
+}
+
+static const u8 sText_LevelCapOff[] = _("Off");
+static const u8 sText_LevelCapSoft[] = _("Soft");
+static const u8 sText_LevelCapHard[] = _("Hard"); //WORPTodo: Implement
+static void DrawChoices_LevelCap(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_LEVELCAP);
+    u8 styles[2] = {0};
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(sText_LevelCapOff, 104, y, styles[0], active);
+    DrawOptionMenuChoice(sText_LevelCapSoft, GetStringRightAlignXOffset(FONT_NORMAL, sText_LevelCapSoft, 198), y, styles[1], active);
+}
+static const u8 sText_ExpMult10[] = _("x1.0");
+static const u8 sText_ExpMult15[] = _("x1.5");
+static const u8 sText_ExpMult20[] = _("x2.0");
+static void DrawChoices_ExpMult(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_EXPMULT);
+    u8 styles[3] = {0};
+    int xMid = GetMiddleX(sText_ExpMult10, sText_ExpMult15, sText_ExpMult20);
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(sText_ExpMult10, 104, y, styles[0], active);
+    DrawOptionMenuChoice(sText_ExpMult15, xMid, y, styles[1], active);
+    DrawOptionMenuChoice(sText_ExpMult20, GetStringRightAlignXOffset(1, sText_ExpMult20, 198), y, styles[2], active);
+}
+static const u8 sText_CatchRateNormal[] = _("x1.0");
+static const u8 sText_CatchRateEasy[] = _("x2.0");
+static const u8 sText_CatchRateEasiest[] = _("x3.0");
+static void DrawChoices_CatchRate(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_EXPMULT);
+    u8 styles[3] = {0};
+    int xMid = GetMiddleX(sText_CatchRateNormal, sText_CatchRateEasy, sText_CatchRateEasiest);
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(sText_CatchRateNormal, 104, y, styles[0], active);
+    DrawOptionMenuChoice(sText_CatchRateEasy, xMid, y, styles[1], active);
+    DrawOptionMenuChoice(sText_CatchRateEasiest, GetStringRightAlignXOffset(1, sText_CatchRateEasiest, 198), y, styles[2], active);
+}
+static const u8 sText_TrainerUseItems[] = _("Yes");
+static const u8 sText_TrainerNoUseItemsOn[] = _("No");
+static void DrawChoices_TrainerUseItems(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_TRAINERSUSEITEMS);
+    u8 styles[2] = {0};
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(sText_TrainerUseItems, 104, y, styles[0], active);
+    DrawOptionMenuChoice(sText_TrainerNoUseItemsOn, GetStringRightAlignXOffset(FONT_NORMAL, sText_TrainerNoUseItemsOn, 198), y, styles[1], active);
+}
+static const u8 sText_PlayerUseItems[] = _("Yes");
+static const u8 sText_PlayerNoUseItemsOn[] = _("No");
+static void DrawChoices_PlayerUseItems(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_PLAYERUSEITEMS);
+    u8 styles[2] = {0};
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(sText_PlayerUseItems, 104, y, styles[0], active);
+    DrawOptionMenuChoice(sText_PlayerNoUseItemsOn, GetStringRightAlignXOffset(FONT_NORMAL, sText_PlayerNoUseItemsOn, 198), y, styles[1], active);
+}
+static const u8 sText_WT_Limit[] = _("Yes");
+static const u8 sText_WT_NoLimit[] = _("No");
+static void DrawChoices_UnlimitedWT(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_UNLIMITEDWT);
+    u8 styles[2] = {0};
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(sText_WT_Limit, 104, y, styles[0], active);
+    DrawOptionMenuChoice(sText_WT_NoLimit, GetStringRightAlignXOffset(FONT_NORMAL, sText_WT_NoLimit, 198), y, styles[1], active);
+}
 //Gameplay Draw Choices
 static const u8 sText_DifficultyEasy[] = _("Easy");
 static const u8 sText_DifficultyNorm[] = _("Normal");
 static const u8 sText_DifficultyHard[] = _("Hard");
 static void DrawChoices_Difficulty(int selection, int y)
 {
-    bool8 active = CheckConditions(MENUITEM_MAIN_DIFFICULTY);
+    bool8 active = CheckConditions(MENUITEM_GAMEPLAY_DIFFICULTY);
     u8 styles[3] = {0};
     int xMid = GetMiddleX(sText_DifficultyEasy, sText_DifficultyNorm, sText_DifficultyHard);
     styles[selection] = 1;
@@ -1192,7 +1257,7 @@ static const u8 sText_BattleStyleShift[] = _("Shift");
 static const u8 sText_BattleStyleSet[] = _("Set");
 static void DrawChoices_BattleStyle(int selection, int y)
 {
-    bool8 active = CheckConditions(MENUITEM_MAIN_BATTLESTYLE);
+    bool8 active = CheckConditions(MENUITEM_GAMEPLAY_BATTLESTYLE);
     u8 styles[2] = {0};
     styles[selection] = 1;
 
@@ -1204,7 +1269,7 @@ static const u8 sText_MatchCallOn[] = _("On");
 static const u8 sText_MatchCallOff[] = _("Off");
 static void DrawChoices_MatchCall(int selection, int y)
 {
-    bool8 active = CheckConditions(MENUITEM_MAIN_MATCHCALL);
+    bool8 active = CheckConditions(MENUITEM_GAMEPLAY_MATCHCALL);
     u8 styles[2] = {0};
     styles[selection] = 1;
 
@@ -1216,7 +1281,7 @@ static const u8 sText_CatchModeOn[] = _("On");
 static const u8 sText_CatchModeOff[] = _("Off");
 static void DrawChoices_CatchMode(int selection, int y)
 {
-    bool8 active = CheckConditions(MENUITEM_MAIN_CATCHMODE);
+    bool8 active = CheckConditions(MENUITEM_GAMEPLAY_CATCHMODE);
     u8 styles[2] = {0};
     styles[selection] = 1;
 
@@ -1228,7 +1293,7 @@ static const u8 sText_BallPromptOn[] = _("On");
 static const u8 sText_BallPromptOff[] = _("Off");
 static void DrawChoices_BallPrompt(int selection, int y)
 {
-    bool8 active = CheckConditions(MENUITEM_MAIN_BALLPROMPT);
+    bool8 active = CheckConditions(MENUITEM_GAMEPLAY_BALLPROMPT);
     u8 styles[2] = {0};
     styles[selection] = 1;
 
@@ -1236,125 +1301,16 @@ static void DrawChoices_BallPrompt(int selection, int y)
     DrawOptionMenuChoice(sText_BallPromptOn, GetStringRightAlignXOffset(1, sText_BallPromptOn, 198), y, styles[1], active);
 }
 
-static const u8 sText_AutoRunOn[] = _("On");
-static const u8 sText_AutoRunOff[] = _("Off");
-static void DrawChoices_AutoRun(int selection, int y)
-{
-    bool8 active = CheckConditions(MENUITEM_MAIN_AUTORUN);
-    u8 styles[2] = {0};
-    styles[selection] = 1;
-
-    DrawOptionMenuChoice(sText_AutoRunOff, 104, y, styles[0], active);
-    DrawOptionMenuChoice(sText_AutoRunOn, GetStringRightAlignXOffset(1, sText_AutoRunOn, 198), y, styles[1], active);
-}
-
 static const u8 sText_BoxModeClassic[] = _("Classic");
 static const u8 sText_BoxModeModern[] = _("Modern");
 static void DrawChoices_BoxMode(int selection, int y)
 {
-    bool8 active = CheckConditions(MENUITEM_MAIN_BOXMODE);
+    bool8 active = CheckConditions(MENUITEM_GAMEPLAY_BOXMODE);
     u8 styles[2] = {0};
     styles[selection] = 1;
 
     DrawOptionMenuChoice(sText_BoxModeClassic, 104, y, styles[0], active);
     DrawOptionMenuChoice(sText_BoxModeModern, GetStringRightAlignXOffset(1, sText_BoxModeModern, 198), y, styles[1], active);
-}
-
-// System Draw Choices
-static const u8 sText_TextSpeedSlow[] = _("Slow");
-static const u8 sText_TextSpeedMid[] = _("Mid");
-static const u8 sText_TextSpeedFast[] = _("Fast");
-static const u8 sText_TextSpeedInstant[] = _("Instant");
-static const u8 *const sTextSpeedStrings[] = {sText_TextSpeedSlow, sText_TextSpeedMid, sText_TextSpeedFast, sText_TextSpeedInstant};
-static void DrawChoices_TextSpeed(int selection, int y)
-{
-    bool8 active = CheckConditions(MENUITEM_SYSTEM_TEXTSPEED);
-    DrawChoices_Options_Four(sTextSpeedStrings, selection, y, active);
-}
-
-static const u8 sText_BattleSceneOn[] = _("On");
-static const u8 sText_BattleSceneOff[] = _("Off");
-static void DrawChoices_BattleScene(int selection, int y)
-{
-    bool8 active = CheckConditions(MENUITEM_SYSTEM_BATTLESCENE);
-    u8 styles[2] = {0};
-    styles[selection] = 1;
-
-    DrawOptionMenuChoice(sText_BattleSceneOn, 104, y, styles[0], active);
-    DrawOptionMenuChoice(sText_BattleSceneOff, GetStringRightAlignXOffset(FONT_NORMAL, sText_BattleSceneOff, 198), y, styles[1], active);
-}
-
-static const u8 sText_SoundMono[] = _("Mono");
-static const u8 sText_SoundStereo[] = _("Stereo");
-static void DrawChoices_Sound(int selection, int y)
-{
-    bool8 active = CheckConditions(MENUITEM_SYSTEM_SOUND);
-    u8 styles[2] = {0};
-    styles[selection] = 1;
-
-    DrawOptionMenuChoice(sText_SoundMono, 104, y, styles[0], active);
-    DrawOptionMenuChoice(sText_SoundStereo, GetStringRightAlignXOffset(FONT_NORMAL, sText_SoundStereo, 198), y, styles[1], active);
-}
-
-static const u8 sText_ButtonTypeNormal[] = _("Normal");
-static const u8 sText_ButtonTypeLR[] = _("LR");
-static const u8 sText_ButtonTypeLEqualsA[] = _("L=A");
-static void DrawChoices_ButtonMode(int selection, int y)
-{
-    bool8 active = CheckConditions(MENUITEM_SYSTEM_BUTTONMODE);
-    u8 styles[3] = {0};
-    int xMid = GetMiddleX(sText_ButtonTypeNormal, sText_ButtonTypeLR, sText_ButtonTypeLEqualsA);
-    styles[selection] = 1;
-
-    DrawOptionMenuChoice(sText_ButtonTypeNormal, 104, y, styles[0], active);
-    DrawOptionMenuChoice(sText_ButtonTypeLR, xMid, y, styles[1], active);
-    DrawOptionMenuChoice(sText_ButtonTypeLEqualsA, GetStringRightAlignXOffset(1, sText_ButtonTypeLEqualsA, 198), y, styles[2], active);
-}
-
-static const u8 sText_OptionFontRSE[] = _("RSE");
-static const u8 sText_OptionFontFRLG[] = _("FRLG");
-static void DrawChoices_Font(int selection, int y)
-{
-    bool8 active = CheckConditions(MENUITEM_SYSTEM_FONT);
-    u8 styles[2] = {0};
-    styles[selection] = 1;
-
-    DrawOptionMenuChoice(sText_OptionFontRSE, 104, y, styles[0], active);
-    DrawOptionMenuChoice(sText_OptionFontFRLG, GetStringRightAlignXOffset(1, sText_OptionFontFRLG, 198), y, styles[1], active);
-}
-
-static const u8 sText_FrameTypeNumber[] = _(" ");
-static const u8 sText_FrameType[] = _("Type");
-static void DrawChoices_FrameType(int selection, int y)
-{
-    bool8 active = CheckConditions(MENUITEM_SYSTEM_FRAMETYPE);
-    u8 text[16];
-    u8 n = selection + 1;
-    u16 i;
-
-    for (i = 0; sText_FrameTypeNumber[i] != EOS && i <= 5; i++)
-        text[i] = sText_FrameTypeNumber[i];
-
-    // Convert a number to decimal string
-    if (n / 10 != 0)
-    {
-        text[i] = n / 10 + CHAR_0;
-        i++;
-        text[i] = n % 10 + CHAR_0;
-        i++;
-    }
-    else
-    {
-        text[i] = n % 10 + CHAR_0;
-        i++;
-        text[i] = 0x77;
-        i++;
-    }
-
-    text[i] = EOS;
-
-    DrawOptionMenuChoice(sText_FrameType, 104, y, 0, active);
-    DrawOptionMenuChoice(text, 128, y, 1, active);
 }
 
 // Background tilemap
