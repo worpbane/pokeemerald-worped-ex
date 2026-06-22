@@ -37,7 +37,9 @@ gText_Birch_BoyOrGirl::
 
 gText_Birch_WhatsYourName::
 	.string "All right.\n"
-	.string "What's your name?$"
+	.string "What's your name?\p"
+	.string "And how do you see your\n"
+	.string "journey going?$"
 
 gText_Birch_SoItsPlayer::
 	.string "So it's {PLAYER}{KUN}?$"
@@ -47,12 +49,6 @@ gText_Birch_YourePlayer::
 	.string "You're {PLAYER}{KUN} who's moving to my\n"
 	.string "hometown of Littleroot.\l"
 	.string "I get it now!\p"
-	.string "$"
-
-gText_Birch_SetOptions::
-	.string "One last thing before you go!\p"
-	.string "Let's set some expectations\n"
-	.string "for what's to come.\p"
 	.string "$"
 
 gText_Birch_AreYouReady::
