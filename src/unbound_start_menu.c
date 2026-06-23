@@ -3,6 +3,7 @@
 #include "battle_pyramid.h"
 #include "battle_pyramid_bag.h"
 #include "bg.h"
+#include "config/debug.h"
 #include "constants/battle_pyramid.h"
 #include "constants/characters.h"
 #include "constants/field_weather.h"
@@ -785,6 +786,7 @@ static bool32 Usm_IsItemAvailable(enum Usm_Icons item)
         case USM_ICO_POKENAV: return FlagGet(FLAG_SYS_POKENAV_GET);
         case USM_ICO_FRONTIER_RETIRE: return IsPlayerInBattlePyramid();
         case USM_ICO_SAFARI_RETIRE: return FALSE;
+        case USM_ICO_DEBUG: return (DEBUG_OVERWORLD_MENU && DEBUG_OVERWORLD_IN_MENU);
         default: return TRUE;
     }
 
@@ -808,7 +810,9 @@ static void Usm_BuildDefaultMenuItems(void)
     Usm_AddMenuItem(USM_ICO_TRAINER);
     Usm_AddMenuItem(USM_ICO_SAVE);
     Usm_AddMenuItem(USM_ICO_OPTIONS);
-    Usm_AddMenuItem(USM_ICO_DEBUG);
+
+    if (DEBUG_OVERWORLD_MENU && DEBUG_OVERWORLD_IN_MENU)
+        Usm_AddMenuItem(USM_ICO_DEBUG);
 }
 
 static void Usm_BuildVisibleList(void)
