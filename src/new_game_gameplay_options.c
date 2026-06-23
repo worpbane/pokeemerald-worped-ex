@@ -354,7 +354,8 @@ static bool8 CheckConditions(int selection)
 
 //General Strings
 static const u8 sText_Empty[]                   = _("");
-static const u8 sText_Desc_Next[]               = _("Continue to Game Options.\n{COLOR 8}{SHADOW 7}(Game Rules CAN NOT be changed later)");
+//static const u8 sText_Desc_Next[]               = _("Continue to Game Options.\n{COLOR 8}{SHADOW 7}(Game Rules CAN NOT be changed later)");
+static const u8 sText_Desc_Next[]               = _("Continue to Game Options.\n{COLOR 8}{SHADOW 7}(Game Rules NOT implemented atm)");
 static const u8 sText_Desc_Save[]               = _("Save your settings and continue.\n{COLOR 12}{SHADOW 11}(Game Options CAN be changed later)");
 
 //System Menu Descriptions
@@ -375,7 +376,7 @@ static const u8 sText_Desc_TrainerUseItemsOn[]  = _("Enemy trainers {COLOR 12}{S
 static const u8 sText_Desc_TrainerUseItemsOff[] = _("Enemy trainers can {COLOR 8}{SHADOW 7}NOT{COLOR 2}{SHADOW 4} use items\nin battle.");
 static const u8 sText_Desc_PlayerUseItemsOn[]   = _("The player {COLOR 12}{SHADOW 11}can{COLOR 2}{SHADOW 4} use items in battle.");
 static const u8 sText_Desc_PlayerUseItemsOff[]  = _("The player {COLOR 8}{SHADOW 7}can NOT{COLOR 2}{SHADOW 4} use items\nin battle.");
-static const u8 sText_Desc_WonderTrade_Limit[]  = _("Enables a daily limit of 3 WonderTrades.\n({COLOR 12}{SHADOW 11}Recommended{COLOR 2}{SHADOW 4})");
+static const u8 sText_Desc_WonderTrade_Limit[]  = _("Enables a daily limit of 3 WonderTrades.\n{COLOR 12}{SHADOW 11}(Recommended){COLOR 2}{SHADOW 4}");
 static const u8 sText_Desc_WonderTrade_Unlimited[]  = _("WonderTrades have no daily limit.");
 
 static const u8 *const sOptionMenuItemDescriptionsMain[MENUITEM_MODE_COUNT][5] =
