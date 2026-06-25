@@ -2618,16 +2618,27 @@ static const u8 sDefaultDynamicWeathers[] =
     WEATHER_DROUGHT,
 };
 
-/*static const u8 sDynamicWeathers_DewfordTown[] =
+static const u8 sDynamicWeathers_StarterAreaTest[] =
 {
     WEATHER_SUNNY,
     WEATHER_RAIN,
     WEATHER_RAIN_THUNDERSTORM,
-};*/
+};
+
+static const u8 sDynamicWeathers_Littleroot[] =
+{
+    WEATHER_SUNNY,
+    WEATHER_RAIN,
+};
 
 static const struct DynamicWeatherPool sDynamicWeatherPools[] =
 {
-    /*{ MAPSEC_DEWFORD_TOWN, DYNAMIC_WEATHER_POOL(sDynamicWeathers_DewfordTown) },*/
+    { MAPSEC_LITTLEROOT_TOWN, DYNAMIC_WEATHER_POOL(sDynamicWeathers_Littleroot) },
+    { MAPSEC_ROUTE_101, DYNAMIC_WEATHER_POOL(sDynamicWeathers_StarterAreaTest) },
+    { MAPSEC_OLDALE_TOWN, DYNAMIC_WEATHER_POOL(sDynamicWeathers_StarterAreaTest) },
+    { MAPSEC_ROUTE_103, DYNAMIC_WEATHER_POOL(sDynamicWeathers_StarterAreaTest) },
+    { MAPSEC_ROUTE_102, DYNAMIC_WEATHER_POOL(sDynamicWeathers_StarterAreaTest) },
+    { MAPSEC_PETALBURG_CITY, DYNAMIC_WEATHER_POOL(sDynamicWeathers_StarterAreaTest) },
 };
 
 static const u8 *GetDynamicWeatherPool(u8 *count)
