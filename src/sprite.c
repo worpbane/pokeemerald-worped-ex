@@ -89,6 +89,7 @@ static void ApplyAffineAnimFrame(u8 matrixNum, struct AffineAnimFrameCmd *frameC
 static void AllocSpriteTileRange(u16 tag, u16 start, u16 count);
 static void DoLoadSpritePalette(const u16 *src, u16 paletteOffset);
 static void UpdateSpriteMatrixAnchorPos(struct Sprite *, s32, s32);
+static bool8 AddObjWinMaskToOamBuffer(struct Sprite *sprite, u8 *oamIndex);
 
 typedef void (*AnimFunc)(struct Sprite *);
 typedef void (*AnimCmdFunc)(struct Sprite *);
@@ -1749,11 +1750,29 @@ bool8 AddSpriteToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
     {
         gMain.oamBuffer[*oamIndex] = sprite->oam;
         (*oamIndex)++;
+        if (sprite->objWinMask)
+            return AddObjWinMaskToOamBuffer(sprite, oamIndex);
         return 0;
     }
     else
     {
         return AddSubspritesToOamBuffer(sprite, &gMain.oamBuffer[*oamIndex], oamIndex);
+    }
+}
+
+static bool8 AddObjWinMaskToOamBuffer(struct Sprite *sprite, u8 *oamIndex)
+{
+    if (*oamIndex >= gOamLimit)
+    {
+        return 1;
+    }
+
+    else
+    {
+        struct OamData oam = sprite->oam;
+        oam.objMode = ST_OAM_OBJ_WINDOW;
+        gMain.oamBuffer[(*oamIndex)++] = oam;
+        return 0;
     }
 }
 
