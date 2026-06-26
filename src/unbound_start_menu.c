@@ -38,6 +38,7 @@
 #include "palette.h"
 #include "party_menu.h"
 #include "pokedex.h"
+#include "pokenav.h"
 #include "rtc.h"
 #include "safari_zone.h"
 #include "save_dialog.h"
@@ -56,16 +57,18 @@
 
 typedef bool8 (*Usm_MenuCB)(void) ;
 
-#define USM_MAX_ICON_COUNT 6
-#define USM_ICON_WIDTH 32
+#define USM_MAX_ICON_COUNT 7
+#define USM_ICON_WIDTH 30
 #define USM_BANNER_WIDTH 224
 #define USM_ICON_YPOS 128
 
 enum Usm_IconTiletags {
     USM_TILETAG_POKEDEX = 0x1000,
     USM_TILETAG_PARTY,
-    USM_TILETAG_BAG,
+    USM_TILETAG_BAGM,
+    USM_TILETAG_BAGF,
     USM_TILETAG_POKENAV,
+    USM_TILETAG_DEXNAV,
     USM_TILETAG_TRAINER,
     USM_TILETAG_SAVE,
     USM_TILETAG_OPTIONS,
@@ -100,8 +103,7 @@ struct Usm_State {
     u8 loadState;
     u8 selectedIcon;
     u8 windowCount;
-    u8 page;
-    u8 pageCount;
+    u8 scrollOffset;
     u8 items[USM_ICO_COUNT];
     u8 itemCount;
     struct Usm_VisibleIcons visible;
@@ -126,8 +128,10 @@ struct Usm_MenuItem {
 static const u32 sPokedexIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconPokedex.png", ".4bpp.smol");
 static const u16 sIconPal[] = INCGFX_U16("graphics/unbound_start_menu/usm_iconPokedex.png", ".gbapal");
 static const u32 sPartyIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconParty.png", ".4bpp.smol");
-static const u32 sBagIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconBag.png", ".4bpp.smol");
+static const u32 sBagMIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconBagM.png", ".4bpp.smol");
+static const u32 sBagFIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconBagF.png", ".4bpp.smol");
 static const u32 sPokenavIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconPokenav.png", ".4bpp.smol");
+static const u32 sDexnavIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconDexnav.png", ".4bpp.smol");
 static const u32 sTrainerIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconTrainer.png", ".4bpp.smol");
 static const u32 sSaveIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconSave.png", ".4bpp.smol");
 static const u32 sOptionsIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconOptions.png", ".4bpp.smol");
@@ -223,8 +227,10 @@ static const union AffineAnimCmd* const sIconAffineAnimTable[] = {
 
 ICON_TEMPLATE(POKEDEX, Pokedex)
 ICON_TEMPLATE(PARTY, Party)
-ICON_TEMPLATE(BAG, Bag)
+ICON_TEMPLATE(BAGM, BagM)
+ICON_TEMPLATE(BAGF, BagF)
 ICON_TEMPLATE(POKENAV, Pokenav)
+ICON_TEMPLATE(DEXNAV, Dexnav)
 ICON_TEMPLATE(TRAINER, Trainer)
 ICON_TEMPLATE(SAVE, Save)
 ICON_TEMPLATE(OPTIONS, Options)
@@ -237,7 +243,7 @@ static const struct SpritePalette sSpritePalette_Icons = {.data = sIconPal, .tag
 static EWRAM_DATA struct Usm_Memory* sUsmMemory;
 static EWRAM_DATA struct Usm_State* sUsmState;
 static EWRAM_DATA u8 sUsmSavedIcon = 0;
-static EWRAM_DATA u8 sUsmSavedPage = 0;
+static EWRAM_DATA u8 sUsmSavedScrollOffset = 0;
 
 // Tasks
 static void Task_UsmHandleMainInput(u8 taskId);
@@ -259,12 +265,9 @@ static void Usm_PrintClockText();
 static void Usm_PrintButtonHints();
 static void Usm_AnimateSelectedIcon(void);
 static struct Sprite* Usm_GetIconSprite(u8 iconId);
-static void Usm_SwitchPage(s8 pageNum);
 static void Usm_ExitStartMenu(void);
 static u32 Usm_ReadKeys(void);
-static void Usm_SwitchSelectedIcon(enum Usm_Icons iconId);
 static void Usm_HandleDPadInput(u8 input);
-static enum Usm_Icons Usm_GetNextIcon(s8 change);
 static void GetCurrentDateTime(struct DateTime* dateTime);
 static void BuildDateTimeString(void);
 static void Usm_BuildMenuItems(void);
@@ -275,7 +278,6 @@ static void Usm_MoveItem(s8 dir);
 static void Usm_RedrawIcons(bool32 startAffine);
 static void Usm_DestroyVisibleIcons(void);
 static void Usm_StartIconAnim(u8 iconId);
-static void Usm_StopIconAnim(u8 iconId);
 static void Usm_SaveItems(void);
 static bool32 Usm_IsItemAvailable(enum Usm_Icons item);
 static bool32 IsPlayerInBattlePyramid(void);
@@ -311,15 +313,24 @@ static const struct Usm_MenuItem sUsmMenuItems[USM_ICO_COUNT] = {
             .iconId = USM_ICO_PARTY,
             .template = &sSpriteTemplate_Party,
             .sheet = &sSpriteSheet_Party,
-            .label = COMPOUND_STRING("Party"),
+            .label = COMPOUND_STRING("Pokémon"),
             .shouldFade = TRUE,
             .callback = StartMenuPokemonCallback,
         },
-    [USM_ICO_BAG] =
+    [USM_ICO_BAGM] =
         {
-            .iconId = USM_ICO_BAG,
-            .template = &sSpriteTemplate_Bag,
-            .sheet = &sSpriteSheet_Bag,
+            .iconId = USM_ICO_BAGM,
+            .template = &sSpriteTemplate_BagM,
+            .sheet = &sSpriteSheet_BagM,
+            .label = COMPOUND_STRING("Bag"),
+            .shouldFade = TRUE,
+            .callback = StartMenuBagCallback,
+        },
+    [USM_ICO_BAGF] =
+        {
+            .iconId = USM_ICO_BAGF,
+            .template = &sSpriteTemplate_BagF,
+            .sheet = &sSpriteSheet_BagF,
             .label = COMPOUND_STRING("Bag"),
             .shouldFade = TRUE,
             .callback = StartMenuBagCallback,
@@ -332,6 +343,15 @@ static const struct Usm_MenuItem sUsmMenuItems[USM_ICO_COUNT] = {
             .label = COMPOUND_STRING("PokéNav"),
             .shouldFade = TRUE,
             .callback = StartMenuPokeNavCallback,
+        },
+    [USM_ICO_DEXNAV] =
+        {
+            .iconId = USM_ICO_DEXNAV,
+            .template = &sSpriteTemplate_Dexnav,
+            .sheet = &sSpriteSheet_Dexnav,
+            .label = COMPOUND_STRING("DexNav"),
+            .shouldFade = TRUE,
+            .callback = StartMenuDexNavCallback,
         },
     [USM_ICO_TRAINER] =
         {
@@ -429,15 +449,21 @@ static bool8 StartMenuBagCallback(void)
         PlayRainStoppingSoundEffect();
         CleanupOverworldWindowsAndTilemaps();
         SetMainCallback2(CB2_BagMenuFromStartMenu); // Display bag menu
-
         return TRUE;
     }
-
     return FALSE;
 }
 
 static bool8 StartMenuPokeNavCallback(void)
 {
+    if (!gPaletteFade.active)
+    {
+        PlayRainStoppingSoundEffect();
+        CleanupOverworldWindowsAndTilemaps();
+        SetMainCallback2(CB2_InitPokeNav); 
+
+        return TRUE;
+    }
     return FALSE;
 }
 
@@ -462,10 +488,11 @@ static bool8 StartMenuPlayerNameCallback(void)
     }
     return FALSE;
 }
+
 static bool8 StartMenuSaveCallback(void)
 {
     sUsmSavedIcon = 0;
-    sUsmSavedPage = 0;
+    sUsmSavedScrollOffset = 0;
     SaveDialog_InitSave();
     LockPlayerFieldControls();
     FreezeObjectEvents();
@@ -518,7 +545,6 @@ static bool8 StartMenuLinkModePlayerNameCallback(void)
 static bool8 StartMenuBattlePyramidRetireCallback(void)
 {
     sUsmSavedIcon = 0;
-    sUsmSavedPage = 0;
     SaveDialog_InitBattlePyramidRetire();
     LockPlayerFieldControls();
     FreezeObjectEvents();
@@ -542,7 +568,6 @@ static bool8 StartMenuBattlePyramidBagCallback(void)
 
 static bool8 StartMenuDebugCallback(void)
 {
-    sUsmSavedPage = 0;
     sUsmSavedIcon = 0;
     Debug_ShowMainMenu();
 
@@ -578,14 +603,9 @@ void Usm_InitStartMenu(void)
 
     sUsmState = &sUsmMemory->state;
 
-    sUsmState->page = sUsmSavedPage;
     sUsmState->selectedIcon = sUsmSavedIcon;
-    sUsmSavedPage = 0;
-    sUsmSavedIcon = 0;
+    sUsmState->scrollOffset = sUsmSavedScrollOffset;
     Usm_BuildMenuItems();
-
-    sUsmState->pageCount =
-        (sUsmState->itemCount + USM_MAX_ICON_COUNT - 1) / USM_MAX_ICON_COUNT;
 
     Usm_LoadBgGfx();
     Usm_SetupWindows();
@@ -620,16 +640,16 @@ static void Usm_PrintClockText()
 {
     u8 winId = sUsmMemory->windowIds[USM_WIN_CLOCK];
     BuildDateTimeString();
-    s16 x = GetStringCenterAlignXOffset(FONT_SMALL, gStringVar4, GetWindowAttribute(winId, WINDOW_WIDTH) * 8);
+    s16 x = GetStringCenterAlignXOffset(FONT_SHORT, gStringVar4, GetWindowAttribute(winId, WINDOW_WIDTH) * 8);
     FillWindowPixelBuffer(winId, PIXEL_FILL(Usm_GetWindowBaseColor(USM_WIN_CLOCK)));
     Usm_PrintText(sUsmMemory->windowIds[USM_WIN_CLOCK], FONT_SMALL, x, 0, sUsmWinFontColors[FONT_BLACK], gStringVar4);
     CopyWindowToVram(winId, COPYWIN_GFX);
 }
 
-static void Usm_PrintButtonHints()
+static void Usm_PrintButtonHints() //worpTODO: Maybe make this dynamic like my changes to other UI? ([Select] Move and then [A] Confirm or something??)
 {
     u8 winId = sUsmMemory->windowIds[USM_WIN_HINTS];
-    const u8* text = COMPOUND_STRING("{L_BUTTON} Page    {R_BUTTON} Move    ");
+    const u8* text = COMPOUND_STRING("{SELECT_BUTTON} Move    ");
     s16 x = GetStringRightAlignXOffset(FONT_SMALL_NARROWER, text, GetWindowAttribute(winId, WINDOW_WIDTH) * 8);
     FillWindowPixelBuffer(winId, PIXEL_FILL(Usm_GetWindowBaseColor(USM_WIN_HINTS)));
     Usm_PrintText(winId, FONT_SMALL_NARROWER, x, 0, sUsmWinFontColors[FONT_WHITE], text);
@@ -682,14 +702,6 @@ static void GetCurrentDateTime(struct DateTime* dateTime)
     ConvertTimeToDateTime(dateTime, &gLocalTime);
 }
 
-
-static const u8* const sMonthNames[13] = {
-    [MONTH_JAN] = COMPOUND_STRING("Jan"), [MONTH_FEB] = COMPOUND_STRING("Feb"), [MONTH_MAR] = COMPOUND_STRING("Mar"),
-    [MONTH_APR] = COMPOUND_STRING("Apr"), [MONTH_MAY] = COMPOUND_STRING("May"), [MONTH_JUN] = COMPOUND_STRING("Jun"),
-    [MONTH_JUL] = COMPOUND_STRING("Jul"), [MONTH_AUG] = COMPOUND_STRING("Aug"), [MONTH_SEP] = COMPOUND_STRING("Sep"),
-    [MONTH_OCT] = COMPOUND_STRING("Oct"), [MONTH_NOV] = COMPOUND_STRING("Nov"), [MONTH_DEC] = COMPOUND_STRING("Dec"),
-};
-
 static const u8* const sWeekdayNames[WEEKDAY_COUNT] = {
     [WEEKDAY_SUN] = COMPOUND_STRING("Sun"), [WEEKDAY_MON] = COMPOUND_STRING("Mon"),
     [WEEKDAY_TUE] = COMPOUND_STRING("Tue"), [WEEKDAY_WED] = COMPOUND_STRING("Wed"),
@@ -699,17 +711,31 @@ static const u8* const sWeekdayNames[WEEKDAY_COUNT] = {
 
 static void BuildDateTimeString(void)
 {
-    const u8* text = COMPOUND_STRING("{STR_VAR_1}. {STR_VAR_2}, {STR_VAR_3}");
+    const u8* text = COMPOUND_STRING("{STR_VAR_1}. {STR_VAR_2}");
     struct DateTime dt;
     GetCurrentDateTime(&dt);
 
+    //Weekday
     StringCopy(gStringVar1, sWeekdayNames[dt.dayOfWeek]);
-    ConvertIntToDecimalStringN(gStringVar2, dt.day, STR_CONV_MODE_LEADING_ZEROS, 2);
+    //Hour (Made this a 12 Hour clock)
+    u8 hour = dt.hour;
+    const u8* ampm = COMPOUND_STRING("AM");
 
-    ConvertIntToDecimalStringN(gStringVar3, dt.hour, STR_CONV_MODE_LEADING_ZEROS, 2);
-    StringAppend(gStringVar3, COMPOUND_STRING(":"));
-    ConvertIntToDecimalStringN(gStringVar4, dt.minute, STR_CONV_MODE_LEADING_ZEROS, 2);
-    StringAppend(gStringVar3, gStringVar4);
+    if (hour == 0) hour = 12; // Midnight
+    else if (hour == 12) ampm = COMPOUND_STRING("PM"); //Noon
+    else if (hour > 12) //Afternoon
+    {
+        hour -= 12;
+        ampm = COMPOUND_STRING("PM");
+    }
+    ConvertIntToDecimalStringN(gStringVar2, hour, STR_CONV_MODE_LEFT_ALIGN, 2);
+    StringAppend(gStringVar2, COMPOUND_STRING(":"));
+    
+    u8 minStr[8];
+    ConvertIntToDecimalStringN(minStr, dt.minute, STR_CONV_MODE_LEADING_ZEROS, 2);
+    StringAppend(gStringVar2, minStr);
+    StringAppend(gStringVar2, COMPOUND_STRING(" "));
+    StringAppend(gStringVar2, ampm);
 
     StringExpandPlaceholders(gStringVar4, text);
 }
@@ -730,16 +756,41 @@ static bool32 Usm_ListContains(enum Usm_Icons item, u8 *list, u8 count)
     return FALSE;
 }
 
-static bool32 UNUSED Usm_ShouldPrepend(enum Usm_Icons item)
+static void Usm_InjectFirst(enum Usm_Icons newIcon) //Injects an icon before all others by moving the list up by 1 and then injecting the icon at 0
 {
-    switch (item)
+    for (u8 i = sUsmState->itemCount; i > 0; i--)
     {
-        case USM_ICO_POKEDEX:
-        case USM_ICO_PARTY:
-        case USM_ICO_POKENAV:
-            return TRUE;
-        default:
-            return FALSE;
+        sUsmState->items[i] = sUsmState->items[i - 1];
+    }
+    sUsmState->items[0] = newIcon;
+    sUsmState->itemCount++;
+}
+
+static void Usm_InjectAfter(enum Usm_Icons newIcon, enum Usm_Icons anchorIcon) //Injects an icon after the anchor icon by moving the list after the anchor icon up by 1 and then inject icon at the old anchor icon position (DexNav AFTER PokeNav)
+{
+    u8 anchorIdx = 0;
+    
+    for (u8 i = 0; i < sUsmState->itemCount; i++)
+    {
+        if (sUsmState->items[i] == anchorIcon)
+        {
+            anchorIdx = i;
+            break;
+        }
+    }
+
+    if (anchorIdx != 0xFF)
+    {
+        for (u8 i = sUsmState->itemCount; i > anchorIdx + 1; i--)
+        {
+            sUsmState->items[i] = sUsmState->items[i - 1];
+        }
+        sUsmState->items[anchorIdx + 1] = newIcon;
+        sUsmState->itemCount++;
+    }
+    else
+    {
+        Usm_AddMenuItem(newIcon);
     }
 }
 
@@ -749,33 +800,47 @@ static void Usm_BuildMenuItems(void)
 
     sUsmState->itemCount = 0;
 
-    if (!saved->count)
+    if (saved->count > 0) //This loops checks for items that hare in the saved list.
+    {
+        for (u32 i = 0; i < saved->count; i++)
+        {
+            if (Usm_IsItemAvailable(saved->items[i])) Usm_AddMenuItem(saved->items[i]);
+        }
+    }
+    else //If no items in saved list, this makes a new list to save.
     {
         Usm_BuildDefaultMenuItems();
         return;
     }
 
-    for (u32 i = 0; i < saved->count; i++)
+    for (u32 item = 0; item < USM_ICO_COUNT; item++) //This loop checks for items that aren't in the saved list.
     {
-        enum Usm_Icons item = saved->items[i];
-
-        if (item >= USM_ICO_COUNT)
-            continue;
-
-        if (Usm_IsItemAvailable(item))
-            Usm_AddMenuItem(item);
-    }
-
-    for (u32 item = 0; item < USM_ICO_COUNT; item++)
-    {
-        if (!Usm_IsItemAvailable(item))
-            continue;
-
-        if (Usm_ListContains(item, sUsmState->items, sUsmState->itemCount))
-            continue;
-        else
+        if (Usm_IsItemAvailable(item) && !Usm_ListContains(item, sUsmState->items, sUsmState->itemCount))
         {
-            Usm_AddMenuItem(item);
+            switch (item)
+            {
+                case USM_ICO_POKEDEX:
+                    Usm_InjectFirst(USM_ICO_POKEDEX);
+                    break;
+                case USM_ICO_PARTY:
+                    Usm_InjectFirst(USM_ICO_PARTY);
+                    break;
+                case USM_ICO_FRONTIER_RETIRE:
+                    Usm_InjectFirst(USM_ICO_FRONTIER_RETIRE);
+                    break;
+                case USM_ICO_SAFARI_RETIRE:
+                    Usm_InjectFirst(USM_ICO_SAFARI_RETIRE);
+                    break;
+                case USM_ICO_POKENAV:
+                    Usm_InjectAfter(USM_ICO_POKENAV, USM_ICO_PARTY);
+                    break;
+                //case USM_ICO_DEXNAV:
+                //    Usm_InjectAfter(USM_ICO_DEXNAV, USM_ICO_POKENAV);
+                //    break;
+                default:
+                    Usm_AddMenuItem(item); // Append others to the end
+                    break;
+            }
         }
     }
 }
@@ -786,6 +851,9 @@ static bool32 Usm_IsItemAvailable(enum Usm_Icons item)
         case USM_ICO_POKEDEX: return FlagGet(FLAG_SYS_POKEDEX_GET);
         case USM_ICO_PARTY: return FlagGet(FLAG_SYS_POKEMON_GET);
         case USM_ICO_POKENAV: return FlagGet(FLAG_SYS_POKENAV_GET);
+        case USM_ICO_DEXNAV: return FALSE;
+        case USM_ICO_BAGM: return (gSaveBlock2Ptr->playerGender == MALE);
+        case USM_ICO_BAGF: return (gSaveBlock2Ptr->playerGender == FEMALE);
         case USM_ICO_FRONTIER_RETIRE: return IsPlayerInBattlePyramid();
         case USM_ICO_SAFARI_RETIRE: return FALSE;
         case USM_ICO_DEBUG: return (DEBUG_OVERWORLD_MENU && DEBUG_OVERWORLD_IN_MENU);
@@ -804,7 +872,10 @@ static void Usm_BuildDefaultMenuItems(void)
     if (FlagGet(FLAG_SYS_POKEMON_GET))
         Usm_AddMenuItem(USM_ICO_PARTY);
 
-    Usm_AddMenuItem(USM_ICO_BAG);
+    if (gSaveBlock2Ptr->playerGender == MALE)
+        Usm_AddMenuItem(USM_ICO_BAGM);
+    else
+        Usm_AddMenuItem(USM_ICO_BAGF);
 
     if (FlagGet(FLAG_SYS_POKENAV_GET))
         Usm_AddMenuItem(USM_ICO_POKENAV);
@@ -819,7 +890,7 @@ static void Usm_BuildDefaultMenuItems(void)
 
 static void Usm_BuildVisibleList(void)
 {
-    u8 start = sUsmState->page * USM_MAX_ICON_COUNT;
+    u8 start = sUsmState->scrollOffset;
     u8 end = start + USM_MAX_ICON_COUNT;
 
     if (end > sUsmState->itemCount)
@@ -841,7 +912,6 @@ void Usm_LoadIconPalette(void)
 
 static void Usm_CreateIcons(s16 x, s16 y)
 {
-
     u8 count = sUsmState->visible.count;
 
     s16 startX = 24 + (USM_BANNER_WIDTH - (count * USM_ICON_WIDTH)) / 2;
@@ -865,21 +935,6 @@ static void Usm_LoadIconGfx(void)
     for (u32 i = 0; i < USM_ICO_COUNT; i++) {
         LoadCompressedSpriteSheet(sUsmMenuItems[i].sheet);
     }
-}
-
-static void Usm_SwitchPage(s8 pageNum)
-{
-    if (sUsmState->pageCount <= 1)
-        return;
-
-    sUsmState->page = (sUsmState->page + pageNum) % sUsmState->pageCount;
-    sUsmState->selectedIcon = 0;
-
-    Usm_DestroyVisibleIcons();
-    Usm_BuildVisibleList();
-    Usm_CreateIcons(0, USM_ICON_YPOS);
-    Usm_StartIconAnim(sUsmState->selectedIcon);
-    Usm_PrintIconLabel();
 }
 
 static struct Sprite* Usm_GetSelectedSprite(void)
@@ -917,15 +972,6 @@ static void Usm_StartIconAnim(u8 iconId)
     StartSpriteAffineAnim(sprite, 0);
 }
 
-
-static void Usm_StopIconAnim(u8 iconId)
-{
-    struct Sprite* sprite = Usm_GetIconSprite(iconId);
-    sprite->oam.affineMode = ST_OAM_AFFINE_OFF;
-    FreeSpriteOamMatrix(sprite);
-    StartSpriteAnim(sprite, 0);
-}
-
 static struct Sprite* Usm_GetIconSprite(u8 iconId)
 {
     struct Sprite* sprite = &gSprites[sUsmMemory->spriteIds[iconId]];
@@ -936,6 +982,9 @@ static void Usm_ExitStartMenu(void)
 {
     Usm_SaveItems();
     u8* buf = GetBgTilemapBuffer(0);
+
+    sUsmSavedIcon = sUsmState->selectedIcon;
+    sUsmSavedScrollOffset = sUsmState->scrollOffset;
 
     Usm_DestroyVisibleIcons();
 
@@ -1001,6 +1050,9 @@ static u32 Usm_ReadKeys(void)
     if (JOY_NEW(DPAD_LEFT)) {
         return DPAD_LEFT;
     }
+    if (JOY_NEW(SELECT_BUTTON)) {
+        return SELECT_BUTTON;
+    }
     else {
         return 0;
     }
@@ -1016,7 +1068,6 @@ static void Task_UsmHandleMainInput(u8 taskId)
             u8 iconId = sUsmState->visible.iconIndex[sUsmState->selectedIcon];
             gMenuCallback = sUsmMenuItems[iconId].callback;
             sUsmSavedIcon = sUsmState->selectedIcon;
-            sUsmSavedPage = sUsmState->page;
             if (sUsmMenuItems[iconId].shouldFade)
                 func = Task_UsmFadeAndRunCallback;
             else
@@ -1030,11 +1081,7 @@ static void Task_UsmHandleMainInput(u8 taskId)
             UnlockPlayerFieldControls();
             DestroyTask(taskId);
             break;
-        case L_BUTTON:
-            PlaySE(SE_SELECT);
-            Usm_SwitchPage(1);
-            break;
-        case R_BUTTON:
+        case SELECT_BUTTON:
             PlaySE(SE_SELECT);
             gTasks[taskId].data[0] = 0;
             gTasks[taskId].func = Task_UsmHandleMoveItems;
@@ -1048,46 +1095,45 @@ static void Task_UsmHandleMainInput(u8 taskId)
     }
 }
 
+static void Usm_RefreshMenu(void)
+{
+    Usm_DestroyVisibleIcons();
+    Usm_BuildVisibleList();
+
+    s16 startX = 24 + (USM_BANNER_WIDTH - (sUsmState->visible.count * USM_ICON_WIDTH)) / 2;
+    Usm_CreateIcons(startX, USM_ICON_YPOS);
+
+    StartSpriteAnim(Usm_GetSelectedSprite(), 1);
+    Usm_StartIconAnim(sUsmState->selectedIcon);
+
+    Usm_PrintIconLabel();
+}
+
 static void Usm_HandleDPadInput(u8 input)
 {
-    u8 curr = sUsmState->selectedIcon;
-    u8 last = sUsmState->visible.count - 1;
-    u8 page = sUsmState->page;
-    u8 lastPage = sUsmState->pageCount - 1;
-
-    PlaySE(SE_SELECT);
-
     if (input == DPAD_RIGHT)
     {
-        if (curr == last)
+        PlaySE(SE_SELECT);
+        if (sUsmState->selectedIcon + sUsmState->scrollOffset == sUsmState->itemCount - 1) //If this is at the very last icon on the list, it will wrap around to item 0.
         {
-            if (page < lastPage)
-            {
-                Usm_SwitchPage(1);
-                Usm_SwitchSelectedIcon(0);
-                return;
-            }
-            return;
+            sUsmState->scrollOffset = 0;
+            sUsmState->selectedIcon = 0;
         }
-
-        Usm_SwitchSelectedIcon(Usm_GetNextIcon(1));
-        return;
+        else if (sUsmState->selectedIcon == USM_MAX_ICON_COUNT - 1)  sUsmState->scrollOffset++; //If it hits the max items on screen number, but not the last item on the list, everything gets shifted to the left by 1.
+        else sUsmState->selectedIcon++; //Business as usual
+        Usm_RefreshMenu();
     }
-
-    if (input == DPAD_LEFT)
+    else if (input == DPAD_LEFT)
     {
-        if (curr == 0)
+        PlaySE(SE_SELECT);
+        if (sUsmState->selectedIcon + sUsmState->scrollOffset == 0) //If you move LEFT from the first icon, it wraps around to the last item on the list. It needs to check 
         {
-            if (page > 0)
-            {
-                Usm_SwitchPage(-1);
-                Usm_SwitchSelectedIcon(sUsmState->visible.count - 1);
-                return;
-            }
-            return;
+            sUsmState->scrollOffset = (sUsmState->itemCount > USM_MAX_ICON_COUNT) ? sUsmState->itemCount - USM_MAX_ICON_COUNT : 0;
+            sUsmState->selectedIcon = (sUsmState->itemCount > USM_MAX_ICON_COUNT) ? USM_MAX_ICON_COUNT - 1 : sUsmState->itemCount - 1;
         }
-
-        Usm_SwitchSelectedIcon(Usm_GetNextIcon(-1));
+        else if (sUsmState->selectedIcon == 0 && sUsmState->scrollOffset > 0) sUsmState->scrollOffset--; //If it hits icon slot 0 and that isn't the first icon on the list, moves the whole list right by 1.
+        else sUsmState->selectedIcon--;
+        Usm_RefreshMenu();
     }
 }
 
@@ -1131,13 +1177,10 @@ static void Task_UsmHandleMoveItems(u8 taskId)
     {
         case 0:
         {
-            u8 icon = sUsmState->selectedIcon;
-            u8 menu = sUsmState->page * USM_MAX_ICON_COUNT + icon;
-
-            *grabIndex = menu;
+            *grabIndex = sUsmState->scrollOffset + sUsmState->selectedIcon;
 
             struct Sprite* sprite = Usm_GetSelectedSprite();
-            Usm_StartIconAnim(icon);
+            Usm_StartIconAnim(sUsmState->selectedIcon);
             sprite->oam.affineMode = ST_OAM_AFFINE_OFF;
 
             *handSprite = Usm_CreateHandSprite(sprite->x, sprite->y - 8);
@@ -1150,53 +1193,28 @@ static void Task_UsmHandleMoveItems(u8 taskId)
         {
             u16 input = Usm_ReadKeys();
 
-            if (input == B_BUTTON || input == R_BUTTON)
+            if (input == SELECT_BUTTON || input == A_BUTTON || input == B_BUTTON)
             {
+                PlaySE(SE_SUCCESS);
                 DestroySprite(&gSprites[*handSprite]);
                 FreeSpriteTilesByTag(USM_TILETAG_HAND);
-                Usm_DestroyVisibleIcons();
-                Usm_CreateIcons(0, USM_ICON_YPOS);
-                Usm_StartIconAnim(sUsmState->selectedIcon);
+                Usm_RefreshMenu();
                 task->func = Task_UsmHandleMainInput;
                 return;
             }
 
             s8 dir = 0;
             if (input == DPAD_LEFT || input == DPAD_UP)
-                dir = -1;
-            else if (input == DPAD_RIGHT || input == DPAD_DOWN)
-                dir = 1;
-
-            if (dir != 0)
             {
-                u8 curr = sUsmState->selectedIcon;
-                u8 last = sUsmState->visible.count - 1;
-                u8 page = sUsmState->page;
-                u8 lastPage = sUsmState->pageCount - 1;
-
-                if (dir > 0 && curr == last)
-                {
-                    if (page < lastPage)
-                    {
-                        Usm_MoveItem(dir);
-                        Usm_SwitchPage(1);
-                        Usm_SwitchSelectedIcon(0);
-                    }
-                }
-                else if (dir < 0 && curr == 0)
-                {
-                    if (page > 0)
-                    {
-                        Usm_MoveItem(dir);
-                        Usm_SwitchPage(-1);
-                        Usm_SwitchSelectedIcon(sUsmState->visible.count - 1);
-                    }
-                }
-                else
-                {
-                    Usm_MoveItem(dir);
-                }
+                PlaySE(SE_CLICK);
+                dir = -1;
             }
+            else if (input == DPAD_RIGHT || input == DPAD_DOWN)
+            {
+                PlaySE(SE_CLICK);
+                dir = 1;
+            }
+            if (dir != 0) Usm_MoveItem(dir);
 
             struct Sprite* hand = &gSprites[*handSprite];
             struct Sprite* target = Usm_GetSelectedSprite();
@@ -1225,14 +1243,12 @@ static void Usm_MoveItem(s8 dir)
 
     *grabIndex = newIndex;
 
-    Usm_DestroyVisibleIcons();
-    Usm_BuildVisibleList();
+    if (newIndex < sUsmState->scrollOffset) sUsmState->scrollOffset = newIndex;
+    else if (newIndex >= sUsmState->scrollOffset + USM_MAX_ICON_COUNT) sUsmState->scrollOffset = newIndex - USM_MAX_ICON_COUNT + 1;
 
-    sUsmState->selectedIcon = newIndex % USM_MAX_ICON_COUNT;
+    sUsmState->selectedIcon = newIndex - sUsmState->scrollOffset;
 
-    Usm_CreateIcons(0, USM_ICON_YPOS);
-    StartSpriteAnim(Usm_GetSelectedSprite(), 1);
-    Usm_PrintIconLabel();
+    Usm_RefreshMenu();
 }
 
 static void UNUSED Usm_RedrawIcons(bool32 startAffine)
@@ -1253,28 +1269,6 @@ static void Usm_DestroyVisibleIcons(void)
         FreeSpriteOamMatrix(sprite);
         DestroySprite(sprite);
     }
-}
-
-static enum Usm_Icons Usm_GetNextIcon(s8 change)
-{
-    u8 count = sUsmState->visible.count;
-    s8 val = sUsmState->selectedIcon + change;
-    if (val >= count)
-    {
-        val = 0;
-    }
-    else if (val < 0)
-        val = count - 1;
-    return val;
-}
-
-static void Usm_SwitchSelectedIcon(enum Usm_Icons iconId)
-{
-    u8 curr = sUsmState->selectedIcon;
-    sUsmState->selectedIcon = iconId;
-    Usm_StopIconAnim(curr);
-    Usm_StartIconAnim(sUsmState->selectedIcon);
-    Usm_PrintIconLabel();
 }
 
 static u32 Usm_CreateHandSprite(s16 x, s16 y)
