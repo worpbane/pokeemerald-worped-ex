@@ -141,6 +141,7 @@ static const u32 sDebugIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_i
 static const u32 sRetireIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconRetire.png", ".4bpp.smol");
 
 static const u32 sUsmHandGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconHand.png", ".4bpp.smol");
+static const u8 sUsmSafariPopupGfx[] = INCGFX_U8("graphics/unbound_start_menu/usm_popupSafari.png", ".4bpp");
 
 static const u32 sUsmBgTiles[] = INCGFX_U32("graphics/unbound_start_menu/usm_tiles.png", ".4bpp.smol");
 static const u32 sUsmBgTilemap[] = INCGFX_U32("graphics/unbound_start_menu/usm_tilemap.bin", ".smolTM");
@@ -168,10 +169,10 @@ static const u8 sUsmWinFontColors[][3] = {
 
 //Safari Window is it's own thing because it kept creating a big white square when there was no reason to do that.
 static const struct WindowTemplate sWindowTemplate_SafariBalls = {
-    .bg = 1,
+    .bg = 0,
     .tilemapLeft = 0,
-    .tilemapTop = 1,
-    .width = 10,
+    .tilemapTop = 9,
+    .width = 4,
     .height = 4,
     .paletteNum = 14,
     .baseBlock = 150
@@ -709,46 +710,21 @@ static void Usm_PrintClockText()
     CopyWindowToVram(winId, COPYWIN_GFX);
 }
 
-static const u16 sSafariWindowTilemap[] = {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, // Row 1
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, // Row 2
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 9, // Row 3
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 9, // Row 4
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, // Row 5
-    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7  // Row 6
-};
-
 static void ShowSafariBallsWindow(void)
 {
     //Prepare the window
-    u8 winId = AddWindow(&sWindowTemplate_SafariBalls);
-    sSafariBallsWindowId = winId;
-    //Custom border since the start menu palette overwrites the same slots the regular GBA border takes
-    u16 *tilemap = GetBgTilemapBuffer(0);
-    u16 *safariBox = (u16*)sSafariWindowTilemap;
-    u16 paletteBits = (14 << 12); //I genuinely have no idea what the << means, but this loads the right palette lol
-    for (int y = 0; y < 6; y++) //Row Printer
-    {
-        for (int x = 0; x < 11; x++) //Column Printer
-        {
-            tilemap[(y * 32) + x] = safariBox[(y * 11) + x] | paletteBits;
-            //Tilemap is 32 tiles wide when I open it in tilemapstudio, safari tiles are only 11.
-        }
-    }
-    PutWindowTilemap(winId);
-    //Fill the area where the text is with the textbox BG.
-    FillWindowPixelBuffer(winId, PIXEL_FILL(Usm_GetWindowBaseColor(USM_WIN_CLOCK)));
-    //Print Labels(Steps and Balls(lol))
-    //Usm_PrintText(winId, FONT_SHORT, 2, 2, sUsmWinFontColors[FONT_WHITE], COMPOUND_STRING("Steps Left:"));
-    //Usm_PrintText(winId, FONT_SHORT, 2, 17, sUsmWinFontColors[FONT_WHITE], COMPOUND_STRING("Balls Left:"));
+    sSafariBallsWindowId = AddWindow(&sWindowTemplate_SafariBalls);
+    FillWindowPixelBuffer(sSafariBallsWindowId, PIXEL_FILL(0));
+    BlitBitmapToWindow(sSafariBallsWindowId, sUsmSafariPopupGfx, 0, 0, 32, 32);
     //Grab the step count and ball count
     ConvertIntToDecimalStringN(gStringVar1, gSafariZoneStepCounter, STR_CONV_MODE_RIGHT_ALIGN, 3);
     ConvertIntToDecimalStringN(gStringVar2, gNumSafariBalls, STR_CONV_MODE_RIGHT_ALIGN, 2);
     //Use Miri's print function 
-    Usm_PrintText(winId, FONT_SMALL, 0, 0, sUsmWinFontColors[FONT_WHITE], gStringVar1);
-    //Usm_PrintText(winId, FONT_SMALL, 67, 17, sUsmWinFontColors[FONT_WHITE], gStringVar2);
+    Usm_PrintText(sSafariBallsWindowId, FONT_SMALL, 10, 3, sUsmWinFontColors[FONT_WHITE], gStringVar1);
+    Usm_PrintText(sSafariBallsWindowId, FONT_SMALL, 15, 13, sUsmWinFontColors[FONT_WHITE], gStringVar2);
     //Copy to the VRAM so it shows
-    CopyWindowToVram(winId, COPYWIN_GFX);
+    PutWindowTilemap(sSafariBallsWindowId);
+    CopyWindowToVram(sSafariBallsWindowId, COPYWIN_GFX);
 }
 
 static void Usm_SetupWindows()
