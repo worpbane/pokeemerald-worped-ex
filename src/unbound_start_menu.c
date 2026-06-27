@@ -92,6 +92,7 @@ enum Usm_Activation {
 enum Usm_Windows {
     USM_WIN_NAME,
     USM_WIN_CLOCK,
+    USM_WIN_POPUP,
     USM_WIN_COUNT,
 };
 
@@ -141,7 +142,9 @@ static const u32 sDebugIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_i
 static const u32 sRetireIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconRetire.png", ".4bpp.smol");
 
 static const u32 sUsmHandGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconHand.png", ".4bpp.smol");
+
 static const u8 sUsmSafariPopupGfx[] = INCGFX_U8("graphics/unbound_start_menu/usm_popupSafari.png", ".4bpp");
+static const u8 sUsmPyramidPopupGfx[] = INCGFX_U8("graphics/unbound_start_menu/usm_popupPyramid.png", ".4bpp");
 
 static const u32 sUsmBgTiles[] = INCGFX_U32("graphics/unbound_start_menu/usm_tiles.png", ".4bpp.smol");
 static const u32 sUsmBgTilemap[] = INCGFX_U32("graphics/unbound_start_menu/usm_tilemap.bin", ".smolTM");
@@ -159,23 +162,14 @@ static const struct WindowTemplate sUsmWindowTemplates[] = {
         {.bg = 0, .tilemapLeft = 0, .tilemapTop = 13, .width = 7, .height = 2, .paletteNum = 14, .baseBlock = 48},
     [USM_WIN_CLOCK] =
         {.bg = 0, .tilemapLeft = 20, .tilemapTop = 13, .width = 10, .height = 2, .paletteNum = 14, .baseBlock = 62},
+    [USM_WIN_POPUP] =
+        {.bg = 0, .tilemapLeft = 0, .tilemapTop = 8, .width = 5, .height = 4, .paletteNum = 14, .baseBlock = 82},
     DUMMY_WIN_TEMPLATE};
 
 
 static const u8 sUsmWinFontColors[][3] = {
     [FONT_BLACK] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_DARK_GRAY, TEXT_COLOR_LIGHT_GRAY},
     [FONT_WHITE] = {TEXT_COLOR_TRANSPARENT, TEXT_COLOR_WHITE, TEXT_COLOR_DARK_GRAY},
-};
-
-//Safari Window is it's own thing because it kept creating a big white square when there was no reason to do that.
-static const struct WindowTemplate sWindowTemplate_SafariBalls = {
-    .bg = 0,
-    .tilemapLeft = 0,
-    .tilemapTop = 9,
-    .width = 4,
-    .height = 4,
-    .paletteNum = 14,
-    .baseBlock = 150
 };
 
 static const struct OamData sIconOam = {
@@ -256,8 +250,6 @@ static const struct SpritePalette sSpritePalette_Icons = {.data = sIconPal, .tag
 // Static Variables
 static EWRAM_DATA struct Usm_Memory* sUsmMemory;
 static EWRAM_DATA struct Usm_State* sUsmState;
-static EWRAM_DATA u8 sSafariBallsWindowId = 0;
-//static EWRAM_DATA u8 sBattlePyramidFloorWindowId = 0;
 static EWRAM_DATA u8 sUsmSavedIcon = 0;
 static EWRAM_DATA u8 sUsmSavedScrollOffset = 0;
 
@@ -296,12 +288,10 @@ static void Usm_StartIconAnim(u8 iconId);
 static void Usm_SaveItems(void);
 static bool32 Usm_IsItemAvailable(enum Usm_Icons item);
 static bool32 IsPlayerInBattlePyramid(void);
-static void ShowSafariBallsWindow(void);
-static void RemoveExtraStartMenuWindows(void);
-//static void ShowPyramidFloorWindow(void);
+static void ShowSafariPopup(void);
+static void ShowBattlePyramidPopup(void);
 
-//Safari Stats and Battle Pyramid Stats
-/* Babble Pyramid stuff, will test way later lol
+//WorpTODO: Make this nicer pls
 static const u8 *const sPyramidFloorNames[FRONTIER_STAGES_PER_CHALLENGE + 1] =
 {
     gText_Floor1,
@@ -314,26 +304,6 @@ static const u8 *const sPyramidFloorNames[FRONTIER_STAGES_PER_CHALLENGE + 1] =
     gText_Peak
 };
 
-static const struct WindowTemplate sWindowTemplate_PyramidFloor = {
-    .bg = 0,
-    .tilemapLeft = 1,
-    .tilemapTop = 1,
-    .width = 10,
-    .height = 4,
-    .paletteNum = 15,
-    .baseBlock = 150
-};
-
-static const struct WindowTemplate sWindowTemplate_PyramidPeak = {
-    .bg = 0,
-    .tilemapLeft = 1,
-    .tilemapTop = 1,
-    .width = 12,
-    .height = 4,
-    .paletteNum = 15,
-    .baseBlock = 150
-};
-*/
 // Menu Callbacks
 static bool8 StartMenuPokedexCallback(void);
 static bool8 StartMenuPokemonCallback(void);
@@ -647,10 +617,10 @@ void Usm_InitStartMenu(void)
         return;
     }
 
-    if (!!GetFlashLevel())
+    if (GetFlashLevel())
     {
         SetGpuRegBits(REG_OFFSET_DISPCNT, DISPCNT_OBJWIN_ON);
-        SetGpuRegBits(REG_OFFSET_WINOUT, WINOUT_WINOBJ_OBJ | WINOUT_WINOBJ_BG0);
+        SetGpuRegBits(REG_OFFSET_WINOUT, WINOUT_WINOBJ_OBJ);
     }
 
     sUsmState = &sUsmMemory->state;
@@ -670,8 +640,8 @@ void Usm_InitStartMenu(void)
     Usm_CreateIcons(0, USM_ICON_YPOS);
     Usm_StartIconAnim(sUsmState->selectedIcon);
 
-    if (GetSafariZoneFlag()) ShowSafariBallsWindow(); //Sfari Menu WIP
-    //if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE) ShowPyramidFloorWindow();
+    if (GetSafariZoneFlag()) ShowSafariPopup();
+    if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE) ShowBattlePyramidPopup();
 
     CreateTask(Task_UsmHandleMainInput, 0);
 }
@@ -710,21 +680,32 @@ static void Usm_PrintClockText()
     CopyWindowToVram(winId, COPYWIN_GFX);
 }
 
-static void ShowSafariBallsWindow(void)
+static void ShowSafariPopup(void)
 {
     //Prepare the window
-    sSafariBallsWindowId = AddWindow(&sWindowTemplate_SafariBalls);
-    FillWindowPixelBuffer(sSafariBallsWindowId, PIXEL_FILL(0));
-    BlitBitmapToWindow(sSafariBallsWindowId, sUsmSafariPopupGfx, 0, 0, 32, 32);
+    u8 winId = sUsmMemory->windowIds[USM_WIN_POPUP];
+    FillWindowPixelBuffer(winId, PIXEL_FILL(0));
+    BlitBitmapToWindow(winId, sUsmSafariPopupGfx, 0, 0, 32, 32);
     //Grab the step count and ball count
     ConvertIntToDecimalStringN(gStringVar1, gSafariZoneStepCounter, STR_CONV_MODE_RIGHT_ALIGN, 3);
     ConvertIntToDecimalStringN(gStringVar2, gNumSafariBalls, STR_CONV_MODE_RIGHT_ALIGN, 2);
     //Use Miri's print function 
-    Usm_PrintText(sSafariBallsWindowId, FONT_SMALL, 10, 3, sUsmWinFontColors[FONT_WHITE], gStringVar1);
-    Usm_PrintText(sSafariBallsWindowId, FONT_SMALL, 15, 13, sUsmWinFontColors[FONT_WHITE], gStringVar2);
+    Usm_PrintText(winId, FONT_SMALL, 10, 3, sUsmWinFontColors[FONT_WHITE], gStringVar1);
+    Usm_PrintText(winId, FONT_SMALL, 15, 13, sUsmWinFontColors[FONT_WHITE], gStringVar2);
     //Copy to the VRAM so it shows
-    PutWindowTilemap(sSafariBallsWindowId);
-    CopyWindowToVram(sSafariBallsWindowId, COPYWIN_GFX);
+    CopyWindowToVram(winId, COPYWIN_GFX);
+}
+
+static void ShowBattlePyramidPopup(void)
+{
+    //Prepare the window
+    u8 winId = sUsmMemory->windowIds[USM_WIN_POPUP];
+    FillWindowPixelBuffer(winId, PIXEL_FILL(0));
+    BlitBitmapToWindow(winId, sUsmPyramidPopupGfx, 0, 0, 40, 32);
+    //Print the current level
+    Usm_PrintText(winId, FONT_SMALL, 2, 12, sUsmWinFontColors[FONT_WHITE], sPyramidFloorNames[gSaveBlock2Ptr->frontier.curChallengeBattleNum]);
+    //Copy to the VRAM so it shows
+    CopyWindowToVram(winId, COPYWIN_GFX);
 }
 
 static void Usm_SetupWindows()
@@ -748,7 +729,7 @@ static u8 Usm_GetWindowBaseColor(u8 winId)
         case USM_WIN_NAME:
             return 13;
         default:
-            return 1;
+            return 0;
     }
 }
 
@@ -992,8 +973,7 @@ static void Usm_CreateIcons(s16 x, s16 y)
 
         u8 id = CreateSprite(sUsmMenuItems[iconId].template, posX, y, 1);
 
-        if (!!GetFlashLevel())
-            gSprites[id].objWinMask = TRUE;
+        if (GetFlashLevel()) gSprites[id].objWinMask = TRUE;
 
         sUsmMemory->spriteIds[i] = id;
     }
@@ -1047,23 +1027,6 @@ static struct Sprite* Usm_GetIconSprite(u8 iconId)
     return sprite;
 }
 
-static void RemoveExtraStartMenuWindows(void)
-{
-    if (GetSafariZoneFlag())
-    {
-        ClearStdWindowAndFrameToTransparent(sSafariBallsWindowId, FALSE);
-        CopyWindowToVram(sSafariBallsWindowId, COPYWIN_GFX);
-        RemoveWindow(sSafariBallsWindowId);
-    }
-    /*
-    if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE)
-    {
-        ClearStdWindowAndFrameToTransparent(sBattlePyramidFloorWindowId, FALSE);
-        RemoveWindow(sBattlePyramidFloorWindowId);
-    }
-    */
-}
-
 static void Usm_ExitStartMenu(void)
 {
     Usm_SaveItems();
@@ -1073,7 +1036,6 @@ static void Usm_ExitStartMenu(void)
     sUsmSavedScrollOffset = sUsmState->scrollOffset;
 
     Usm_DestroyVisibleIcons();
-    RemoveExtraStartMenuWindows();
 
     for (u32 i = 0; i < USM_ICO_COUNT; i++) {
         FreeSpriteTilesByTag(sUsmMenuItems[i].template->tileTag);
@@ -1395,20 +1357,3 @@ static bool32 IsPlayerInBattlePyramid(void)
 {
     return CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE;
 }
-
-/*
-static void ShowPyramidFloorWindow(void)
-{
-    if (gSaveBlock2Ptr->frontier.curChallengeBattleNum == FRONTIER_STAGES_PER_CHALLENGE)
-        sBattlePyramidFloorWindowId = AddWindow(&sWindowTemplate_PyramidPeak);
-    else
-        sBattlePyramidFloorWindowId = AddWindow(&sWindowTemplate_PyramidFloor);
-
-    PutWindowTilemap(sBattlePyramidFloorWindowId);
-    DrawStdWindowFrame(sBattlePyramidFloorWindowId, FALSE);
-    StringCopy(gStringVar1, sPyramidFloorNames[gSaveBlock2Ptr->frontier.curChallengeBattleNum]);
-    StringExpandPlaceholders(gStringVar4, gText_BattlePyramidFloor);
-    AddTextPrinterParameterized(sBattlePyramidFloorWindowId, FONT_NORMAL, gStringVar4, 0, 1, TEXT_SKIP_DRAW, NULL);
-    CopyWindowToVram(sBattlePyramidFloorWindowId, COPYWIN_GFX);
-}
-    */
