@@ -54,6 +54,7 @@
 #include "text.h"
 #include "trainer_card.h"
 #include "unbound_start_menu.h"
+#include "util.h"
 #include "window.h"
 #include <string.h>
 #include <sys/cdefs.h>
@@ -78,6 +79,7 @@ enum Usm_IconTiletags {
     USM_TILETAG_RETIRE,
     USM_TILETAG_DEBUG,
     USM_TILETAG_HAND,
+    USM_TILETAG_ARROW
 };
 
 enum Usm_Paltags {
@@ -116,6 +118,8 @@ struct Usm_Memory {
     struct Usm_State state;
     u8 spriteIds[USM_MAX_ICON_COUNT];
     u8 windowIds[USM_WIN_COUNT];
+    u8 leftArrowId;
+    u8 rightArrowId;
 };
 
 struct Usm_MenuItem {
@@ -142,6 +146,7 @@ static const u32 sDebugIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_i
 static const u32 sRetireIconGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconRetire.png", ".4bpp.smol");
 
 static const u32 sUsmHandGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconHand.png", ".4bpp.smol");
+static const u32 sUsmArrowGfx[] = INCGFX_U32("graphics/unbound_start_menu/usm_iconArrow.png", ".4bpp.smol");
 
 static const u8 sUsmSafariPopupGfx[] = INCGFX_U8("graphics/unbound_start_menu/usm_popupSafari.png", ".4bpp");
 static const u8 sUsmPyramidPopupGfx[] = INCGFX_U8("graphics/unbound_start_menu/usm_popupPyramid.png", ".4bpp");
@@ -280,6 +285,7 @@ static void Usm_BuildMenuItems(void);
 static void Usm_BuildDefaultMenuItems(void);
 static void Usm_AddMenuItem(enum Usm_Icons icon);
 static u32 Usm_CreateHandSprite(s16 x, s16 y);
+static u32 Usm_CreateArrowSprite(s16 x, s16 y, bool32 flip);
 static void Usm_MoveItem(s8 dir);
 static void Usm_DestroyVisibleIcons(void);
 static void Usm_StartIconAnim(u8 iconId);
@@ -594,6 +600,26 @@ static bool8 UNUSED StartMenuDexNavCallback(void)
     return FALSE;
 }
 
+static void Usm_SpriteCallbackArrow(struct Sprite *sprite)
+{
+    bool32 show;
+    s8 maxOffset = SubtractClamped(0, USM_ICO_COUNT, sUsmState->itemCount, USM_MAX_ICON_COUNT);
+
+    if (sprite->hFlip)
+    {
+        show = (sUsmState->scrollOffset > 0);
+    }
+    else
+        show = (sUsmState->scrollOffset < maxOffset);
+
+    if (!show)
+    {
+        sprite->invisible = TRUE;
+        return;
+    }
+    sprite->invisible = (sUsmState->windowCount % 32) >= 16;
+}
+
 void Usm_InitStartMenu(void)
 {
     if (!IsOverworldLinkActive()) {
@@ -631,6 +657,8 @@ void Usm_InitStartMenu(void)
     Usm_LoadIconGfx();
     Usm_LoadIconPalette();
     Usm_CreateIcons(0, USM_ICON_YPOS);
+    sUsmMemory->leftArrowId = Usm_CreateArrowSprite(8, USM_ICON_YPOS, TRUE);
+    sUsmMemory->rightArrowId = Usm_CreateArrowSprite(DISPLAY_WIDTH - 8, USM_ICON_YPOS, FALSE);
     Usm_StartIconAnim(sUsmState->selectedIcon);
 
     if (GetSafariZoneFlag()) ShowSafariPopup();
@@ -1024,6 +1052,10 @@ static void Usm_ExitStartMenu(void)
     FreeSpritePaletteByTag(USM_PALTAG_ICON);
     ResetPreservedPalettesInWeather();
 
+    DestroySprite(&gSprites[sUsmMemory->leftArrowId]);
+    DestroySprite(&gSprites[sUsmMemory->rightArrowId]);
+    FreeSpriteTilesByTag(USM_TILETAG_ARROW);
+
     CpuFastFill(0, buf, BG_SCREEN_SIZE);
     CpuFastFill(0, (void*)BG_CHAR_ADDR(2), BG_CHAR_SIZE);
     ScheduleBgCopyTilemapToVram(0);
@@ -1124,6 +1156,8 @@ static void Usm_RefreshMenu(void)
 
     s16 startX = 24 + (USM_BANNER_WIDTH - (sUsmState->visible.count * USM_ICON_WIDTH)) / 2;
     Usm_CreateIcons(startX, USM_ICON_YPOS);
+    sUsmMemory->leftArrowId = Usm_CreateArrowSprite(8, USM_ICON_YPOS, TRUE);
+    sUsmMemory->rightArrowId = Usm_CreateArrowSprite(DISPLAY_WIDTH - 8, USM_ICON_YPOS, FALSE);
 
     StartSpriteAnim(Usm_GetSelectedSprite(), 1);
     Usm_StartIconAnim(sUsmState->selectedIcon);
@@ -1275,7 +1309,8 @@ static void Usm_MoveItem(s8 dir)
 
 static void Usm_DestroyVisibleIcons(void)
 {
-    for (u32 i = 0; i < sUsmState->visible.count; i++) {
+    for (u32 i = 0; i < sUsmState->visible.count; i++)
+    {
         struct Sprite* sprite = &gSprites[sUsmMemory->spriteIds[i]];
         FreeSpriteOamMatrix(sprite);
         DestroySprite(sprite);
@@ -1291,6 +1326,20 @@ static u32 Usm_CreateHandSprite(s16 x, s16 y)
     struct Sprite* sprite = &gSprites[spriteId];
     if (shouldIconsObjWinMask()) gSprites[spriteId].copyToObjWin = TRUE;
     sprite->oam.priority = 0;
+    return spriteId;
+}
+
+static u32 Usm_CreateArrowSprite(s16 x, s16 y, bool32 flip)
+{
+    u8 spriteId = Even_CreateSpriteParametrized(
+        sUsmArrowGfx, USM_TILETAG_ARROW, sIconPal, USM_PALTAG_ICON,
+        SPRITE_SIZE(16x16), SPRITE_SHAPE(16x16), x, y, 0, Usm_SpriteCallbackArrow,
+        TRUE);
+    gSprites[spriteId].oam.priority = 0;
+    if (GetFlashLevel())
+        gSprites[spriteId].copyToObjWin = TRUE;
+    gSprites[spriteId].hFlip = flip;
+    gSprites[spriteId].invisible = TRUE;
     return spriteId;
 }
 
