@@ -1835,6 +1835,7 @@ static void Cmd_resultmessage(void)
 
     enum StringID stringId = 0;
     u32 *moveResultFlags = &gBattleStruct->moveResultFlags[gBattlerTarget];
+    enum MoveTarget target = GetBattlerMoveTargetType(gBattlerAttacker, gCurrentMove);
 
     if (gBattleControllerExecFlags)
         return;
@@ -1859,7 +1860,7 @@ static void Cmd_resultmessage(void)
                 else
                     stringId = STRINGID_SUPEREFFECTIVE;
             }
-            else if (!gMultiHitCounter)  // Don't print effectiveness on each hit in a multi hit attack
+            else if (!gMultiHitCounter || target == TARGET_SMART)  // Don't print effectiveness on each hit in a multi hit attack
             {
                 stringId = STRINGID_SUPEREFFECTIVE;
             }
@@ -1878,7 +1879,7 @@ static void Cmd_resultmessage(void)
                 else
                     stringId = STRINGID_NOTVERYEFFECTIVE; // Needs a string
             }
-            else if (!gMultiHitCounter)
+            else if (!gMultiHitCounter || target == TARGET_SMART)
             {
                 stringId = STRINGID_NOTVERYEFFECTIVE;
             }
@@ -6184,6 +6185,7 @@ static void Cmd_removeitem(void)
 
     enum BattlerId battler = GetBattlerForBattleScript(cmd->battler);
     enum Item itemId = gBattleMons[battler].item;
+    bool32 scriptQueued;
 
     if (gBattleStruct->flungItem == FLUNG_ITEM_REMOVE)
     {
@@ -6215,7 +6217,10 @@ static void Cmd_removeitem(void)
     MarkBattlerForControllerExec(battler);
 
     ClearBattlerItemEffectHistory(battler);
-    if (!TryCheekPouch(battler, itemId, cmd->nextInstr) && !TrySymbiosis(battler, itemId, FALSE))
+    scriptQueued = TrySymbiosis(battler, itemId, cmd->nextInstr);
+    if (TryCheekPouch(battler, itemId, scriptQueued ? gBattlescriptCurrInstr : cmd->nextInstr))
+        scriptQueued = TRUE;
+    if (!scriptQueued)
         gBattlescriptCurrInstr = cmd->nextInstr;
 }
 

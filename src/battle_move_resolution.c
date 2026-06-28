@@ -3238,8 +3238,11 @@ static enum MoveEndResult MoveEndMultihitMove(struct BattleCalcValues *cv)
         gBattleScripting.multihitString[4]++;
         if (gMultiHitCounter == 0)
         {
-            BattleScriptCall(BattleScript_MultiHitPrintStrings);
-            result = MOVEEND_RESULT_RUN_SCRIPT;
+            if (target != TARGET_SMART) // Dragon Darts doesn't print hit x times message
+            {
+                BattleScriptCall(BattleScript_MultiHitPrintStrings);
+                result = MOVEEND_RESULT_RUN_SCRIPT;
+            }
         }
         else
         {
@@ -3270,7 +3273,7 @@ static enum MoveEndResult MoveEndMultihitMove(struct BattleCalcValues *cv)
                 gBattlescriptCurrInstr = BattleScript_FlushMessageBox;
                 return MOVEEND_RESULT_BREAK;
             }
-            else
+            else if (target != TARGET_SMART) // Dragon Darts doesn't print hit x times message
             {
                 BattleScriptCall(BattleScript_MultiHitPrintStrings);
                 result = MOVEEND_RESULT_RUN_SCRIPT;
@@ -4052,7 +4055,7 @@ static enum MoveEndResult MoveEndThirdMoveBlock(struct BattleCalcValues *cv)
             MarkBattlerForControllerExec(cv->battlerAtk);
             ClearBattlerItemEffectHistory(cv->battlerAtk);
 
-            if (!TrySymbiosis(cv->battlerAtk, item, TRUE))
+            if (!TrySymbiosis(cv->battlerAtk, item, NULL))
                 result = MOVEEND_RESULT_RUN_SCRIPT;
         }
         break;
@@ -4266,6 +4269,8 @@ static enum MoveEndResult MoveEndClearBits(struct BattleCalcValues *cv)
     gBattleStruct->toxicChainPriority = FALSE;
     gBattleStruct->flungItem = FLUNG_ITEM_NONE;
     gBattleStruct->blunderPolicy = FALSE;
+    gBattleScripting.animTurn = 0;
+    gBattleScripting.animTargetsHit = 0;
 
     if (gBattleStruct->pledgeState == PLEDGE_COMBO_ATTACK)
         gBattleStruct->pledgeState = PLEDGE_COMBO_NONE;
