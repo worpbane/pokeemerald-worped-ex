@@ -108,6 +108,7 @@ struct Usm_State {
     u8 loadState;
     u8 selectedIcon;
     u8 windowCount;
+    u8 frameCounter;
     u8 scrollOffset;
     u8 items[USM_ICO_COUNT];
     u8 itemCount;
@@ -292,22 +293,11 @@ static void Usm_StartIconAnim(u8 iconId);
 static void Usm_SaveItems(void);
 static bool32 Usm_IsItemAvailable(enum Usm_Icons item);
 static bool32 IsPlayerInBattlePyramid(void);
+static void Usm_CreateScrollingArrows(void);
+
 static bool32 shouldIconsObjWinMask(void);
 static void ShowSafariPopup(void);
 static void ShowBattlePyramidPopup(void);
-
-//WorpTODO: Make this nicer pls
-static const u8 *const sPyramidFloorNames[FRONTIER_STAGES_PER_CHALLENGE + 1] =
-{
-    gText_Floor1,
-    gText_Floor2,
-    gText_Floor3,
-    gText_Floor4,
-    gText_Floor5,
-    gText_Floor6,
-    gText_Floor7,
-    gText_Peak
-};
 
 // Menu Callbacks
 static bool8 StartMenuPokedexCallback(void);
@@ -617,7 +607,14 @@ static void Usm_SpriteCallbackArrow(struct Sprite *sprite)
         sprite->invisible = TRUE;
         return;
     }
-    sprite->invisible = (sUsmState->windowCount % 32) >= 16;
+    //sprite->invisible = (sUsmState->frameCounter % 32) >= 16; //Blinky
+    sprite->invisible = FALSE;
+    //Move Left/Right instead of blinky
+    u8 offset = (sUsmState->frameCounter % 48) / 12;
+    if (sprite->hFlip)
+        sprite->x2 = -(offset);
+    else
+        sprite->x2 = offset;
 }
 
 void Usm_InitStartMenu(void)
@@ -657,14 +654,19 @@ void Usm_InitStartMenu(void)
     Usm_LoadIconGfx();
     Usm_LoadIconPalette();
     Usm_CreateIcons(0, USM_ICON_YPOS);
-    sUsmMemory->leftArrowId = Usm_CreateArrowSprite(8, USM_ICON_YPOS, TRUE);
-    sUsmMemory->rightArrowId = Usm_CreateArrowSprite(DISPLAY_WIDTH - 8, USM_ICON_YPOS, FALSE);
+    Usm_CreateScrollingArrows();
     Usm_StartIconAnim(sUsmState->selectedIcon);
 
     if (GetSafariZoneFlag()) ShowSafariPopup();
     if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE) ShowBattlePyramidPopup();
 
     CreateTask(Task_UsmHandleMainInput, 0);
+}
+
+static void Usm_CreateScrollingArrows(void)
+{
+    sUsmMemory->leftArrowId = Usm_CreateArrowSprite(9, USM_ICON_YPOS, TRUE);
+    sUsmMemory->rightArrowId = Usm_CreateArrowSprite(DISPLAY_WIDTH - 9, USM_ICON_YPOS, FALSE);
 }
 
 static void Usm_PrintText(u8 winId, u8 fontId, s16 x, s16 y, const u8* color, const u8* str)
@@ -716,6 +718,19 @@ static void ShowSafariPopup(void)
     //Copy to the VRAM so it shows
     CopyWindowToVram(winId, COPYWIN_GFX);
 }
+
+//WorpTODO: Make this nicer pls
+static const u8 *const sPyramidFloorNames[FRONTIER_STAGES_PER_CHALLENGE + 1] =
+{
+    gText_Floor1,
+    gText_Floor2,
+    gText_Floor3,
+    gText_Floor4,
+    gText_Floor5,
+    gText_Floor6,
+    gText_Floor7,
+    gText_Peak
+};
 
 static void ShowBattlePyramidPopup(void)
 {
@@ -1115,6 +1130,7 @@ static u32 Usm_ReadKeys(void)
 static void Task_UsmHandleMainInput(u8 taskId)
 {
     u16 input = Usm_ReadKeys();
+    sUsmState->frameCounter++;
     TaskFunc func;
     switch (input) {
         case A_BUTTON:
@@ -1156,8 +1172,6 @@ static void Usm_RefreshMenu(void)
 
     s16 startX = 24 + (USM_BANNER_WIDTH - (sUsmState->visible.count * USM_ICON_WIDTH)) / 2;
     Usm_CreateIcons(startX, USM_ICON_YPOS);
-    sUsmMemory->leftArrowId = Usm_CreateArrowSprite(8, USM_ICON_YPOS, TRUE);
-    sUsmMemory->rightArrowId = Usm_CreateArrowSprite(DISPLAY_WIDTH - 8, USM_ICON_YPOS, FALSE);
 
     StartSpriteAnim(Usm_GetSelectedSprite(), 1);
     Usm_StartIconAnim(sUsmState->selectedIcon);
@@ -1252,6 +1266,7 @@ static void Task_UsmHandleMoveItems(u8 taskId)
             if (input == SELECT_BUTTON || input == A_BUTTON || input == B_BUTTON)
             {
                 PlaySE(SE_SUCCESS);
+                gSprites[*handSprite].invisible = TRUE;
                 DestroySprite(&gSprites[*handSprite]);
                 FreeSpriteTilesByTag(USM_TILETAG_HAND);
                 Usm_RefreshMenu();
