@@ -270,7 +270,6 @@ static u8 Usm_GetWindowBaseColor(u8 winId);
 static void Usm_PrintText(u8 winId, u8 fontId, s16 x, s16 y, const u8* color, const u8* str);
 static void Usm_PrintIconLabel(void);
 static void Usm_PrintClockText();
-static void Usm_AnimateSelectedIcon(void);
 static struct Sprite* Usm_GetIconSprite(u8 iconId);
 static void Usm_ExitStartMenu(void);
 static u32 Usm_ReadKeys(void);
@@ -282,12 +281,12 @@ static void Usm_BuildDefaultMenuItems(void);
 static void Usm_AddMenuItem(enum Usm_Icons icon);
 static u32 Usm_CreateHandSprite(s16 x, s16 y);
 static void Usm_MoveItem(s8 dir);
-static void Usm_RedrawIcons(bool32 startAffine);
 static void Usm_DestroyVisibleIcons(void);
 static void Usm_StartIconAnim(u8 iconId);
 static void Usm_SaveItems(void);
 static bool32 Usm_IsItemAvailable(enum Usm_Icons item);
 static bool32 IsPlayerInBattlePyramid(void);
+static bool32 shouldIconsObjWinMask(void);
 static void ShowSafariPopup(void);
 static void ShowBattlePyramidPopup(void);
 
@@ -312,7 +311,6 @@ static bool8 StartMenuPokeNavCallback(void);
 static bool8 StartMenuPlayerNameCallback(void);
 static bool8 StartMenuSaveCallback(void);
 static bool8 StartMenuOptionCallback(void);
-static bool8 StartMenuExitCallback(void);
 static bool8 StartMenuSafariZoneRetireCallback(void);
 static bool8 StartMenuLinkModePlayerNameCallback(void);
 static bool8 StartMenuBattlePyramidRetireCallback(void);
@@ -417,14 +415,14 @@ static const struct Usm_MenuItem sUsmMenuItems[USM_ICO_COUNT] = {
             .template = &sSpriteTemplate_Retire,
             .sheet = &sSpriteSheet_Retire,
             .label = COMPOUND_STRING("Retire"),
-            .shouldFade = TRUE,
+            .shouldFade = FALSE,
             .callback = StartMenuSafariZoneRetireCallback,
         },
     [USM_ICO_FRONTIER_RETIRE] =
         {
             .iconId = USM_ICO_SAVE,
-            .template = &sSpriteTemplate_Save,
-            .sheet = &sSpriteSheet_Save,
+            .template = &sSpriteTemplate_Retire,
+            .sheet = &sSpriteSheet_Retire,
             .label = COMPOUND_STRING("Retire"),
             .shouldFade = FALSE,
             .callback = StartMenuBattlePyramidRetireCallback,
@@ -536,18 +534,13 @@ static bool8 StartMenuOptionCallback(void)
 
     return FALSE;
 }
-static bool8 UNUSED StartMenuExitCallback(void)
-{
-    Usm_ExitStartMenu();
-    UnlockPlayerFieldControls();
-    UnfreezeObjectEvents();
-    return TRUE;
-}
 
 static bool8 StartMenuSafariZoneRetireCallback(void)
 {
     SafariZoneRetirePrompt();
     return TRUE;
+
+    //Prompt > Script - No Closes Yes leads to > Retire Script which just leads to > Exit Script
 }
 
 static bool8 StartMenuLinkModePlayerNameCallback(void)
@@ -617,7 +610,7 @@ void Usm_InitStartMenu(void)
         return;
     }
 
-    if (GetFlashLevel())
+    if (shouldIconsObjWinMask())
     {
         SetGpuRegBits(REG_OFFSET_DISPCNT, DISPCNT_OBJWIN_ON);
         SetGpuRegBits(REG_OFFSET_WINOUT, WINOUT_WINOBJ_OBJ);
@@ -972,9 +965,7 @@ static void Usm_CreateIcons(s16 x, s16 y)
         u8 iconId = sUsmState->visible.iconIndex[i];
 
         u8 id = CreateSprite(sUsmMenuItems[iconId].template, posX, y, 1);
-
-        if (GetFlashLevel()) gSprites[id].objWinMask = TRUE;
-
+        if (shouldIconsObjWinMask()) gSprites[id].copyToObjWin = TRUE;
         sUsmMemory->spriteIds[i] = id;
     }
 }
@@ -991,24 +982,6 @@ static struct Sprite* Usm_GetSelectedSprite(void)
     u8 selectedId = sUsmMemory->spriteIds[sUsmState->selectedIcon];
     struct Sprite* sprite = &gSprites[selectedId];
     return sprite;
-}
-
-static void Usm_AnimateSelectedIcon(void)
-{
-    for (u32 i = 0; i < sUsmState->visible.count; i++) {
-        struct Sprite* sprite = &gSprites[sUsmMemory->spriteIds[i]];
-        if (i != sUsmState->selectedIcon) {
-            sprite->oam.affineMode = ST_OAM_AFFINE_OFF;
-            StartSpriteAnim(sprite, 0);
-        }
-        else {
-            StartSpriteAnim(sprite, 1);
-            sprite->oam.affineMode = ST_OAM_AFFINE_NORMAL;
-            u8 matrixNum = AllocOamMatrix();
-            sprite->oam.matrixNum = matrixNum;
-            StartSpriteAffineAnim(sprite, 0);
-        }
-    }
 }
 
 static void Usm_StartIconAnim(u8 iconId)
@@ -1300,17 +1273,6 @@ static void Usm_MoveItem(s8 dir)
     Usm_RefreshMenu();
 }
 
-static void UNUSED Usm_RedrawIcons(bool32 startAffine)
-{
-    Usm_DestroyVisibleIcons();
-
-    Usm_CreateIcons(0, USM_ICON_YPOS);
-    if (startAffine)
-        Usm_AnimateSelectedIcon();
-    else
-        StartSpriteAnim(Usm_GetSelectedSprite(), 1);
-}
-
 static void Usm_DestroyVisibleIcons(void)
 {
     for (u32 i = 0; i < sUsmState->visible.count; i++) {
@@ -1327,7 +1289,7 @@ static u32 Usm_CreateHandSprite(s16 x, s16 y)
         SPRITE_SIZE(32x32), SPRITE_SHAPE(32x32), x, y, 0, SpriteCallbackDummy,
         TRUE);
     struct Sprite* sprite = &gSprites[spriteId];
-    sprite->objWinMask = TRUE;
+    if (shouldIconsObjWinMask()) gSprites[spriteId].copyToObjWin = TRUE;
     sprite->oam.priority = 0;
     return spriteId;
 }
@@ -1356,4 +1318,11 @@ bool8 FieldCB_ReturnToFieldUsm(void)
 static bool32 IsPlayerInBattlePyramid(void)
 {
     return CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE;
+}
+
+static bool32 shouldIconsObjWinMask(void)
+{
+    if (GetFlashLevel()) return TRUE;
+    else if (CurrentBattlePyramidLocation() != PYRAMID_LOCATION_NONE) return TRUE;
+    else return FALSE;
 }
