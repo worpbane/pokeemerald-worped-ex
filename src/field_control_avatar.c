@@ -1352,7 +1352,8 @@ static void Task_OpenStartMenu(u8 taskId)
         return;
 
     PlaySE(SE_WIN_OPEN);
-    ShowStartMenu();
+    //ShowStartMenu();
+    Usm_InitStartMenu();
     DestroyTask(taskId);
 }
 

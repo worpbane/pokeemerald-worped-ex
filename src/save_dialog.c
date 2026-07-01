@@ -405,7 +405,11 @@ void Task_SaveDialogHandleBattlePyramidRetire(u8 taskId)
     switch (RunSaveCallback())
     {
     case USM_SAVE_SUCCESS: // No (Stay in battle pyramid)
+        ClearDialogWindowAndFrameToTransparent(0, TRUE);
+        ScriptUnfreezeObjectEvents();
+        UnlockPlayerFieldControls();
         gMenuCallback = BattlePyramidRetireReturnCallback;
+        DestroyTask(taskId);
         break;
     case USM_SAVE_IN_PROGRESS:
         break;
@@ -414,6 +418,7 @@ void Task_SaveDialogHandleBattlePyramidRetire(u8 taskId)
         ScriptUnfreezeObjectEvents();
         UnlockPlayerFieldControls();
         ScriptContext_SetupScript(BattlePyramid_Retire);
+        DestroyTask(taskId);
         break;
     }
 }
@@ -427,6 +432,8 @@ void SaveDialog_InitBattlePyramidRetire(void)
 
 static u8 BattlePyramidConfirmRetireCallback(void)
 {
+    LoadMessageBoxAndFrameGfx(0, TRUE);
+    LoadUserWindowBorderGfx_(0, 8, BG_PLTT_ID(14));
     ShowSaveMessage(gText_BattlePyramidConfirmRetire, BattlePyramidRetireYesNoCallback);
 
     return USM_SAVE_IN_PROGRESS;

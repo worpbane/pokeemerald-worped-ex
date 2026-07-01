@@ -531,12 +531,14 @@ static bool8 StartMenuOptionCallback(void)
     return FALSE;
 }
 
+extern const u8 SafariZone_EventScript_RetirePrompt[];
 static bool8 StartMenuSafariZoneRetireCallback(void)
 {
-    SafariZoneRetirePrompt();
-    return TRUE;
-
-    //Prompt > Script - No Closes Yes leads to > Retire Script which just leads to > Exit Script
+    if (!gPaletteFade.active)
+    {
+        ScriptContext_SetupScript(SafariZone_EventScript_RetirePrompt);
+    }
+    return FALSE;
 }
 
 static bool8 StartMenuLinkModePlayerNameCallback(void)
@@ -943,6 +945,7 @@ static bool32 Usm_IsItemAvailable(enum Usm_Icons item)
         case USM_ICO_FRONTIER_RETIRE: return IsPlayerInBattlePyramid();
         case USM_ICO_SAFARI_RETIRE: return GetSafariZoneFlag();
         case USM_ICO_DEBUG: return (DEBUG_OVERWORLD_MENU && DEBUG_OVERWORLD_IN_MENU);
+        case USM_ICO_SAVE: return !GetSafariZoneFlag() && !IsPlayerInBattlePyramid();
         default: return TRUE;
     }
 
