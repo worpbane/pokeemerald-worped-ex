@@ -92,7 +92,8 @@ TEST("Shininess independent from PID and OTID")
 
 TEST("Shininess set on an Egg persists after hatching")
 {
-    u32 personality = SHINY_ODDS;
+    //u32 personality = SHINY_ODDS;
+    u32 personality = GetCurrentShinyOdds();
     u32 trainerId = 0;
     bool32 isShiny = TRUE;
     bool8 isEgg = TRUE;

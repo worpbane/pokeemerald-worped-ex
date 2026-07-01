@@ -620,8 +620,6 @@ struct SaveBlock2
              u16 w_opBallPrompt:1;      //0=Disabled, 1=Enabled - Last Used Ball
              u16 w_opCatchMode:1;       //0=Disabled, 1=Enabled - Catch Mode
              u16 w_opFontType:1;        //0=RSE, 1=FRLG
-             u8  padding_align;
-             u8 w_rivalName[PLAYER_NAME_LENGTH + 1]; //Name set at start
     // ========================
     /*0x18*/ struct Pokedex pokedex;
     /*0x90*/ u8 filler_90[0x8];
@@ -1225,19 +1223,20 @@ struct SaveBlock1
     //WorpedEx Custom New Game Options
     //=================================
                 u8 wx_ShinyChance:4;            //Shiny Rate: 0 - Gen3(8192), 1 - Gen6(4096), 2 - 2048, 3 - 1024, 4 - Go(512)
+                u8 wx_ShinyCharmRolls:1;        //Shiny Charm Rolls: 0 - 3, 1 - 5
                 u8 wx_LevelCap:1;               //Level Cap: 0 - Off, 1 - On
                 u8 wx_ExpMulti:2;               //Experience: 0 - 1x, 1 - 1.5x, 2 - 2x
                 u8 wx_CatchRate:2;              //Catch Rate: 0 - Normal(1x), 1 - Easier(2x), 2 - Much Easier(3x)
                 u8 wx_TrainerItemUse:1;         //From tx_rac | 0 - Normal Item Use, 1 No Item Use in Battles
                 u8 wx_PlayerItemUse:1;          //From tx_rac | 0 - Normal Item Use, 1 No Item Use in Battles
                 u8 wx_UnlimitedWT:1;            //From tx_rac | 0 - Limit WT to 3, 1 - Unlimited WT
+                u8 rivalName[PLAYER_NAME_LENGTH + 1]; //Rival Name
     //=================================
 #if FREE_TRAINER_TOWER == FALSE && IS_FRLG
     u32 towerChallengeId;
     struct TrainerTower trainerTower[NUM_TOWER_CHALLENGE_TYPES];
 #endif //FREE_TRAINER_TOWER
 #if IS_FRLG
-    u8 rivalName[PLAYER_NAME_LENGTH + 1];
     struct DaycareMon route5DayCareMon;
 #endif
     // sizeof: 0x3???

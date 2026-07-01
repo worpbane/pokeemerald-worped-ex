@@ -32,6 +32,7 @@ enum
 enum
 {
     MENUITEM_MODE_SHINYCHANCE,
+    MENUITEM_MODE_SHINYCHARM,
     MENUITEM_MODE_LEVELCAP,
     MENUITEM_MODE_EXPMULT,
     MENUITEM_MODE_CATCHRATE,
@@ -175,6 +176,7 @@ static void DrawChoices_Options_Five(const u8 *const *const strings, int selecti
 static void ReDrawAll(void);
 
 static void DrawChoices_ShinyChance(int selection, int y);
+static void DrawChoices_ShinyCharm(int selection, int y);
 static void DrawChoices_LevelCap(int selection, int y);
 static void DrawChoices_ExpMult(int selection, int y);
 static void DrawChoices_CatchRate(int selection, int y);
@@ -220,7 +222,8 @@ struct // MENU_MODE
     int (*processInput)(int selection);
 } static const sItemFunctionsMain[MENUITEM_MODE_COUNT] =
 {
-    [MENUITEM_MODE_SHINYCHANCE]         = {DrawChoices_ShinyChance,         ProcessInput_Options_Five}, 
+    [MENUITEM_MODE_SHINYCHANCE]         = {DrawChoices_ShinyChance,         ProcessInput_Options_Five},
+    [MENUITEM_MODE_SHINYCHARM]          = {DrawChoices_ShinyCharm,          ProcessInput_Options_Two},
     [MENUITEM_MODE_LEVELCAP]            = {DrawChoices_LevelCap,            ProcessInput_Options_Two},
     [MENUITEM_MODE_EXPMULT]             = {DrawChoices_ExpMult,             ProcessInput_Options_Three},
     [MENUITEM_MODE_CATCHRATE]           = {DrawChoices_CatchRate,           ProcessInput_Options_Three},
@@ -248,6 +251,7 @@ struct // MENU_MAIN
 //Strings
 //System Options
 static const u8 sText_ShinyChance[]         = _("Shiny Chance");
+static const u8 sText_ShinyCharm[]         = _("Shiny Charm");
 static const u8 sText_LevelCap[]            = _("Level Cap");
 static const u8 sText_ExpMult[]             = _("Exp Mult");
 static const u8 sText_CatchRate[]           = _("Catch Rate");
@@ -269,6 +273,7 @@ static const u8 gText_OptionMenuSave[]      = _("Save");
 static const u8 *const sOptionMenuItemsNamesMain[MENUITEM_MODE_COUNT] =
 {
     [MENUITEM_MODE_SHINYCHANCE]         = sText_ShinyChance, 
+    [MENUITEM_MODE_SHINYCHARM]          = sText_ShinyCharm, 
     [MENUITEM_MODE_LEVELCAP]            = sText_LevelCap,
     [MENUITEM_MODE_EXPMULT]             = sText_ExpMult,
     [MENUITEM_MODE_CATCHRATE]           = sText_CatchRate,
@@ -330,18 +335,20 @@ static bool8 CheckConditions(int selection)
         {
         case MENUITEM_MODE_SHINYCHANCE:
             return TRUE;
+        case MENUITEM_MODE_SHINYCHARM:
+            return TRUE;
         case MENUITEM_MODE_LEVELCAP:
-            return TRUE;
+            return FALSE;
         case MENUITEM_MODE_EXPMULT:
-            return TRUE;
+            return FALSE;
         case MENUITEM_MODE_CATCHRATE:
-            return TRUE;
+            return FALSE;
         case MENUITEM_MODE_TRAINERSUSEITEMS:
             return FALSE;
         case MENUITEM_MODE_PLAYERUSEITEMS:
             return FALSE;
         case MENUITEM_MODE_UNLIMITEDWT:
-            return TRUE;
+            return FALSE;
         case MENUITEM_MODE_NEXT:
             return TRUE;
         case MENUITEM_MODE_COUNT:
@@ -364,6 +371,8 @@ static const u8 sText_Desc_Shiny4096[]          = _("Modern rates ({COLOR 12}{SH
 static const u8 sText_Desc_Shiny2048[]          = _("Increased rates ({COLOR 12}{SHADOW 11}1/2048{COLOR 2}{SHADOW 4}).\nA casual hunt.");
 static const u8 sText_Desc_Shiny1024[]          = _("Boosted rates ({COLOR 6}{SHADOW 5}1/1024{COLOR 2}{SHADOW 4}).\nEasier encounters.");
 static const u8 sText_Desc_Shiny512[]           = _("High odds ({COLOR 6}{SHADOW 5}1/512{COLOR 2}{SHADOW 4}).\nSimilar to PokémonGO.");
+static const u8 sText_Desc_ShinyCharm_3[]       = _("Shiny Charm adds {COLOR 12}{SHADOW 11}2 extra rolls.{COLOR 2}{SHADOW 4}\nStacks with other Shiny bonuses.");
+static const u8 sText_Desc_ShinyCharm_5[]       = _("Shiny Charm adds {COLOR 6}{SHADOW 5}4 extra rolls.{COLOR 2}{SHADOW 4}\nStacks with other Shiny bonuses.");
 static const u8 sText_Desc_LevelCap_None[]      = _("No level limits. Power level your\nteam without restriction.");
 static const u8 sText_Desc_LevelCap_Normal[]    = _("Player team is capped to the next\n{COLOR 6}{SHADOW 5}Gym Leader's{COLOR 2}{SHADOW 4} entry level.");
 static const u8 sText_Desc_ExpMult_1_0[]        = _("Standard growth.\nA more authentic experience.");
@@ -382,6 +391,7 @@ static const u8 sText_Desc_WonderTrade_Unlimited[]  = _("WonderTrades have no da
 static const u8 *const sOptionMenuItemDescriptionsMain[MENUITEM_MODE_COUNT][5] =
 {
     [MENUITEM_MODE_SHINYCHANCE]         = {sText_Desc_Shiny8192,            sText_Desc_Shiny4096,               sText_Desc_Shiny2048,       sText_Desc_Shiny1024,       sText_Desc_Shiny512},
+    [MENUITEM_MODE_SHINYCHARM]          = {sText_Desc_ShinyCharm_3,         sText_Desc_ShinyCharm_5,            sText_Empty,                sText_Empty,                sText_Empty},
     [MENUITEM_MODE_LEVELCAP]            = {sText_Desc_LevelCap_None,        sText_Desc_LevelCap_Normal,         sText_Empty,                sText_Empty,                sText_Empty},
     [MENUITEM_MODE_EXPMULT]             = {sText_Desc_ExpMult_1_0,          sText_Desc_ExpMult_1_5,             sText_Desc_ExpMult_2_0,     sText_Empty,                sText_Empty},
     [MENUITEM_MODE_CATCHRATE]           = {sText_Desc_CatchRate_1x,         sText_Desc_CatchRate_2x,            sText_Desc_CatchRate_3x,    sText_Empty,                sText_Empty},
@@ -423,6 +433,7 @@ static const u8 sText_Desc_NotImplemented[]               = _("Not Implemented."
 static const u8 *const sOptionMenuItemDescriptionsDisabledMain[MENUITEM_MODE_COUNT] =
 {
     [MENUITEM_MODE_SHINYCHANCE]         = sText_Desc_NotImplemented,
+    [MENUITEM_MODE_SHINYCHARM]          = sText_Desc_NotImplemented,
     [MENUITEM_MODE_LEVELCAP]            = sText_Desc_NotImplemented,
     [MENUITEM_MODE_EXPMULT]             = sText_Desc_NotImplemented,
     [MENUITEM_MODE_CATCHRATE]           = sText_Desc_NotImplemented,
@@ -699,6 +710,7 @@ void CB2_InitNGOptionPlusMenu(void)
             break;
         case 6:
             gSaveBlock1Ptr->wx_ShinyChance              =       1;
+            gSaveBlock1Ptr->wx_ShinyCharmRolls          =       0;
             gSaveBlock1Ptr->wx_LevelCap                 =       0;
             gSaveBlock1Ptr->wx_ExpMulti                 =       0;
             gSaveBlock1Ptr->wx_CatchRate                =       0;
@@ -707,6 +719,7 @@ void CB2_InitNGOptionPlusMenu(void)
             gSaveBlock1Ptr->wx_UnlimitedWT              =       0;
 
             sOptions->sel_mode[MENUITEM_MODE_SHINYCHANCE]               = gSaveBlock1Ptr->wx_ShinyChance;
+            sOptions->sel_mode[MENUITEM_MODE_SHINYCHARM]                = gSaveBlock1Ptr->wx_ShinyCharmRolls;
             sOptions->sel_mode[MENUITEM_MODE_LEVELCAP]                  = gSaveBlock1Ptr->wx_LevelCap;
             sOptions->sel_mode[MENUITEM_MODE_EXPMULT]                   = gSaveBlock1Ptr->wx_ExpMulti;
             sOptions->sel_mode[MENUITEM_MODE_CATCHRATE]                 = gSaveBlock1Ptr->wx_CatchRate;
@@ -948,6 +961,7 @@ static void Task_NGOptionMenuSave(u8 taskId)
     gSaveBlock2Ptr->w_opBoxMode         = sOptions->sel_gameplay[MENUITEM_GAMEPLAY_BOXMODE];
 
     gSaveBlock1Ptr->wx_ShinyChance      = sOptions->sel_mode[MENUITEM_MODE_SHINYCHANCE];
+    gSaveBlock1Ptr->wx_ShinyCharmRolls  = sOptions->sel_mode[MENUITEM_MODE_SHINYCHARM];
     gSaveBlock1Ptr->wx_LevelCap         = sOptions->sel_mode[MENUITEM_MODE_LEVELCAP];
     gSaveBlock1Ptr->wx_ExpMulti         = sOptions->sel_mode[MENUITEM_MODE_EXPMULT];
     gSaveBlock1Ptr->wx_CatchRate        = sOptions->sel_mode[MENUITEM_MODE_CATCHRATE];
@@ -1165,9 +1179,21 @@ static void DrawChoices_ShinyChance(int selection, int y)
     DrawChoices_Options_Five(sText_ShinyChance_Strings, selection, y, active);
 }
 
+static const u8 sText_ShinyCharm_3[] = _("3 Rolls");
+static const u8 sText_ShinyCharm_5[] = _("5 Rolls");
+static void DrawChoices_ShinyCharm(int selection, int y)
+{
+    bool8 active = CheckConditions(MENUITEM_MODE_LEVELCAP);
+    u8 styles[2] = {0};
+    styles[selection] = 1;
+
+    DrawOptionMenuChoice(sText_ShinyCharm_3, 104, y, styles[0], active);
+    DrawOptionMenuChoice(sText_ShinyCharm_5, GetStringRightAlignXOffset(FONT_NORMAL, sText_ShinyCharm_5, 198), y, styles[1], active);
+}
+
 static const u8 sText_LevelCapOff[] = _("Off");
 static const u8 sText_LevelCapSoft[] = _("Soft");
-static const u8 sText_LevelCapHard[] = _("Hard"); //WORPTodo: Implement
+static const u8 sText_LevelCapHard[] = _("Hard"); //WorpTODO: Implement
 static void DrawChoices_LevelCap(int selection, int y)
 {
     bool8 active = CheckConditions(MENUITEM_MODE_LEVELCAP);

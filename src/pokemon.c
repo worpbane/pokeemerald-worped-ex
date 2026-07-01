@@ -881,7 +881,19 @@ bool32 ComputePlayerShinyOdds(u32 personality, u32 value)
     u32 totalRerolls = 0;
 
     if (CheckBagHasItem(ITEM_SHINY_CHARM, 1))
-        totalRerolls += I_SHINY_CHARM_ADDITIONAL_ROLLS;
+    {
+        //totalRerolls += I_SHINY_CHARM_ADDITIONAL_ROLLS; //We ignore the config in favor of the option at the start
+        switch (gSaveBlock1Ptr->wx_ShinyCharmRolls)
+        {
+            case 1: //1 should be 5 rerolls
+                totalRerolls += 5;
+                break;
+            case 0: //0 or default would be 3 rerolls
+            default:
+                totalRerolls += 3;
+                break;
+        }
+    }
 
     if (LURE_STEP_COUNT != 0)
         totalRerolls += 1;
@@ -891,13 +903,15 @@ bool32 ComputePlayerShinyOdds(u32 personality, u32 value)
     if (gDexNavSpecies)
         totalRerolls += CalculateDexNavShinyRolls();
 
-    while (GET_SHINY_VALUE(value, personality) >= SHINY_ODDS && totalRerolls > 0)
+    //while (GET_SHINY_VALUE(value, personality) >= SHINY_ODDS && totalRerolls > 0)
+    while (GET_SHINY_VALUE(value, personality) >= GetCurrentShinyOdds() && totalRerolls > 0)
     {
         personality = Random32();
         totalRerolls--;
     }
 
-    return GET_SHINY_VALUE(value, personality) < SHINY_ODDS;
+    //return GET_SHINY_VALUE(value, personality) < SHINY_ODDS;
+    return GET_SHINY_VALUE(value, personality) < GetCurrentShinyOdds();
 }
 
 void SetBoxMonIVs(struct BoxPokemon *mon, u8 fixedIV)
@@ -981,7 +995,8 @@ void CreateBoxMon(struct BoxPokemon *boxMon, enum Species species, u8 level, u32
     else if (trainerId.method == OT_ID_PRESET)
     {
         value = trainerId.value;
-        isShiny = GET_SHINY_VALUE(value, personality) < SHINY_ODDS;
+        //isShiny = GET_SHINY_VALUE(value, personality) < SHINY_ODDS;
+        isShiny = GET_SHINY_VALUE(value, personality) < GetCurrentShinyOdds();
     }
     else // Player is the OT
     {
@@ -2524,7 +2539,8 @@ u32 GetBoxMonData3(struct BoxPokemon *boxMon, s32 field, u8 *data)
         case MON_DATA_IS_SHINY:
         {
             u32 shinyValue = GET_SHINY_VALUE(boxMon->otId, boxMon->personality);
-            retVal = (shinyValue < SHINY_ODDS) ^ boxMon->shinyModifier;
+            //retVal = (shinyValue < SHINY_ODDS) ^ boxMon->shinyModifier;
+            retVal = (shinyValue < GetCurrentShinyOdds()) ^ boxMon->shinyModifier;
             break;
         }
         case MON_DATA_HIDDEN_NATURE:
@@ -2956,7 +2972,8 @@ void SetBoxMonData(struct BoxPokemon *boxMon, s32 field, const void *dataArg)
             u32 shinyValue = GET_SHINY_VALUE(boxMon->otId, boxMon->personality);
             bool32 isShiny;
             SET8(isShiny);
-            boxMon->shinyModifier = (shinyValue < SHINY_ODDS) ^ isShiny;
+            //boxMon->shinyModifier = (shinyValue < SHINY_ODDS) ^ isShiny;
+            boxMon->shinyModifier = (shinyValue < GetCurrentShinyOdds()) ^ isShiny;
             break;
         }
         case MON_DATA_HIDDEN_NATURE:
@@ -6936,4 +6953,17 @@ bool32 HasShedinjaHPHandling(enum Species species)
     if (P_BASE_HP_1_SHEDINJA_HANDLING && GetSpeciesBaseHP(species) == 1)
         return TRUE;
     return FALSE;
+}
+
+u16 GetCurrentShinyOdds(void)
+{
+    switch (gSaveBlock1Ptr->wx_ShinyChance)
+    {
+        case 0: return 8;    // Gen3: 8/65536 = 1/8192
+        case 1: return 16;   // Gen6: 16/65536 = 1/4096
+        case 2: return 32;   // 32/65536 = 1/2048
+        case 3: return 64;   // 64/65536 = 1/1024
+        case 4: return 128;  // GO: 128/65536 = 1/512
+        default: return 16;   // Defaults to Gen6/GenLatest
+    }
 }
