@@ -34,6 +34,7 @@
 #include "link.h"
 #include "main.h"
 #include "malloc.h"
+#include "map_name_popup.h"
 #include "menu.h"
 #include "option_menu.h"
 #include "overworld.h"
@@ -621,7 +622,9 @@ static void Usm_SpriteCallbackArrow(struct Sprite *sprite)
 
 void Usm_InitStartMenu(void)
 {
-    if (!IsOverworldLinkActive()) {
+    HideMapNamePopUpWindow();
+    if (!IsOverworldLinkActive())
+    {
         FreezeObjectEvents();
         PlayerFreeze();
         StopPlayerAvatar();
