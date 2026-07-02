@@ -2882,8 +2882,7 @@ bool32 CanThrowLastUsedBall(void)
         return FALSE;
     if (!CheckBagHasItem(gBallToDisplay, 1))
         return FALSE;
-
-    return TRUE;
+        return TRUE;
 }
 
 void TryAddLastUsedBallItemSprites(void)
@@ -3118,6 +3117,8 @@ static void TryHideOrRestoreLastUsedBall(u8 caseId)
     if (B_LAST_USED_BALL == FALSE)
         return;
     if (gBattleStruct->ballSpriteIds[0] == MAX_SPRITES)
+        return;
+    if (!CanThrowLastUsedBall())
         return;
 
     switch (caseId)

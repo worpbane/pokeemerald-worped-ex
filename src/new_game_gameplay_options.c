@@ -1183,7 +1183,7 @@ static const u8 sText_ShinyCharm_3[] = _("3 Rolls");
 static const u8 sText_ShinyCharm_5[] = _("5 Rolls");
 static void DrawChoices_ShinyCharm(int selection, int y)
 {
-    bool8 active = CheckConditions(MENUITEM_MODE_LEVELCAP);
+    bool8 active = CheckConditions(MENUITEM_MODE_SHINYCHARM);
     u8 styles[2] = {0};
     styles[selection] = 1;
 
