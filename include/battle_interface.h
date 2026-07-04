@@ -141,6 +141,7 @@ void TryToHideMoveInfoWindow(void);
 void TryUpdateCatchModeWindow(void);
 void TryAddPokeballIconToHealthbox(u8 healthboxSpriteId, bool8 noStatus);
 void UpdateNickInHealthbox(u8 healthboxSpriteId, struct Pokemon *mon);
+void GetCatTypeIconData(u8 category, u8 *dest);
 void GetMoveTypeIconData(u8 type, u8 *dest);
 void LoadTypePalette(u8 typeId);
 

@@ -1758,24 +1758,26 @@ static void MoveSelectionDisplayMoveType(enum BattlerId battler) //WorpBattleInf
         type = CheckDynamicMoveType(mon, move, battler, MON_IN_BATTLE);
     }
 
-    //Category Icon (Sprite)
-    if (gCategoryIconSpriteId != 0xFF) {
-        DestroySprite(&gSprites[gCategoryIconSpriteId]);
-        gCategoryIconSpriteId = 0xFF;
-    }
-    gCategoryIconSpriteId = CreateSprite(&gSpriteTemplate_CategoryIconsWide, 220, 128, 1);
-    StartSpriteAnim(&gSprites[gCategoryIconSpriteId], GetMoveCategory(move));
-
-    //Type Icon
+    //Icon data
     u8 typeIconBuffer[0x100]; 
     GetMoveTypeIconData(type, typeIconBuffer);
+    u8 catIconBuffer[0x100]; 
+    GetCatTypeIconData(GetMoveCategory(move), catIconBuffer);
 
+    //Type
     LoadTypePalette(type);
     FillWindowPixelBuffer(B_WIN_MOVE_TYPE, PIXEL_FILL(0));
     BlitBitmapToWindow(B_WIN_MOVE_TYPE, typeIconBuffer, 0, 0, 32, 16);
-    
     PutWindowTilemap(B_WIN_MOVE_TYPE);
+
+    //Category
+    FillWindowPixelBuffer(B_WIN_PSS_TYPE, PIXEL_FILL(0));
+    BlitBitmapToWindow(B_WIN_PSS_TYPE, catIconBuffer, 0, 0, 32, 16);
+    PutWindowTilemap(B_WIN_PSS_TYPE);
+
+    //Print
     CopyWindowToVram(B_WIN_MOVE_TYPE, COPYWIN_FULL);
+    CopyWindowToVram(B_WIN_PSS_TYPE, COPYWIN_FULL);
 }
 
 static void TryMoveSelectionDisplayMoveDescription(enum BattlerId battler)

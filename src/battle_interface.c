@@ -3286,10 +3286,15 @@ void ArrowsChangeColorLastBallCycle(bool32 showArrows)
 
 void CategoryIcons_LoadSpritesGfx(void)
 {
-    LoadCompressedSpriteSheet(&gSpriteSheet_CategoryIconsWide);
-    LoadSpritePalette(&gSpritePal_CategoryIcons);
-    //LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
-    //LoadPalette(gMoveTypes_Pal, OBJ_PLTT_ID(14), PLTT_SIZE_4BPP);
+    LoadPalette(gCategoryIconsWide_Pal, BG_PLTT_ID(13), PLTT_SIZE_4BPP);
+}
+
+void GetCatTypeIconData(u8 category, u8 *dest)
+{
+    if (category >= 3) category = 0; //Just in case...
+
+    u32 offset = (u32)category * 0x100; 
+    CpuCopy16((const u8 *)gCategoryIcons_InterfaceGfx + offset, dest, 0x100);
 }
 
 void GetMoveTypeIconData(u8 type, u8 *dest)
@@ -3308,6 +3313,6 @@ void LoadTypePalette(u8 typeId)
     {
         u8 paletteBlockIndex = palNum - 13;
         u32 offset = paletteBlockIndex * 16;
-        LoadPalette(gMoveTypes_Pal + offset, BG_PLTT_ID(14), PLTT_SIZE_4BPP);
+        LoadPalette(gMoveTypes_Pal + offset, BG_PLTT_ID(12), PLTT_SIZE_4BPP);
     }
 }

@@ -1712,8 +1712,10 @@ const u32 gCategoryIcons_Gfx[] = INCGFX_U32("graphics/interface/category_icons.p
 const u16 gCategoryIconsWide_Pal[] = INCGFX_U16("graphics/interface/category_icons_wide.png", ".gbapal");
 const u32 gCategoryIconsWide_Gfx[] = INCGFX_U32("graphics/interface/category_icons_wide.png", ".4bpp.smol");
 
+const u32 gCategoryIcons_InterfaceGfx[] = INCGFX_U32("graphics/battle_interface/wMoveInfo_Categories.png", ".4bpp");
+
 const u32 gMoveTypes_Gfx[] = INCGFX_U32("graphics/types/move_types.4bpp", ".smol");
-const u32 gMoveTypes_InterfaceGfx[] = INCGFX_U32("graphics/types/wTypeIconsMoveInfoWindow.png", ".4bpp", "-mwidth 4 -mheight 2");
+const u32 gMoveTypes_InterfaceGfx[] = INCGFX_U32("graphics/battle_interface/wMoveInfo_Types.png", ".4bpp");
 const u16 gMoveTypes_Pal[] = INCBIN_U16("graphics/types/move_types.gbapal");
 
 const u32 gSummaryMoveSelect_Gfx[] = INCGFX_U32("graphics/summary_screen/move_select.png", ".4bpp.smol");

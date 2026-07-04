@@ -2025,6 +2025,7 @@ extern const u16 gCategoryIcons_Pal[];
 extern const u32 gCategoryIcons_Gfx[];
 extern const u16 gCategoryIconsWide_Pal[];
 extern const u32 gCategoryIconsWide_Gfx[];
+extern const u32 gCategoryIcons_InterfaceGfx[];
 
 extern const u32 gShopMenu_Gfx[];
 extern const u32 gShopMenu_Tilemap[];
