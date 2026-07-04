@@ -3284,6 +3284,8 @@ void ArrowsChangeColorLastBallCycle(bool32 showArrows)
 
 void CategoryIcons_LoadSpritesGfx(void)
 {
-    LoadCompressedSpriteSheet(&gSpriteSheet_CategoryIcons);
+    LoadCompressedSpriteSheet(&gSpriteSheet_CategoryIconsWide);
     LoadSpritePalette(&gSpritePal_CategoryIcons);
+    LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
+    LoadPalette(gMoveTypes_Pal, OBJ_PLTT_ID(13), 3 * PLTT_SIZE_4BPP);
 }

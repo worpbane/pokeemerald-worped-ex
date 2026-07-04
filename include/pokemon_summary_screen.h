@@ -7,11 +7,14 @@
 
 extern u8 gLastViewedMonIndex;
 
+extern const struct SpritePalette gSpritePal_MoveTypes;
 extern const struct SpriteTemplate gSpriteTemplate_MoveTypes;
 extern const struct CompressedSpriteSheet gSpriteSheet_MoveTypes;
 extern const struct CompressedSpriteSheet gSpriteSheet_CategoryIcons;
 extern const struct SpritePalette gSpritePal_CategoryIcons;
 extern const struct SpriteTemplate gSpriteTemplate_CategoryIcons;
+extern const struct CompressedSpriteSheet gSpriteSheet_CategoryIconsWide;
+extern const struct SpriteTemplate gSpriteTemplate_CategoryIconsWide;
 extern MainCallback gInitialSummaryScreenCallback;
 
 enum IncrDecrUpdateValues

@@ -1709,6 +1709,9 @@ const u16 gStatusPal_Icons[] = INCGFX_U16("graphics/interface/status_icons.png",
 const u16 gCategoryIcons_Pal[] = INCGFX_U16("graphics/interface/category_icons.png", ".gbapal");
 const u32 gCategoryIcons_Gfx[] = INCGFX_U32("graphics/interface/category_icons.png", ".4bpp.smol");
 
+const u16 gCategoryIconsWide_Pal[] = INCGFX_U16("graphics/interface/category_icons_wide.png", ".gbapal");
+const u32 gCategoryIconsWide_Gfx[] = INCGFX_U32("graphics/interface/category_icons_wide.png", ".4bpp.smol");
+
 const u32 gMoveTypes_Gfx[] = INCGFX_U32("graphics/types/move_types.4bpp", ".smol");
 const u16 gMoveTypes_Pal[] = INCBIN_U16("graphics/types/move_types.gbapal");
 

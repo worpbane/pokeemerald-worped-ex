@@ -786,6 +786,7 @@ static const u8 sMovesPPLayout[] = _("{PP}{DYNAMIC 0}/{DYNAMIC 1}");
 #define TAG_MOVE_TYPES 30002
 #define TAG_MON_MARKINGS 30003
 #define TAG_CATEGORY_ICONS 30004
+#define TAG_CATEGORY_ICONS_WIDE 30005
 
 static const struct OamData sOamData_CategoryIcons =
 {
@@ -840,6 +841,53 @@ const struct SpriteTemplate gSpriteTemplate_CategoryIcons =
     .anims = sSpriteAnimTable_CategoryIcons,
 };
 
+static const struct OamData sOamData_CategoryIconsWide =
+{
+    .size = SPRITE_SIZE(32x16),
+    .shape = SPRITE_SHAPE(32x16),
+    .priority = 0,
+};
+
+const struct CompressedSpriteSheet gSpriteSheet_CategoryIconsWide =
+{
+    .data = gCategoryIconsWide_Gfx,
+    .size = 32*16*3/2,
+    .tag = TAG_CATEGORY_ICONS_WIDE,
+};
+
+static const union AnimCmd sSpriteAnim_CategoryIcon0Wide[] =
+{
+    ANIMCMD_FRAME(0, 0),
+    ANIMCMD_END
+};
+
+static const union AnimCmd sSpriteAnim_CategoryIcon1Wide[] =
+{
+    ANIMCMD_FRAME(8, 0),
+    ANIMCMD_END
+};
+
+static const union AnimCmd sSpriteAnim_CategoryIcon2Wide[] =
+{
+    ANIMCMD_FRAME(16, 0),
+    ANIMCMD_END
+};
+
+static const union AnimCmd *const sSpriteAnimTable_CategoryIconsWide[] =
+{
+    sSpriteAnim_CategoryIcon0Wide,
+    sSpriteAnim_CategoryIcon1Wide,
+    sSpriteAnim_CategoryIcon2Wide,
+};
+
+const struct SpriteTemplate gSpriteTemplate_CategoryIconsWide =
+{
+    .tileTag = TAG_CATEGORY_ICONS_WIDE,
+    .paletteTag = TAG_CATEGORY_ICONS,
+    .oam = &sOamData_CategoryIconsWide,
+    .anims = sSpriteAnimTable_CategoryIconsWide,
+};
+
 static const struct OamData sOamData_MoveTypes =
 {
     .y = 0,
@@ -852,7 +900,7 @@ static const struct OamData sOamData_MoveTypes =
     .matrixNum = 0,
     .size = SPRITE_SIZE(32x16),
     .tileNum = 0,
-    .priority = 1,
+    .priority = 0,
     .paletteNum = 0,
     .affineParam = 0,
 };
@@ -995,6 +1043,7 @@ const struct CompressedSpriteSheet gSpriteSheet_MoveTypes =
     .size = (NUMBER_OF_MON_TYPES + CONTEST_CATEGORIES_COUNT) * 0x100,
     .tag = TAG_MOVE_TYPES
 };
+
 const struct SpriteTemplate gSpriteTemplate_MoveTypes =
 {
     .tileTag = TAG_MOVE_TYPES,

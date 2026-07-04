@@ -78,7 +78,7 @@ static void PlayerHandleBattleDebug(enum BattlerId battler);
 
 static void PlayerBufferRunCommand(enum BattlerId battler);
 static void MoveSelectionDisplayPpNumber(enum BattlerId battler);
-static void MoveSelectionDisplayPpString(enum BattlerId battler);
+//static void MoveSelectionDisplayPpString(enum BattlerId battler);
 static void MoveSelectionDisplayMoveType(enum BattlerId battler);
 static void MoveSelectionDisplayMoveNames(enum BattlerId battler);
 static void TryMoveSelectionDisplayMoveDescription(enum BattlerId battler);
@@ -690,6 +690,30 @@ static bool32 CanSelectBattler(enum MoveTarget target)
     return FALSE;
 }
 
+void TryToHideMoveInfoTypeCatIcons(void)
+{
+    if (gCategoryIconSpriteId != 0xFF)
+        gSprites[gCategoryIconSpriteId].invisible = TRUE;
+    if (gTypeIconSpriteId != 0xFF)
+        gSprites[gTypeIconSpriteId].invisible = TRUE;
+
+    TryToDestroyMoveInfoTypeCatIcons();
+}
+
+void TryToDestroyMoveInfoTypeCatIcons(void)
+{
+    if (gCategoryIconSpriteId != 0xFF)
+    {
+        DestroySprite(&gSprites[gCategoryIconSpriteId]);
+        gCategoryIconSpriteId = 0xFF;
+    }
+    if (gTypeIconSpriteId != 0xFF)
+    {
+        DestroySprite(&gSprites[gTypeIconSpriteId]);
+        gTypeIconSpriteId = 0xFF;
+    }
+}
+
 void HandleInputChooseMove(enum BattlerId battler)
 {
     u32 canSelectTarget = 0;
@@ -703,6 +727,7 @@ void HandleInputChooseMove(enum BattlerId battler)
     if (JOY_NEW(A_BUTTON) && !gBattleStruct->descriptionSubmenu)
     {
         TryToHideMoveInfoWindow();
+        TryToHideMoveInfoTypeCatIcons();
         PlaySE(SE_SELECT);
 
         enum MoveTarget moveTarget = GetBattlerMoveTargetType(battler, moveInfo->moves[gMoveSelectionCursor[battler]]);
@@ -813,6 +838,7 @@ void HandleInputChooseMove(enum BattlerId battler)
             HideGimmickTriggerSprite();
             BtlController_Complete(battler);
             TryToHideMoveInfoWindow();
+            TryToHideMoveInfoTypeCatIcons();
         }
     }
     else if (JOY_NEW(CATCH_MODE_TOGGLE_BUTTON) && !gBattleStruct->descriptionSubmenu)
@@ -911,12 +937,6 @@ void HandleInputChooseMove(enum BattlerId battler)
         if (JOY_NEW(B_MOVE_DESCRIPTION_BUTTON) || JOY_NEW(A_BUTTON) || JOY_NEW(B_BUTTON))
         {
             gBattleStruct->descriptionSubmenu = FALSE;
-            if (gCategoryIconSpriteId != 0xFF)
-            {
-                DestroySprite(&gSprites[gCategoryIconSpriteId]);
-                gCategoryIconSpriteId = 0xFF;
-            }
-
             FillWindowPixelBuffer(B_WIN_MOVE_DESCRIPTION, PIXEL_FILL(0));
             ClearStdWindowAndFrame(B_WIN_MOVE_DESCRIPTION, FALSE);
             CopyWindowToVram(B_WIN_MOVE_DESCRIPTION, COPYWIN_GFX);
@@ -1118,10 +1138,7 @@ void HandleMoveSwitching(enum BattlerId battler)
             gBattlerControllerFuncs[battler] = HandleInputChooseMove;
         gMoveSelectionCursor[battler] = gMultiUsePlayerCursor;
         MoveSelectionCreateCursorAt(gMoveSelectionCursor[battler], 0);
-        if (B_SHOW_EFFECTIVENESS)
-            MoveSelectionDisplayMoveEffectiveness(CheckTargetTypeEffectiveness(battler), battler);
-        else
-            MoveSelectionDisplayPpString(battler);
+        MoveSelectionDisplayMoveEffectiveness(CheckTargetTypeEffectiveness(battler), battler);
         MoveSelectionDisplayPpNumber(battler);
         MoveSelectionDisplayMoveType(battler);
         AssignUsableZMoves(battler, moveInfo->moves);
@@ -1136,11 +1153,8 @@ void HandleMoveSwitching(enum BattlerId battler)
             gBattlerControllerFuncs[battler] = OakOldManHandleInputChooseMove;
         else
             gBattlerControllerFuncs[battler] = HandleInputChooseMove;
-
-        if (B_SHOW_EFFECTIVENESS)
-            MoveSelectionDisplayMoveEffectiveness(CheckTargetTypeEffectiveness(battler), battler);
-        else
-            MoveSelectionDisplayPpString(battler);
+            
+        MoveSelectionDisplayMoveEffectiveness(CheckTargetTypeEffectiveness(battler), battler);
         MoveSelectionDisplayPpNumber(battler);
         MoveSelectionDisplayMoveType(battler);
     }
@@ -1696,13 +1710,13 @@ static void MoveSelectionDisplayMoveNames(enum BattlerId battler)
     }
 }
 
-static void MoveSelectionDisplayPpString(enum BattlerId battler)
+/*static void MoveSelectionDisplayPpString(enum BattlerId battler)
 {
     StringCopy(gDisplayedStringBattle, gText_MoveInterfacePP);
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
-}
+}*/
 
-static void MoveSelectionDisplayPpNumber(enum BattlerId battler)
+static void MoveSelectionDisplayPpNumber(enum BattlerId battler) //WorpBattleInfo Modified
 {
     u8 *txtPtr;
     struct ChooseMoveStruct *moveInfo;
@@ -1719,12 +1733,10 @@ static void MoveSelectionDisplayPpNumber(enum BattlerId battler)
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP_REMAINING);
 }
 
-static void MoveSelectionDisplayMoveType(enum BattlerId battler)
+static void MoveSelectionDisplayMoveType(enum BattlerId battler) //WorpBattleInfo Modified
 {
-    u8 *txtPtr, *end;
     enum Species speciesId = gBattleMons[battler].species;
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
-    txtPtr = StringCopy(gDisplayedStringBattle, gText_MoveInterfaceType);
     enum Move move = moveInfo->moves[gMoveSelectionCursor[battler]];
     enum Type type = GetMoveType(move);
     enum BattleMoveEffects effect = GetMoveEffect(move);
@@ -1757,10 +1769,16 @@ static void MoveSelectionDisplayMoveType(enum BattlerId battler)
         struct Pokemon *mon = GetBattlerMon(battler);
         type = CheckDynamicMoveType(mon, move, battler, MON_IN_BATTLE);
     }
-    end = StringCopy(txtPtr, gTypesInfo[type].name);
 
-    PrependFontIdToFit(txtPtr, end, FONT_NORMAL, WindowWidthPx(B_WIN_MOVE_TYPE) - 25);
-    BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_TYPE);
+    if (gCategoryIconSpriteId == 0xFF)
+        gCategoryIconSpriteId = CreateSprite(&gSpriteTemplate_CategoryIconsWide, 220, 128, 1);
+
+    if (gTypeIconSpriteId == 0xFF)
+        gTypeIconSpriteId = CreateSprite(&gSpriteTemplate_MoveTypes, 184, 128, 1);
+        
+    StartSpriteAnim(&gSprites[gCategoryIconSpriteId], GetMoveCategory(move));
+    gSprites[gTypeIconSpriteId].oam.paletteNum = gTypesInfo[type].palette;
+    StartSpriteAnim(&gSprites[gTypeIconSpriteId], GetMoveType(move));
 }
 
 static void TryMoveSelectionDisplayMoveDescription(enum BattlerId battler)
@@ -1778,7 +1796,6 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
     enum Move move = moveInfo->moves[gMoveSelectionCursor[battler]];
     u16 pwr = GetMovePower(move);
     u16 acc = GetMoveAccuracy(move);
-    enum DamageCategory cat = GetBattleMoveCategory(move);
 
     if (GetActiveGimmick(battler) == GIMMICK_DYNAMAX || IsGimmickSelected(battler, GIMMICK_DYNAMAX))
     {
@@ -1788,12 +1805,14 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
     }
 
     u8 pwr_num[3], acc_num[3];
-    u8 cat_desc[7] = _("CAT: ");
+    //u8 cat_desc[7] = _("CAT: ");
     u8 pwr_desc[7] = _("PWR: ");
     u8 acc_desc[7] = _("ACC: ");
-    u8 cat_start[] = _("{CLEAR_TO 3}");
-    u8 pwr_start[] = _("{CLEAR_TO 56}");
-    u8 acc_start[] = _("{CLEAR_TO 108}");
+    //u8 cat_start[] = _("{CLEAR_TO 3}");
+    //u8 pwr_start[] = _("{CLEAR_TO 56}");
+    u8 pwr_start[] = _("{CLEAR_TO 3}");
+    //u8 acc_start[] = _("{CLEAR_TO 108}");
+    u8 acc_start[] = _("{CLEAR_TO 56}");
     LoadMessageBoxAndBorderGfx();
     DrawStdWindowFrame(B_WIN_MOVE_DESCRIPTION, FALSE);
     if (pwr < 2)
@@ -1804,9 +1823,10 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
         StringCopy(acc_num, gText_BattleSwitchWhich5);
     else
         ConvertIntToDecimalStringN(acc_num, acc, STR_CONV_MODE_LEFT_ALIGN, 3);
-    StringCopy(gDisplayedStringBattle, cat_start);
-    StringAppend(gDisplayedStringBattle, cat_desc);
-    StringAppend(gDisplayedStringBattle, pwr_start);
+    //StringCopy(gDisplayedStringBattle, cat_start);
+    //StringAppend(gDisplayedStringBattle, cat_desc);
+    StringCopy(gDisplayedStringBattle, pwr_start);
+    //StringAppend(gDisplayedStringBattle, pwr_start);
     StringAppend(gDisplayedStringBattle, pwr_desc);
     StringAppend(gDisplayedStringBattle, pwr_num);
     StringAppend(gDisplayedStringBattle, acc_start);
@@ -1816,10 +1836,7 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
     StringAppend(gDisplayedStringBattle, GetMoveDescription(move));
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_DESCRIPTION);
 
-    if (gCategoryIconSpriteId == 0xFF)
-        gCategoryIconSpriteId = CreateSprite(&gSpriteTemplate_CategoryIcons, 38, 64, 1);
-
-    StartSpriteAnim(&gSprites[gCategoryIconSpriteId], cat);
+    //WorpTODO: Put in Contact: Yes/No
 
     CopyWindowToVram(B_WIN_MOVE_DESCRIPTION, COPYWIN_FULL);
 }
@@ -2156,10 +2173,7 @@ void InitMoveSelectionsVarsAndStrings(enum BattlerId battler)
     MoveSelectionDisplayMoveNames(battler);
     gMultiUsePlayerCursor = 0xFF;
     MoveSelectionCreateCursorAt(gMoveSelectionCursor[battler], 0);
-    if (B_SHOW_EFFECTIVENESS)
-        MoveSelectionDisplayMoveEffectiveness(CheckTargetTypeEffectiveness(battler), battler);
-    else
-        MoveSelectionDisplayPpString(battler);
+    MoveSelectionDisplayMoveEffectiveness(CheckTargetTypeEffectiveness(battler), battler);
     MoveSelectionDisplayPpNumber(battler);
     MoveSelectionDisplayMoveType(battler);
 }
@@ -2457,17 +2471,20 @@ static u32 CheckTargetTypeEffectiveness(enum BattlerId battler)
     return foeEffectiveness; // fallthrough for any other circumstance
 }
 
-static void MoveSelectionDisplayMoveEffectiveness(u32 foeEffectiveness, enum BattlerId battler)
+static void MoveSelectionDisplayMoveEffectiveness(u32 foeEffectiveness, enum BattlerId battler) //WorpBattleInfo modified (shows Effectiveness & STAB)
 {
-    static const u8 noIcon[] =  _("");
-    static const u8 effectiveIcon[] =  _("{CIRCLE_HOLLOW}");
-    static const u8 superEffectiveIcon[] =  _("{CIRCLE_DOT}");
-    static const u8 notVeryEffectiveIcon[] =  _("{TRIANGLE}");
-    static const u8 immuneIcon[] =  _("{BIG_MULT_X}");
+    static const u8 noIcon[] =  _(" l");
+    static const u8 effectiveIcon[] =  _("{CIRCLE_HOLLOW} ");
+    static const u8 superEffectiveIcon[] =  _("{COLOR 6}{SHADOW 5}{UP_ARROW_2} ");
+    static const u8 notVeryEffectiveIcon[] =  _("{COLOR 4}{SHADOW 3}{DOWN_ARROW_2} ");
+    static const u8 immuneIcon[] =  _("{COLOR 2}{SHADOW 1}{BIG_MULT_X} ");
+    static const u8 spacerSTAB[] =  _("{UNK_SPACER}{UNK_SPACER} ");
+    static const u8 STAB[] =  _("{COLOR 6}{SHADOW 5}S+");
     struct ChooseMoveStruct *moveInfo = (struct ChooseMoveStruct *)(&gBattleResources->bufferA[battler][4]);
+    enum Type moveType = GetMoveType(moveInfo->moves[gMoveSelectionCursor[battler]]);
     u8 *txtPtr;
 
-    txtPtr = StringCopy(gDisplayedStringBattle, gText_MoveInterfacePP);
+    txtPtr = StringCopy(gDisplayedStringBattle, noIcon);
 
     if (!IsBattleMoveStatus(moveInfo->moves[gMoveSelectionCursor[battler]]))
     {
@@ -2490,6 +2507,12 @@ static void MoveSelectionDisplayMoveEffectiveness(u32 foeEffectiveness, enum Bat
             StringCopy(txtPtr, noIcon);
             break;
         }
+    }
+    else StringCopy(txtPtr, spacerSTAB);
+
+    if (moveType != 0 && (moveType == gBattleMons[battler].types[0] || moveType == gBattleMons[battler].types[1])) //0 is MOVE_NONE
+    {
+        StringAppend(txtPtr, STAB);
     }
 
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_PP);
