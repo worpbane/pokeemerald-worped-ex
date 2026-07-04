@@ -3299,7 +3299,7 @@ void GetCatTypeIconData(u8 category, u8 *dest)
 
 void GetMoveTypeIconData(u8 type, u8 *dest)
 {
-    if (type >= 19) type = 0; //Just in case...
+    if (type >= NUMBER_OF_MON_TYPES) type = 0; //Just in case...
 
     u32 offset = (u32)(type + 1) * 0x100; 
     CpuCopy16((const u8 *)gMoveTypes_InterfaceGfx + offset, dest, 0x100);
