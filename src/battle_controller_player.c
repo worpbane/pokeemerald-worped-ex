@@ -690,16 +690,6 @@ static bool32 CanSelectBattler(enum MoveTarget target)
     return FALSE;
 }
 
-void TryToHideMoveInfoTypeCatIcons(void)
-{
-    if (gCategoryIconSpriteId != 0xFF)
-        gSprites[gCategoryIconSpriteId].invisible = TRUE;
-    if (gTypeIconSpriteId != 0xFF)
-        gSprites[gTypeIconSpriteId].invisible = TRUE;
-
-    TryToDestroyMoveInfoTypeCatIcons();
-}
-
 void TryToDestroyMoveInfoTypeCatIcons(void)
 {
     if (gCategoryIconSpriteId != 0xFF)
@@ -727,7 +717,6 @@ void HandleInputChooseMove(enum BattlerId battler)
     if (JOY_NEW(A_BUTTON) && !gBattleStruct->descriptionSubmenu)
     {
         TryToHideMoveInfoWindow();
-        TryToHideMoveInfoTypeCatIcons();
         PlaySE(SE_SELECT);
 
         enum MoveTarget moveTarget = GetBattlerMoveTargetType(battler, moveInfo->moves[gMoveSelectionCursor[battler]]);
@@ -838,7 +827,6 @@ void HandleInputChooseMove(enum BattlerId battler)
             HideGimmickTriggerSprite();
             BtlController_Complete(battler);
             TryToHideMoveInfoWindow();
-            TryToHideMoveInfoTypeCatIcons();
         }
     }
     else if (JOY_NEW(CATCH_MODE_TOGGLE_BUTTON) && !gBattleStruct->descriptionSubmenu)
@@ -1740,7 +1728,6 @@ static void MoveSelectionDisplayMoveType(enum BattlerId battler) //WorpBattleInf
     enum Move move = moveInfo->moves[gMoveSelectionCursor[battler]];
     enum Type type = GetMoveType(move);
     enum BattleMoveEffects effect = GetMoveEffect(move);
-    u8 sLastLoadedType = 0xFF;
 
     if (effect == EFFECT_TERA_BLAST)
     {
@@ -1771,21 +1758,24 @@ static void MoveSelectionDisplayMoveType(enum BattlerId battler) //WorpBattleInf
         type = CheckDynamicMoveType(mon, move, battler, MON_IN_BATTLE);
     }
 
-    if (gCategoryIconSpriteId == 0xFF)
-        gCategoryIconSpriteId = CreateSprite(&gSpriteTemplate_CategoryIconsWide, 220, 128, 1);
-
-    if (gTypeIconSpriteId == 0xFF)
-        gTypeIconSpriteId = CreateSprite(&gSpriteTemplate_MoveTypes, 184, 128, 1);
-
-    if (sLastLoadedType != type)
-    {
-        LoadTypePalette(type);
-        sLastLoadedType = type;
+    //Category Icon (Sprite)
+    if (gCategoryIconSpriteId != 0xFF) {
+        DestroySprite(&gSprites[gCategoryIconSpriteId]);
+        gCategoryIconSpriteId = 0xFF;
     }
-    gSprites[gTypeIconSpriteId].oam.paletteNum = 14;
-        
+    gCategoryIconSpriteId = CreateSprite(&gSpriteTemplate_CategoryIconsWide, 220, 128, 1);
     StartSpriteAnim(&gSprites[gCategoryIconSpriteId], GetMoveCategory(move));
-    StartSpriteAnim(&gSprites[gTypeIconSpriteId], GetMoveType(move));
+
+    //Type Icon
+    u8 typeIconBuffer[0x100]; 
+    GetMoveTypeIconData(type, typeIconBuffer);
+
+    LoadTypePalette(type);
+    FillWindowPixelBuffer(B_WIN_MOVE_TYPE, PIXEL_FILL(0));
+    BlitBitmapToWindow(B_WIN_MOVE_TYPE, typeIconBuffer, 0, 0, 32, 16);
+    
+    PutWindowTilemap(B_WIN_MOVE_TYPE);
+    CopyWindowToVram(B_WIN_MOVE_TYPE, COPYWIN_FULL);
 }
 
 static void TryMoveSelectionDisplayMoveDescription(enum BattlerId battler)
@@ -1830,10 +1820,7 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
         StringCopy(acc_num, gText_BattleSwitchWhich5);
     else
         ConvertIntToDecimalStringN(acc_num, acc, STR_CONV_MODE_LEFT_ALIGN, 3);
-    //StringCopy(gDisplayedStringBattle, cat_start);
-    //StringAppend(gDisplayedStringBattle, cat_desc);
     StringCopy(gDisplayedStringBattle, pwr_start);
-    //StringAppend(gDisplayedStringBattle, pwr_start);
     StringAppend(gDisplayedStringBattle, pwr_desc);
     StringAppend(gDisplayedStringBattle, pwr_num);
     StringAppend(gDisplayedStringBattle, acc_start);

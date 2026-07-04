@@ -3013,6 +3013,7 @@ void TryToHideMoveInfoWindow(void)
      if (gBattleStruct->moveInfoSpriteId != MAX_SPRITES)
         gSprites[gBattleStruct->moveInfoSpriteId].sHide = TRUE;
     TryHideCatchModeWindow();
+    TryToDestroyMoveInfoTypeCatIcons();
 }
 
 static void DestroyMoveInfoWinGfx(struct Sprite *sprite)
@@ -3020,6 +3021,7 @@ static void DestroyMoveInfoWinGfx(struct Sprite *sprite)
     FreeSpriteTilesByTag(MOVE_INFO_WINDOW_TAG);
     if (GetSpriteTileStartByTag(TAG_LAST_BALL_WINDOW) == 0xFFFF)
         FreeSpritePaletteByTag(TAG_ABILITY_POP_UP);
+    TryToDestroyMoveInfoTypeCatIcons();
     DestroySprite(sprite);
     gBattleStruct->moveInfoSpriteId = MAX_SPRITES;
 }
@@ -3286,8 +3288,16 @@ void CategoryIcons_LoadSpritesGfx(void)
 {
     LoadCompressedSpriteSheet(&gSpriteSheet_CategoryIconsWide);
     LoadSpritePalette(&gSpritePal_CategoryIcons);
-    LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
-    LoadPalette(gMoveTypes_Pal, OBJ_PLTT_ID(14), PLTT_SIZE_4BPP);
+    //LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
+    //LoadPalette(gMoveTypes_Pal, OBJ_PLTT_ID(14), PLTT_SIZE_4BPP);
+}
+
+void GetMoveTypeIconData(u8 type, u8 *dest)
+{
+    if (type >= 19) type = 0; //Just in case...
+
+    u32 offset = (u32)(type + 1) * 0x100; 
+    CpuCopy16((const u8 *)gMoveTypes_InterfaceGfx + offset, dest, 0x100);
 }
 
 void LoadTypePalette(u8 typeId)
@@ -3298,6 +3308,6 @@ void LoadTypePalette(u8 typeId)
     {
         u8 paletteBlockIndex = palNum - 13;
         u32 offset = paletteBlockIndex * 16;
-        LoadPalette(gMoveTypes_Pal + offset, OBJ_PLTT_ID(14), PLTT_SIZE_4BPP);
+        LoadPalette(gMoveTypes_Pal + offset, BG_PLTT_ID(14), PLTT_SIZE_4BPP);
     }
 }
