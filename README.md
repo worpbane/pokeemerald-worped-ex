@@ -20,6 +20,7 @@ Much like with **Modern Emerald - Worped**, this repository is mainly for me to 
 I'll try to call out from where a feature was inspired/pulled from. Major feature branches will be linked. Everything will be properly contributed!
 
 ### Gameplay Mechanics:
+* **Unbound Inspired Move Info Panel:** Instead of text based move info, includes a Type Icon and Category Icon, as well as an icon for Effectiveness and STAB. Additionally I've added Contact/No Contact to the move description popup.  
 * **Flash1Lucky's [Catch Mode](https://github.com/Flash1Lucky/pokeemerald-expansion/tree/catch-mode-toggle):** It's a Catch Mode, for catching Pokémon easier, you can turn it off in the Options menu.  
 * **QoL HMs:** HM moves don't need to be taught, as long as you have the HM, the Badge, and a mon who can use it, you can perform the field move. (Custom Code)
 * **Gen IV Poison:** Pokémon will survive poison with 1 hp outside of battles. (Expansion Setting)  
