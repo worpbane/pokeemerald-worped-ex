@@ -1740,6 +1740,7 @@ static void MoveSelectionDisplayMoveType(enum BattlerId battler) //WorpBattleInf
     enum Move move = moveInfo->moves[gMoveSelectionCursor[battler]];
     enum Type type = GetMoveType(move);
     enum BattleMoveEffects effect = GetMoveEffect(move);
+    u8 sLastLoadedType = 0xFF;
 
     if (effect == EFFECT_TERA_BLAST)
     {
@@ -1775,9 +1776,15 @@ static void MoveSelectionDisplayMoveType(enum BattlerId battler) //WorpBattleInf
 
     if (gTypeIconSpriteId == 0xFF)
         gTypeIconSpriteId = CreateSprite(&gSpriteTemplate_MoveTypes, 184, 128, 1);
+
+    if (sLastLoadedType != type)
+    {
+        LoadTypePalette(type);
+        sLastLoadedType = type;
+    }
+    gSprites[gTypeIconSpriteId].oam.paletteNum = 14;
         
     StartSpriteAnim(&gSprites[gCategoryIconSpriteId], GetMoveCategory(move));
-    gSprites[gTypeIconSpriteId].oam.paletteNum = gTypesInfo[type].palette;
     StartSpriteAnim(&gSprites[gTypeIconSpriteId], GetMoveType(move));
 }
 

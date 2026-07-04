@@ -3287,5 +3287,19 @@ void CategoryIcons_LoadSpritesGfx(void)
     LoadCompressedSpriteSheet(&gSpriteSheet_CategoryIconsWide);
     LoadSpritePalette(&gSpritePal_CategoryIcons);
     LoadCompressedSpriteSheet(&gSpriteSheet_MoveTypes);
-    LoadPalette(gMoveTypes_Pal, OBJ_PLTT_ID(13), 3 * PLTT_SIZE_4BPP);
+    LoadPalette(gMoveTypes_Pal, OBJ_PLTT_ID(14), PLTT_SIZE_4BPP);
+}
+
+void LoadTypePalette(u8 typeId)
+{
+    u8 palNum = gTypesInfo[typeId].palette;
+    
+    if (palNum >= 13 && palNum <= 15)
+    {
+        u8 paletteBlockIndex = palNum - 13;
+        u32 offset = paletteBlockIndex * 16;
+        LoadPalette(gMoveTypes_Pal + offset, OBJ_PLTT_ID(14), PLTT_SIZE_4BPP);
+
+        DebugPrintf("typeID: %d. palNum: %d. Offset: %d", typeId, palNum, offset);
+    }
 }
