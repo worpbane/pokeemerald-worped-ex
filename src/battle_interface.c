@@ -3299,7 +3299,5 @@ void LoadTypePalette(u8 typeId)
         u8 paletteBlockIndex = palNum - 13;
         u32 offset = paletteBlockIndex * 16;
         LoadPalette(gMoveTypes_Pal + offset, OBJ_PLTT_ID(14), PLTT_SIZE_4BPP);
-
-        DebugPrintf("typeID: %d. palNum: %d. Offset: %d", typeId, palNum, offset);
     }
 }

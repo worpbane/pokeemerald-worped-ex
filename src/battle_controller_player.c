@@ -1803,6 +1803,7 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
     enum Move move = moveInfo->moves[gMoveSelectionCursor[battler]];
     u16 pwr = GetMovePower(move);
     u16 acc = GetMoveAccuracy(move);
+    bool8 makesContact = gMovesInfo[SanitizeMoveId(move)].makesContact;
 
     if (GetActiveGimmick(battler) == GIMMICK_DYNAMAX || IsGimmickSelected(battler, GIMMICK_DYNAMAX))
     {
@@ -1812,14 +1813,13 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
     }
 
     u8 pwr_num[3], acc_num[3];
-    //u8 cat_desc[7] = _("CAT: ");
     u8 pwr_desc[7] = _("PWR: ");
     u8 acc_desc[7] = _("ACC: ");
-    //u8 cat_start[] = _("{CLEAR_TO 3}");
-    //u8 pwr_start[] = _("{CLEAR_TO 56}");
     u8 pwr_start[] = _("{CLEAR_TO 3}");
-    //u8 acc_start[] = _("{CLEAR_TO 108}");
-    u8 acc_start[] = _("{CLEAR_TO 56}");
+    u8 acc_start[] = _("{CLEAR_TO 50}");
+    u8 con_start[] = _("{CLEAR_TO 90}");
+    u8 con_yes[] = _("{UNK_SPACER} {UNK_SPACER}Contact");
+    u8 con_no[] = _("No Contact");
     LoadMessageBoxAndBorderGfx();
     DrawStdWindowFrame(B_WIN_MOVE_DESCRIPTION, FALSE);
     if (pwr < 2)
@@ -1839,11 +1839,12 @@ static void MoveSelectionDisplayMoveDescription(enum BattlerId battler)
     StringAppend(gDisplayedStringBattle, acc_start);
     StringAppend(gDisplayedStringBattle, acc_desc);
     StringAppend(gDisplayedStringBattle, acc_num);
+    StringAppend(gDisplayedStringBattle, con_start);
+    if(makesContact) StringAppend(gDisplayedStringBattle, con_yes);
+    else StringAppend(gDisplayedStringBattle, con_no);
     StringAppend(gDisplayedStringBattle, gText_NewLine);
     StringAppend(gDisplayedStringBattle, GetMoveDescription(move));
     BattlePutTextOnWindow(gDisplayedStringBattle, B_WIN_MOVE_DESCRIPTION);
-
-    //WorpTODO: Put in Contact: Yes/No
 
     CopyWindowToVram(B_WIN_MOVE_DESCRIPTION, COPYWIN_FULL);
 }
