@@ -126,4 +126,4 @@ This project would be impossible without the massive foundations provided by the
 
 ---
 
-Based off RHH's pokeemerald-expansion 1.16.2 https://github.com/rh-hideout/pokeemerald-expansion/
+Based off RHH's pokeemerald-expansion 1.16.3 https://github.com/rh-hideout/pokeemerald-expansion/
